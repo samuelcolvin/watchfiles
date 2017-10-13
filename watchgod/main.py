@@ -15,16 +15,19 @@ def unix_ms():
 
 def watch(path: Union[Path, str], watcher_cls: Type[Watcher]=Watcher, debounce=400, min_sleep=100):
     p = watcher_cls(path)
-    while True:
-        start = unix_ms()
-        changes = p.check()
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('time taken: %0.2fms, files: %d, changes: %d',
-                         unix_ms() - start, len(p.files), len(changes))
+    try:
+        while True:
+            start = unix_ms()
+            changes = p.check()
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('time taken: %0.2fms, files: %d, changes: %d',
+                             unix_ms() - start, len(p.files), len(changes))
 
-        if changes:
-            yield changes
-        sleep_time = debounce - (unix_ms() - start)
-        if sleep_time < min_sleep:
-            sleep_time = min_sleep
-        sleep(sleep_time / 1000)
+            if changes:
+                yield changes
+            sleep_time = debounce - (unix_ms() - start)
+            if sleep_time < min_sleep:
+                sleep_time = min_sleep
+            sleep(sleep_time / 1000)
+    except KeyboardInterrupt:
+        pass
