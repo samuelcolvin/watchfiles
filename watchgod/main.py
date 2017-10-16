@@ -3,7 +3,7 @@ from pathlib import Path
 from time import time, sleep
 from typing import Type, Union
 
-from .walk import Watcher
+from .watcher import Watcher
 
 __all__ = 'watch',
 logger = logging.getLogger('watchgod.main')
@@ -20,8 +20,7 @@ def watch(path: Union[Path, str], watcher_cls: Type[Watcher]=Watcher, debounce=4
             start = unix_ms()
             changes = p.check()
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('time taken: %0.2fms, files: %d, changes: %d',
-                             unix_ms() - start, len(p.files), len(changes))
+                logger.debug('time=%0.0fms files=%d changes=%d', unix_ms() - start, len(p.files), len(changes))
 
             if changes:
                 yield changes
