@@ -1,9 +1,9 @@
 import logging
 from pathlib import Path
-from time import time, sleep
+from time import sleep, time
 from typing import Type, Union
 
-from .watcher import Watcher
+from .watcher import AllWatcher, DefaultWatcher
 
 __all__ = 'watch',
 logger = logging.getLogger('watchgod.main')
@@ -13,7 +13,7 @@ def unix_ms():
     return int(round(time() * 1000))
 
 
-def watch(path: Union[Path, str], watcher_cls: Type[Watcher]=Watcher, debounce=400, min_sleep=100):
+def watch(path: Union[Path, str], watcher_cls: Type[AllWatcher]=DefaultWatcher, debounce=400, min_sleep=100):
     p = watcher_cls(path)
     try:
         while True:

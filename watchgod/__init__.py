@@ -1,4 +1,4 @@
 # flake8: noqa
 from .main import *
-from .walk import *
+from .watcher import *
 from .version import *
