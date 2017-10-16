@@ -129,13 +129,13 @@ def test_watch_min_sleep(mocker):
             pass
 
         def check(self):
-            return {'r1'}
+            return {'x'}
 
     mocker.spy(watchgod.main, 'sleep')
     mocker.spy(watchgod.main.logger, 'debug')
     iter = watch('xxx', watcher_cls=FakeWatcher, debounce=5, min_sleep=10)
-    assert next(iter) == {'r1'}
-    assert next(iter) == {'r1'}
+    assert next(iter) == {'x'}
+    assert next(iter) == {'x'}
     assert watchgod.main.sleep.call_count == 1
     assert watchgod.main.sleep.call_args[0][0] == 0.01
     assert watchgod.main.logger.debug.called is False
