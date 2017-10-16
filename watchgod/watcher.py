@@ -17,10 +17,10 @@ class AllWatcher:
         self.root_path = root_path
         self.check()
 
-    def should_watch_dir(self, entry: os.DirEntry):
+    def should_watch_dir(self, entry):
         return True
 
-    def should_watch_file(self, entry: os.DirEntry):
+    def should_watch_file(self, entry):
         return True
 
     def _walk(self, dir_path, changes, new_files):
@@ -59,18 +59,18 @@ class DefaultWatcher(AllWatcher):
         self._ignored_file_regexes = tuple(re.compile(r) for r in self.ignored_file_regexes)
         super().__init__(root_path)
 
-    def should_watch_dir(self, entry: os.DirEntry):
+    def should_watch_dir(self, entry):
         return entry.name not in self.ignored_dirs
 
-    def should_watch_file(self, entry: os.DirEntry):
+    def should_watch_file(self, entry):
         return not any(r.search(entry.name) for r in self._ignored_file_regexes)
 
 
 class PythonWatcher(AllWatcher):
     ignored_dirs = DefaultWatcher.ignored_dirs
 
-    def should_watch_dir(self, entry: os.DirEntry):
+    def should_watch_dir(self, entry):
         return entry.name not in self.ignored_dirs
 
-    def should_watch_file(self, entry: os.DirEntry):
+    def should_watch_file(self, entry):
         return entry.name.endswith(('.py', '.pyx', '.pyd'))
