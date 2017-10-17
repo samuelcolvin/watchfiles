@@ -3,6 +3,7 @@ import logging
 import os
 import signal
 import sys
+from functools import partial
 from multiprocessing import Process
 from pathlib import Path
 from time import sleep, time
@@ -10,7 +11,7 @@ from typing import Any, Callable, Dict, Tuple, Type, Union
 
 from .watcher import AllWatcher, DefaultWatcher, PythonWatcher
 
-__all__ = 'watch', 'awatch', 'run_process'
+__all__ = 'watch', 'awatch', 'run_process', 'arun_process'
 logger = logging.getLogger('watchgod.main')
 
 
@@ -97,6 +98,21 @@ def _start_process(target, args, kwargs):
     return process
 
 
+def _stop_process(process):
+    if process.is_alive():
+        logger.debug('stopping server process...')
+        os.kill(process.pid, signal.SIGINT)
+        process.join(5)
+        if process.exitcode is None:
+            logger.warning('process has not terminated, sending SIGKILL')
+            os.kill(process.pid, signal.SIGKILL)
+            process.join(1)
+        else:
+            logger.debug('process stopped')
+    else:
+        logger.warning('server process already dead, exit code: %d', process.exitcode)
+
+
 def run_process(path: Union[Path, str], target: Callable, *,
                 args: Tuple[Any]=(),
                 kwargs: Dict[str, Any]=None,
@@ -111,19 +127,29 @@ def run_process(path: Union[Path, str], target: Callable, *,
     reloads = 0
 
     for _ in watch(path, watcher_cls=watcher_cls, debounce=debounce, min_sleep=min_sleep):
-        if process.is_alive():
-            logger.debug('stopping server process...')
-            os.kill(process.pid, signal.SIGINT)
-            process.join(5)
-            if process.exitcode is None:
-                logger.warning('process has not terminated, sending SIGKILL')
-                os.kill(process.pid, signal.SIGKILL)
-                process.join(1)
-            else:
-                logger.debug('process stopped')
-        else:
-            logger.warning('server process already dead, exit code: %d', process.exitcode)
-
+        _stop_process(process)
         process = _start_process(target=target, args=args, kwargs=kwargs)
+        reloads += 1
+    return reloads
+
+
+async def arun_process(path: Union[Path, str], target: Callable, *,
+                       args: Tuple[Any]=(),
+                       kwargs: Dict[str, Any]=None,
+                       watcher_cls: Type[AllWatcher]=PythonWatcher,
+                       debounce=400,
+                       min_sleep=100):
+    """
+    Run a function in a subprocess using multiprocessing.Process, restart it whenever files change in path.
+    """
+
+    loop = asyncio.get_event_loop()
+    start_process = partial(_start_process, target=target, args=args, kwargs=kwargs)
+    process = await loop.run_in_executor(None, start_process)
+    reloads = 0
+
+    async for _ in awatch(path, watcher_cls=watcher_cls, debounce=debounce, min_sleep=min_sleep):  # noqa: F841
+        await loop.run_in_executor(None, _stop_process, process)
+        process = await loop.run_in_executor(None, start_process)
         reloads += 1
     return reloads

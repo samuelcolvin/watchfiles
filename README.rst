@@ -29,8 +29,10 @@ To run a function and restart it when code changes:
 
    run_process('./path/to/dir', foobar, process_args=(1, 2, 3))
 
+(``run_process`` uses ``PythonWatcher`` so only changes to python files will prompt a
+reload, see *custom watchers* below)
 
-*watchgod* comes with an "async" equivalents of ``watch``: ``awatch`` which uses
+*watchgod* comes with an asynchronous equivalents of ``watch``: ``awatch`` which uses
 a ``ThreadPoolExecutor`` to iterate over files.
 
 .. code:: python
@@ -46,8 +48,59 @@ a ``ThreadPoolExecutor`` to iterate over files.
    loop.run_until_complete(main())
 
 
-Why no inotify / kqueue / fsevent / winapi
-------------------------------------------
+There's also an asynchronous equivalents of ``run_process``: ``arun_process`` which in turn
+uses ``awatch``:
+
+.. code:: python
+
+   import asyncio
+   from watchgod import arun_process
+
+   def foobar(a, b, c):
+       ...
+
+   async def main():
+       await arun_process('./path/to/dir', foobar, process_args=(1, 2, 3))
+
+   loop = asyncio.get_event_loop()
+   loop.run_until_complete(main())
+
+(``arun_process`` uses ``PythonWatcher`` so only changes to python files will prompt a
+reload, see *custom watchers* below)
+
+Custom watchers
+---------------
+
+*watchgod* comes with the following watcher classes which can be used via the ``watcher_cls``
+keyword argument to any of the methods above.
+
+For more details, checkout
+`watcher.py <https://github.com/samuelcolvin/watchgod/blob/master/watchgod/watcher.py>`_,
+it's pretty simple.
+
+**AllWatcher**
+    The base watcher, all files are checked for changes.
+
+**DefaultWatcher**
+    The watcher used by default by ``watch`` and ``awatch``, commonly ignored files
+    like ``*.swp``, ``*.pyc`` and ``*~`` are ignored along with directories like
+    ``.git``.
+
+**PythonWatcher**
+    Specific to python files, only ``*.py``, ``*.pyx`` and ``*.pyd`` files are watched.
+
+**DefaultDirWatcher**
+    Is the base for ``DefaultWatcher`` and ``DefaultDirWatcher`` and takes care of ignoring
+    some regular directories.
+
+
+If these classes aren't sufficient you can define your own watcher, in particular
+you will want to override ``should_watch_dir`` and ``should_watch_file``. Unless you're
+doing something very odd you'll want to inherit from ``DefaultDirWatcher``.
+
+
+Why no inotify / kqueue / fsevent / winapi support
+--------------------------------------------------
 
 *watchgod* (for now) uses file polling rather than the OS's built in file change notifications.
 
@@ -56,7 +109,7 @@ This is not an oversight, it's a decision with the following rationale:
 1. Polling is "fast enough", particularly since PEP 471 introduced fast ``scandir``.
 
    With a reasonably large project like the TutorCruncher code base with 850 files and 300k lines
-   of code *watchdog* can scan the entire tree in 24ms. With a scan interval of 400ms that's roughly
+   of code *watchdog* can scan the entire tree in ~24ms. With a scan interval of 400ms that's roughly
    5% of one CPU - perfectly acceptable load during development.
 
 2. The clue is in the title, there are at least 4 different file notification systems to integrate

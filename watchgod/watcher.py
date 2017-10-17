@@ -2,7 +2,7 @@ import os
 import re
 from enum import IntEnum
 
-__all__ = 'Change', 'AllWatcher', 'DefaultWatcher', 'PythonWatcher'
+__all__ = 'Change', 'AllWatcher', 'DefaultDirWatcher', 'DefaultWatcher', 'PythonWatcher'
 
 
 class Change(IntEnum):
@@ -51,26 +51,24 @@ class AllWatcher:
         return changes
 
 
-class DefaultWatcher(AllWatcher):
+class DefaultDirWatcher(AllWatcher):
     ignored_dirs = {'.git', '__pycache__', 'site-packages', '.idea', 'node_modules'}
-    ignored_file_regexes = (r'\.py[cod]$', r'\.___jb_...___$', r'\.sw.$', '~$')
+
+    def should_watch_dir(self, entry):
+        return entry.name not in self.ignored_dirs
+
+
+class DefaultWatcher(DefaultDirWatcher):
+    ignored_file_regexes = r'\.py[cod]$', r'\.___jb_...___$', r'\.sw.$', '~$'
 
     def __init__(self, root_path):
         self._ignored_file_regexes = tuple(re.compile(r) for r in self.ignored_file_regexes)
         super().__init__(root_path)
 
-    def should_watch_dir(self, entry):
-        return entry.name not in self.ignored_dirs
-
     def should_watch_file(self, entry):
         return not any(r.search(entry.name) for r in self._ignored_file_regexes)
 
 
-class PythonWatcher(AllWatcher):
-    ignored_dirs = DefaultWatcher.ignored_dirs
-
-    def should_watch_dir(self, entry):
-        return entry.name not in self.ignored_dirs
-
+class PythonWatcher(DefaultDirWatcher):
     def should_watch_file(self, entry):
         return entry.name.endswith(('.py', '.pyx', '.pyd'))
