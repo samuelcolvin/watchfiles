@@ -29,8 +29,15 @@ To run a function and restart it when code changes:
 
    run_process('./path/to/dir', foobar, process_args=(1, 2, 3))
 
-(``run_process`` uses ``PythonWatcher`` so only changes to python files will prompt a
-reload, see *custom watchers* below)
+``run_process`` uses ``PythonWatcher`` so only changes to python files will prompt a
+reload, see *custom watchers* below.
+
+If you need notifications about change events as well as to restart a process you can
+use the ``callback`` argument to pass a function will will be called on every file change
+with one argument: the set of file changes.
+
+Asynchronous Methods
+....................
 
 *watchgod* comes with an asynchronous equivalents of ``watch``: ``awatch`` which uses
 a ``ThreadPoolExecutor`` to iterate over files.
@@ -65,11 +72,14 @@ uses ``awatch``:
    loop = asyncio.get_event_loop()
    loop.run_until_complete(main())
 
-(``arun_process`` uses ``PythonWatcher`` so only changes to python files will prompt a
-reload, see *custom watchers* below)
+``arun_process`` uses ``PythonWatcher`` so only changes to python files will prompt a
+reload, see *custom watchers* below.
 
-Custom watchers
----------------
+The signature of ``arun_process`` is almost identical to ``run_process`` except that
+the ``callback`` argument if provide must be a coroutine, not a function.
+
+Custom Watchers
+...............
 
 *watchgod* comes with the following watcher classes which can be used via the ``watcher_cls``
 keyword argument to any of the methods above.

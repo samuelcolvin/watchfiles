@@ -1,3 +1,5 @@
+from asyncio import Future
+
 from watchgod import arun_process, run_process
 from watchgod.main import _start_process
 
@@ -42,14 +44,17 @@ def test_alive_terminates(mocker):
     assert mock_kill.call_count == 1
 
 
-def test_dead(mocker):
+def test_dead_callback(mocker):
     mock_start_process = mocker.patch('watchgod.main._start_process')
     mock_start_process.return_value = FakeProcess(is_alive=False)
     mock_kill = mocker.patch('watchgod.main.os.kill')
+    c = mocker.MagicMock()
 
-    assert run_process('/x/y/z', object(), watcher_cls=FakeWatcher, debounce=5, min_sleep=1) == 1
+    assert run_process('/x/y/z', object(), watcher_cls=FakeWatcher, callback=c, debounce=5, min_sleep=1) == 1
     assert mock_start_process.call_count == 2
     assert mock_kill.call_count == 0
+    assert c.call_count == 1
+    c.assert_called_with({'x'})
 
 
 def test_alive_doesnt_terminate(mocker):
@@ -74,8 +79,13 @@ async def test_async_alive_terminates(mocker):
     mock_start_process = mocker.patch('watchgod.main._start_process')
     mock_start_process.return_value = FakeProcess()
     mock_kill = mocker.patch('watchgod.main.os.kill')
+    f = Future()
+    f.set_result(1)
+    c = mocker.MagicMock(return_value=f)
 
-    reloads = await arun_process('/x/y/async', object(), watcher_cls=FakeWatcher, debounce=5, min_sleep=1)
+    reloads = await arun_process('/x/y/async', object(), watcher_cls=FakeWatcher, callback=c, debounce=5, min_sleep=1)
     assert reloads == 1
     assert mock_start_process.call_count == 2
     assert mock_kill.call_count == 1
+    assert c.call_count == 1
+    c.assert_called_with({'x'})

@@ -7,9 +7,9 @@ from functools import partial
 from multiprocessing import Process
 from pathlib import Path
 from time import sleep, time
-from typing import Any, Callable, Dict, Tuple, Type, Union
+from typing import Any, Awaitable, Callable, Dict, Set, Tuple, Type, Union
 
-from .watcher import AllWatcher, DefaultWatcher, PythonWatcher
+from .watcher import AllWatcher, Change, DefaultWatcher, PythonWatcher
 
 __all__ = 'watch', 'awatch', 'run_process', 'arun_process'
 logger = logging.getLogger('watchgod.main')
@@ -116,6 +116,7 @@ def _stop_process(process):
 def run_process(path: Union[Path, str], target: Callable, *,
                 args: Tuple[Any]=(),
                 kwargs: Dict[str, Any]=None,
+                callback: Callable[[Set[Tuple[Change, str]]], None]=None,
                 watcher_cls: Type[AllWatcher]=PythonWatcher,
                 debounce=400,
                 min_sleep=100):
@@ -126,7 +127,8 @@ def run_process(path: Union[Path, str], target: Callable, *,
     process = _start_process(target=target, args=args, kwargs=kwargs)
     reloads = 0
 
-    for _ in watch(path, watcher_cls=watcher_cls, debounce=debounce, min_sleep=min_sleep):
+    for changes in watch(path, watcher_cls=watcher_cls, debounce=debounce, min_sleep=min_sleep):
+        callback and callback(changes)
         _stop_process(process)
         process = _start_process(target=target, args=args, kwargs=kwargs)
         reloads += 1
@@ -136,6 +138,7 @@ def run_process(path: Union[Path, str], target: Callable, *,
 async def arun_process(path: Union[Path, str], target: Callable, *,
                        args: Tuple[Any]=(),
                        kwargs: Dict[str, Any]=None,
+                       callback: Callable[[Set[Tuple[Change, str]]], Awaitable]=None,
                        watcher_cls: Type[AllWatcher]=PythonWatcher,
                        debounce=400,
                        min_sleep=100):
@@ -148,7 +151,8 @@ async def arun_process(path: Union[Path, str], target: Callable, *,
     process = await loop.run_in_executor(None, start_process)
     reloads = 0
 
-    async for _ in awatch(path, watcher_cls=watcher_cls, debounce=debounce, min_sleep=min_sleep):  # noqa: F841
+    async for changes in awatch(path, watcher_cls=watcher_cls, debounce=debounce, min_sleep=min_sleep):  # noqa: F841
+        callback and await callback(changes)
         await loop.run_in_executor(None, _stop_process, process)
         process = await loop.run_in_executor(None, start_process)
         reloads += 1
