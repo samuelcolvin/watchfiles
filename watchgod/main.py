@@ -151,7 +151,7 @@ async def arun_process(path: Union[Path, str], target: Callable, *,
     process = await loop.run_in_executor(None, start_process)
     reloads = 0
 
-    async for changes in awatch(path, watcher_cls=watcher_cls, debounce=debounce, min_sleep=min_sleep):  # noqa: F841
+    async for changes in awatch(path, watcher_cls=watcher_cls, debounce=debounce, min_sleep=min_sleep):
         callback and await callback(changes)
         await loop.run_in_executor(None, _stop_process, process)
         process = await loop.run_in_executor(None, start_process)
