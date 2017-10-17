@@ -1,6 +1,8 @@
+import asyncio
 import logging
 import os
 import signal
+import sys
 from multiprocessing import Process
 from pathlib import Path
 from time import sleep, time
@@ -8,7 +10,7 @@ from typing import Any, Callable, Dict, Tuple, Type, Union
 
 from .watcher import AllWatcher, DefaultWatcher, PythonWatcher
 
-__all__ = 'watch', 'run_process'
+__all__ = 'watch', 'awatch', 'run_process'
 logger = logging.getLogger('watchgod.main')
 
 
@@ -23,22 +25,70 @@ def watch(path: Union[Path, str], *,
     """
     Watch a directory and yield a set of changes whenever files change in that directory or its subdirectories.
     """
-    p = watcher_cls(path)
+    w = watcher_cls(path)
     try:
         while True:
             start = unix_ms()
-            changes = p.check()
+            changes = w.check()
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('time=%0.0fms files=%d changes=%d', unix_ms() - start, len(p.files), len(changes))
+                logger.debug('time=%0.0fms files=%d changes=%d', unix_ms() - start, len(w.files), len(changes))
 
             if changes:
                 yield changes
-            sleep_time = debounce - (unix_ms() - start)
-            if sleep_time < min_sleep:
-                sleep_time = min_sleep
+
+            sleep_time = max(debounce - (unix_ms() - start), min_sleep)
             sleep(sleep_time / 1000)
     except KeyboardInterrupt:
         logger.debug('KeyboardInterrupt, exiting')
+
+
+def correct_aiter(func):  # pragma: no cover
+    if sys.version_info >= (3, 5, 2):
+        return func
+    else:
+        return asyncio.coroutine(func)
+
+
+class awatch:
+    """
+    asynchronous equivalent of watch using a threaded executor.
+
+    3.5 doesn't support yield in coroutines so we need all this fluff. Yawwwwn.
+    """
+    __slots__ = '_loop', '_path', '_watcher_cls', '_w', '_debounce', '_min_sleep', '_start'
+
+    def __init__(self, path: Union[Path, str], *,
+                 watcher_cls: Type[AllWatcher]=DefaultWatcher,
+                 debounce=400,
+                 min_sleep=100):
+        self._loop = asyncio.get_event_loop()
+        self._path = path
+        self._watcher_cls = watcher_cls
+        self._debounce = debounce
+        self._min_sleep = min_sleep
+        self._start = 0
+        self._w = None
+
+    @correct_aiter
+    def __aiter__(self):
+        return self
+
+    async def __anext__(self):
+        if not self._w:
+            self._w = await self._loop.run_in_executor(None, self._watcher_cls, self._path)
+        while True:
+            if self._start:
+                sleep_time = max(self._debounce - (unix_ms() - self._start), self._min_sleep)
+                await asyncio.sleep(sleep_time / 1000)
+
+            self._start = unix_ms()
+            changes = await self._loop.run_in_executor(None, self._w.check)
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('time=%0.0fms files=%d changes=%d',
+                             unix_ms() - self._start, len(self._w.files), len(changes))
+
+            if changes:
+                return changes
 
 
 def _start_process(target, args, kwargs):

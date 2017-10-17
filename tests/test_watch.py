@@ -1,4 +1,3 @@
-import logging
 from time import sleep
 
 from pytest_toolbox import mktree
@@ -93,19 +92,19 @@ def test_python(tmpdir):
 def test_watch(mocker):
     class FakeWatcher:
         def __init__(self, path):
-            self.results = [
-                {'r2'},
-                set(),
+            self._results = iter([
                 {'r1'},
-            ]
+                set(),
+                {'r2'},
+            ])
 
         def check(self):
-            return self.results.pop()
+            return next(self._results)
 
     mocker.spy(watchgod.main, 'sleep')
-    iter = watch('xxx', watcher_cls=FakeWatcher, debounce=5, min_sleep=1)
-    assert next(iter) == {'r1'}
-    assert next(iter) == {'r2'}
+    iter_ = watch('xxx', watcher_cls=FakeWatcher, debounce=5, min_sleep=1)
+    assert next(iter_) == {'r1'}
+    assert next(iter_) == {'r2'}
     assert watchgod.main.sleep.call_count == 2
     assert watchgod.main.sleep.call_args_list[0][0][0] > 0.001
     assert watchgod.main.sleep.call_args_list[1][0][0] > 0.001
@@ -141,8 +140,9 @@ def test_watch_min_sleep(mocker):
     assert watchgod.main.logger.debug.called is False
 
 
-def test_watch_log(mocker, capsys):
-    logging.basicConfig(level=logging.DEBUG)
+def test_watch_log(mocker, caplog):
+    mock_log_enabled = mocker.patch('watchgod.main.logger.isEnabledFor')
+    mock_log_enabled.return_value = True
 
     class FakeWatcher:
         def __init__(self, path):
@@ -151,10 +151,7 @@ def test_watch_log(mocker, capsys):
         def check(self):
             return {'r1'}
 
-    mocker.spy(watchgod.main.logger, 'debug')
     iter = watch('xxx', watcher_cls=FakeWatcher, debounce=5, min_sleep=10)
     assert next(iter) == {'r1'}
 
-    out, err = capsys.readouterr()
-    assert out == ''
-    assert err == 'DEBUG:watchgod.main:time=0ms files=3 changes=1\n'
+    assert caplog == 'watchgod.main DEBUG: time=0ms files=3 changes=1\n'
