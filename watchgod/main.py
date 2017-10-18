@@ -103,7 +103,7 @@ def _start_process(target, args, kwargs):
 
 def _stop_process(process):
     if process.is_alive():
-        logger.debug('stopping server process...')
+        logger.debug('stopping process...')
         os.kill(process.pid, signal.SIGINT)
         process.join(5)
         if process.exitcode is None:
@@ -113,11 +113,11 @@ def _stop_process(process):
         else:
             logger.debug('process stopped')
     else:
-        logger.warning('server process already dead, exit code: %d', process.exitcode)
+        logger.warning('process already dead, exit code: %d', process.exitcode)
 
 
 def run_process(path: Union[Path, str], target: Callable, *,
-                args: Tuple[Any]=(),
+                args: Tuple=(),
                 kwargs: Dict[str, Any]=None,
                 callback: Callable[[Set[Tuple[Change, str]]], None]=None,
                 watcher_cls: Type[AllWatcher]=PythonWatcher,
