@@ -3,6 +3,7 @@ import logging
 import os
 import signal
 import sys
+from asyncio import Lock as AsyncLock
 from functools import partial
 from multiprocessing import Process
 from pathlib import Path
@@ -56,7 +57,7 @@ class awatch:
 
     3.5 doesn't support yield in coroutines so we need all this fluff. Yawwwwn.
     """
-    __slots__ = '_loop', '_path', '_watcher_cls', '_debounce', '_min_sleep', '_start', '_w'
+    __slots__ = '_loop', '_path', '_watcher_cls', '_debounce', '_min_sleep', '_start', '_w', 'lock'
 
     def __init__(self, path: Union[Path, str], *,
                  watcher_cls: Type[AllWatcher]=DefaultWatcher,
@@ -69,6 +70,7 @@ class awatch:
         self._min_sleep = min_sleep
         self._start = 0
         self._w = None
+        self.lock = AsyncLock()
 
     @correct_aiter
     def __aiter__(self):
@@ -78,18 +80,19 @@ class awatch:
         if not self._w:
             self._w = await self._loop.run_in_executor(None, self._watcher_cls, self._path)
         while True:
-            if self._start:
-                sleep_time = max(self._debounce - (unix_ms() - self._start), self._min_sleep)
-                await asyncio.sleep(sleep_time / 1000)
+            async with self.lock:
+                if self._start:
+                    sleep_time = max(self._debounce - (unix_ms() - self._start), self._min_sleep)
+                    await asyncio.sleep(sleep_time / 1000)
 
-            self._start = unix_ms()
-            changes = await self._loop.run_in_executor(None, self._w.check)
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('time=%0.0fms files=%d changes=%d',
-                             unix_ms() - self._start, len(self._w.files), len(changes))
+                self._start = unix_ms()
+                changes = await self._loop.run_in_executor(None, self._w.check)
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('time=%0.0fms files=%d changes=%d',
+                                 unix_ms() - self._start, len(self._w.files), len(changes))
 
-            if changes:
-                return changes
+                if changes:
+                    return changes
 
 
 def _start_process(target, args, kwargs):
