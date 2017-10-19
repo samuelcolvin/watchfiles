@@ -41,7 +41,7 @@ def set_tty(tty_path):
         yield
 
 
-def serve_main_app(function: str, tty_path: Optional[str]):
+def run_function(function: str, tty_path: Optional[str]):
     with set_tty(tty_path):
         func = import_string(function)
         func()
@@ -69,12 +69,16 @@ def cli():
     wg_logger.addHandler(hdlr)
     wg_logger.setLevel(log_level)
 
-    import_string(args.function)
+    try:
+        import_string(args.function)
+    except ImportError as e:
+        print('ImportError: {}'.format(e), file=sys.stderr)
+        return sys.exit(1)
 
     path = Path(args.path)
     if not path.is_dir():
-        raise RuntimeError('path {} is not a directory'.format(path))
-    set_start_method('spawn')
+        print('path "{}" is not a directory'.format(path), file=sys.stderr)
+        return sys.exit(1)
 
     try:
         tty_path = os.ttyname(sys.stdin.fileno())
@@ -82,6 +86,7 @@ def cli():
         # fileno() always fails with pytest
         tty_path = '/dev/tty'
     except AttributeError:
-        # on windows, without a windows machine I've no idea what else to do here
+        # on windows. No idea of a better solution
         tty_path = None
-    run_process(path, serve_main_app, args=(args.function, tty_path), callback=callback)
+    set_start_method('spawn')
+    run_process(path, run_function, args=(args.function, tty_path), callback=callback)
