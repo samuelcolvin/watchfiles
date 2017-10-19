@@ -108,6 +108,32 @@ If these classes aren't sufficient you can define your own watcher, in particula
 you will want to override ``should_watch_dir`` and ``should_watch_file``. Unless you're
 doing something very odd you'll want to inherit from ``DefaultDirWatcher``.
 
+CLI
+...
+
+*wathgod* also comes with a CLI for running and reloading python code.
+
+Lets say you have ``foobar.py``:
+
+.. code:: python
+
+   from aiohttp import web
+
+   async def handle(request):
+       return web.Response(text='testing more')
+
+   app = web.Application()
+   app.router.add_get('/', handle)
+
+   def main():
+       web.run_app(app, port=8000)
+
+You could run this and reload it when any file in the current directory changes with::
+
+   watchgod foobar.main
+
+Run ``watchgod --help`` for more options. *watchgod* is also available as a python executable module
+via ``python -m watchgod ...``.
 
 Why no inotify / kqueue / fsevent / winapi support
 --------------------------------------------------
@@ -119,7 +145,7 @@ This is not an oversight, it's a decision with the following rationale:
 1. Polling is "fast enough", particularly since PEP 471 introduced fast ``scandir``.
 
    With a reasonably large project like the TutorCruncher code base with 850 files and 300k lines
-   of code *watchdog* can scan the entire tree in ~24ms. With a scan interval of 400ms that's roughly
+   of code *watchgod* can scan the entire tree in ~24ms. With a scan interval of 400ms that's roughly
    5% of one CPU - perfectly acceptable load during development.
 
 2. The clue is in the title, there are at least 4 different file notification systems to integrate
