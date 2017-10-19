@@ -51,7 +51,8 @@ def callback(changes):
     logger.info('%d files changed, reloading', len(changes))
 
 
-def cli():
+def cli(*args):
+    args = args or sys.argv[1:]
     parser = argparse.ArgumentParser(
         prog='watchgod',
         description='Watch a directory and execute a python function on changes.'
@@ -59,9 +60,9 @@ def cli():
     parser.add_argument('function', help='Path to python function to execute.')
     parser.add_argument('path', nargs='?', default='.', help='Filesystem path to watch, defaults to current directory.')
     parser.add_argument('--verbosity', nargs='?', type=int, default=1, help='0, 1 (default) or 2')
-    args = parser.parse_args()
+    arg_namespace = parser.parse_args(args)
 
-    log_level = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}[args.verbosity]
+    log_level = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}[arg_namespace.verbosity]
     hdlr = logging.StreamHandler()
     hdlr.setLevel(log_level)
     hdlr.setFormatter(logging.Formatter(fmt='[%(asctime)s] %(message)s', datefmt='%H:%M:%S'))
@@ -70,15 +71,16 @@ def cli():
     wg_logger.setLevel(log_level)
 
     try:
-        import_string(args.function)
+        import_string(arg_namespace.function)
     except ImportError as e:
         print('ImportError: {}'.format(e), file=sys.stderr)
         return sys.exit(1)
 
-    path = Path(args.path)
+    path = Path(arg_namespace.path)
     if not path.is_dir():
         print('path "{}" is not a directory'.format(path), file=sys.stderr)
         return sys.exit(1)
+    path = path.resolve()
 
     try:
         tty_path = os.ttyname(sys.stdin.fileno())
@@ -88,5 +90,6 @@ def cli():
     except AttributeError:
         # on windows. No idea of a better solution
         tty_path = None
+    logger.info('watching "%s/" and reloading "%s" on changes...', path, arg_namespace.function)
     set_start_method('spawn')
-    run_process(path, run_function, args=(args.function, tty_path), callback=callback)
+    run_process(path, run_function, args=(arg_namespace.function, tty_path), callback=callback)
