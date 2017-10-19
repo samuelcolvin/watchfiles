@@ -33,6 +33,10 @@ setup(
     author='Samuel Colvin',
     author_email='s@muelcolvin.com',
     url='https://github.com/samuelcolvin/watchgod',
+    entry_points="""
+        [console_scripts]
+        watchgod=watchgod.cli:cli
+    """,
     license='MIT',
     packages=['watchgod'],
     python_requires='>=3.5',
