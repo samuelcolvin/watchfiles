@@ -120,7 +120,7 @@ Lets say you have ``foobar.py``:
    from aiohttp import web
 
    async def handle(request):
-       return web.Response(text='testing more')
+       return web.Response(text='testing')
 
    app = web.Application()
    app.router.add_get('/', handle)
