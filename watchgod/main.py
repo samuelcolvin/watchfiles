@@ -3,8 +3,6 @@ import logging
 import os
 import signal
 import sys
-import threading
-from asyncio import Lock as AsyncLock
 from functools import partial
 from multiprocessing import Process
 from pathlib import Path
@@ -25,7 +23,7 @@ def watch(path: Union[Path, str], *,
           watcher_cls: Type[AllWatcher]=DefaultWatcher,
           debounce=400,
           min_sleep=100,
-          stop_event: threading.Event=None):
+          stop_event=None):
     """
     Watch a directory and yield a set of changes whenever files change in that directory or its subdirectories.
     """
@@ -76,7 +74,7 @@ class awatch:
         self._stop_event = stop_event
         self._start = 0
         self._w = None
-        self.lock = AsyncLock()
+        self.lock = asyncio.Lock()
 
     @correct_aiter
     def __aiter__(self):
