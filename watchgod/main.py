@@ -3,6 +3,7 @@ import logging
 import os
 import signal
 import sys
+import threading
 from asyncio import Lock as AsyncLock
 from functools import partial
 from multiprocessing import Process
@@ -23,13 +24,16 @@ def unix_ms():
 def watch(path: Union[Path, str], *,
           watcher_cls: Type[AllWatcher]=DefaultWatcher,
           debounce=400,
-          min_sleep=100):
+          min_sleep=100,
+          stop_event: threading.Event=None):
     """
     Watch a directory and yield a set of changes whenever files change in that directory or its subdirectories.
     """
     w = watcher_cls(path)
     try:
         while True:
+            if stop_event and stop_event.is_set():
+                return
             start = unix_ms()
             changes = w.check()
             if logger.isEnabledFor(logging.DEBUG):
@@ -57,17 +61,19 @@ class awatch:
 
     3.5 doesn't support yield in coroutines so we need all this fluff. Yawwwwn.
     """
-    __slots__ = '_loop', '_path', '_watcher_cls', '_debounce', '_min_sleep', '_start', '_w', 'lock'
+    __slots__ = '_loop', '_path', '_watcher_cls', '_debounce', '_min_sleep', '_stop_event', '_start', '_w', 'lock'
 
     def __init__(self, path: Union[Path, str], *,
                  watcher_cls: Type[AllWatcher]=DefaultWatcher,
                  debounce=400,
-                 min_sleep=100):
+                 min_sleep=100,
+                 stop_event: asyncio.Event=None):
         self._loop = asyncio.get_event_loop()
         self._path = path
         self._watcher_cls = watcher_cls
         self._debounce = debounce
         self._min_sleep = min_sleep
+        self._stop_event = stop_event
         self._start = 0
         self._w = None
         self.lock = AsyncLock()
@@ -80,6 +86,8 @@ class awatch:
         if not self._w:
             self._w = await self._loop.run_in_executor(None, self._watcher_cls, self._path)
         while True:
+            if self._stop_event and self._stop_event.is_set():
+                raise StopAsyncIteration()
             async with self.lock:
                 if self._start:
                     sleep_time = max(self._debounce - (unix_ms() - self._start), self._min_sleep)

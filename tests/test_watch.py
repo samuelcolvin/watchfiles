@@ -1,3 +1,5 @@
+import asyncio
+import threading
 from time import sleep
 
 from pytest_toolbox import mktree
@@ -110,6 +112,26 @@ def test_watch(mocker):
     assert watchgod.main.sleep.call_args_list[1][0][0] > 0.001
 
 
+def test_watch_stop():
+    class FakeWatcher:
+        def __init__(self, path):
+            self._results = iter([
+                {'r1'},
+                set(),
+                {'r2'},
+            ])
+
+        def check(self):
+            return next(self._results)
+
+    stop_event = threading.Event()
+    stop_event.set()
+    ans = []
+    for c in watch('xxx', watcher_cls=FakeWatcher, debounce=5, min_sleep=1, stop_event=stop_event):
+        ans.append(c)
+    assert ans == []
+
+
 def test_watch_keyboard_error():
     class FakeWatcher:
         def __init__(self, path):
@@ -175,6 +197,26 @@ async def test_awatch(mocker):
         if len(ans) == 2:
             break
     assert ans == [{'r1'}, {'r2'}]
+
+
+async def test_awatch_stop():
+    class FakeWatcher:
+        def __init__(self, path):
+            self._results = iter([
+                {'r1'},
+                set(),
+                {'r2'},
+            ])
+
+        def check(self):
+            return next(self._results)
+
+    stop_event = asyncio.Event()
+    stop_event.set()
+    ans = []
+    async for v in awatch('xxx', watcher_cls=FakeWatcher, debounce=5, min_sleep=1, stop_event=stop_event):
+        ans.append(v)
+    assert ans == []
 
 
 async def test_awatch_log(mocker, caplog):
