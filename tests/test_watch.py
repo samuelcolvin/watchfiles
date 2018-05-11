@@ -185,6 +185,8 @@ async def test_awatch(mocker):
     class FakeWatcher:
         def __init__(self, path):
             self._results = iter([
+                set(),
+                set(),
                 {'r1'},
                 set(),
                 {'r2'},
