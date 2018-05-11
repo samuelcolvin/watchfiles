@@ -22,26 +22,41 @@ def unix_ms():
 
 def watch(path: Union[Path, str], *,
           watcher_cls: Type[AllWatcher]=DefaultWatcher,
-          debounce=400,
-          min_sleep=100,
+          debounce=1600,
+          normal_sleep=400,
+          min_sleep=50,
           stop_event=None):
     """
     Watch a directory and yield a set of changes whenever files change in that directory or its subdirectories.
     """
     w = watcher_cls(path)
+    changes = set()
+    last_change = unix_ms()
     try:
         while True:
             if stop_event and stop_event.is_set():
                 return
-            start = unix_ms()
-            changes = w.check()
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('time=%0.0fms files=%d changes=%d', unix_ms() - start, len(w.files), len(changes))
+            s = unix_ms()
+            new_changes = w.check()
+            changes.update(new_changes)
+            now = unix_ms()
+            check_time = now - s
+            debounced = now - last_change
+            if logger.isEnabledFor(logging.DEBUG) and changes:
+                logger.debug('%s time=%0.0fms debounced=%0.0fms files=%d changes=%d (%d)', path,
+                             check_time, debounced, len(w.files), len(changes), len(new_changes))
+
+            if changes and (not new_changes or debounced > debounce):
+                logger.debug('%s changes released debounced=%0.0fms', path, debounced)
+                yield changes
+                changes = set()
 
             if changes:
-                yield changes
+                sleep_time = min_sleep
+            else:
+                sleep_time = max(normal_sleep - check_time, min_sleep)
+                last_change = unix_ms()
 
-            sleep_time = max(debounce - (unix_ms() - start), min_sleep)
             sleep(sleep_time / 1000)
     except KeyboardInterrupt:
         logger.debug('KeyboardInterrupt, exiting')
@@ -61,22 +76,24 @@ class awatch:
     3.5 doesn't support yield in coroutines so we need all this fluff. Yawwwwn.
     """
     __slots__ = (
-        '_loop', '_path', '_watcher_cls', '_debounce', '_min_sleep', '_stop_event', '_start', '_w', 'lock', '_executor'
+        '_loop', '_path', '_watcher_cls', '_debounce', '_min_sleep', '_stop_event', '_normal_sleep', '_w', 'lock',
+        '_executor'
     )
 
     def __init__(self, path: Union[Path, str], *,
                  watcher_cls: Type[AllWatcher]=DefaultWatcher,
-                 debounce=400,
-                 min_sleep=100,
+                 debounce=1600,
+                 normal_sleep=400,
+                 min_sleep=50,
                  stop_event: asyncio.Event=None):
         self._loop = asyncio.get_event_loop()
         self._executor = ThreadPoolExecutor(max_workers=4)
         self._path = path
         self._watcher_cls = watcher_cls
         self._debounce = debounce
+        self._normal_sleep = normal_sleep
         self._min_sleep = min_sleep
         self._stop_event = stop_event
-        self._start = 0
         self._w = None
         self.lock = asyncio.Lock()
 
@@ -87,21 +104,35 @@ class awatch:
     async def __anext__(self):
         if not self._w:
             self._w = await self.run_in_executor(self._watcher_cls, self._path)
+        check_time = 0
+        changes = set()
+        last_change = 0
         while True:
             if self._stop_event and self._stop_event.is_set():
                 raise StopAsyncIteration()
             async with self.lock:
-                if self._start:
-                    sleep_time = max(self._debounce - (unix_ms() - self._start), self._min_sleep)
+                if not changes:
+                    last_change = unix_ms()
+
+                if check_time:
+                    if changes:
+                        sleep_time = self._min_sleep
+                    else:
+                        sleep_time = max(self._normal_sleep - check_time, self._min_sleep)
                     await asyncio.sleep(sleep_time / 1000)
 
-                self._start = unix_ms()
-                changes = await self.run_in_executor(self._w.check)
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('time=%0.0fms files=%d changes=%d',
-                                 unix_ms() - self._start, len(self._w.files), len(changes))
+                s = unix_ms()
+                new_changes = await self.run_in_executor(self._w.check)
+                changes.update(new_changes)
+                now = unix_ms()
+                check_time = now - s
+                debounced = now - last_change
+                if logger.isEnabledFor(logging.DEBUG) and changes:
+                    logger.debug('%s time=%0.0fms debounced=%0.0fms files=%d changes=%d (%d)',
+                                 self._path, check_time, debounced, len(self._w.files), len(changes), len(new_changes))
 
-                if changes:
+                if changes and (not new_changes or debounced > self._debounce):
+                    logger.debug('%s changes released debounced=%0.0fms', self._path, debounced)
                     return changes
 
     async def run_in_executor(self, func, *args):

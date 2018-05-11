@@ -99,17 +99,18 @@ def test_watch(mocker):
                 {'r1'},
                 set(),
                 {'r2'},
+                set(),
             ])
 
         def check(self):
             return next(self._results)
 
     mocker.spy(watchgod.main, 'sleep')
-    iter_ = watch('xxx', watcher_cls=FakeWatcher, debounce=5, min_sleep=1)
+    iter_ = watch('xxx', watcher_cls=FakeWatcher, debounce=5, normal_sleep=2, min_sleep=1)
     assert next(iter_) == {'r1'}
     assert next(iter_) == {'r2'}
-    assert watchgod.main.sleep.call_count == 2
-    assert watchgod.main.sleep.call_args_list[0][0][0] > 0.001
+    assert watchgod.main.sleep.call_count == 3
+    assert watchgod.main.sleep.call_args_list[0][0][0] == 0.001
     assert watchgod.main.sleep.call_args_list[1][0][0] > 0.001
 
 
@@ -155,12 +156,12 @@ def test_watch_min_sleep(mocker):
 
     mocker.spy(watchgod.main, 'sleep')
     mocker.spy(watchgod.main.logger, 'debug')
-    iter = watch('xxx', watcher_cls=FakeWatcher, debounce=5, min_sleep=10)
+    iter = watch('xxx', watcher_cls=FakeWatcher, debounce=5, normal_sleep=5, min_sleep=10)
     assert next(iter) == {'x'}
     assert next(iter) == {'x'}
-    assert watchgod.main.sleep.call_count == 1
+    assert watchgod.main.sleep.call_count == 2
     assert watchgod.main.sleep.call_args[0][0] == 0.01
-    assert watchgod.main.logger.debug.called is False
+    assert watchgod.main.logger.debug.call_count == 2
 
 
 def test_watch_log(mocker, caplog):
@@ -177,23 +178,26 @@ def test_watch_log(mocker, caplog):
     iter = watch('xxx', watcher_cls=FakeWatcher, debounce=5, min_sleep=10)
     assert next(iter) == {'r1'}
 
-    assert 'DEBUG    time=Xms files=3 changes=1\n' in re.sub('\dms', 'Xms', caplog.text)
+    assert 'DEBUG    xxx time=Xms debounced=Xms files=3 changes=1 (1)\n' in re.sub('\dms', 'Xms', caplog.text)
 
 
 async def test_awatch(mocker):
     class FakeWatcher:
         def __init__(self, path):
             self._results = iter([
+                set(),
+                set(),
                 {'r1'},
                 set(),
                 {'r2'},
+                set(),
             ])
 
         def check(self):
             return next(self._results)
 
     ans = []
-    async for v in awatch('xxx', watcher_cls=FakeWatcher, debounce=5, min_sleep=1):
+    async for v in awatch('xxx', watcher_cls=FakeWatcher, debounce=5, normal_sleep=2, min_sleep=1):
         ans.append(v)
         if len(ans) == 2:
             break
@@ -235,4 +239,4 @@ async def test_awatch_log(mocker, caplog):
         assert v == {'r1'}
         break
 
-    assert 'DEBUG    time=Xms files=3 changes=1\n' in re.sub('\dms', 'Xms', caplog.text)
+    assert 'DEBUG    xxx time=Xms debounced=Xms files=3 changes=1 (1)\n' in re.sub('\dms', 'Xms', caplog.text)

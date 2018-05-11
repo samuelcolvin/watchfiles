@@ -12,13 +12,14 @@ class FakeWatcher:
 
     def check(self):
         self._check += 1
-        if self._check > 1:
-            if self._async:
-                raise StopAsyncIteration
-            else:
-                raise KeyboardInterrupt
-        else:
+        if self._check == 1:
             return {'x'}
+        elif self._check == 2:
+            return set()
+        elif self._async:
+            raise StopAsyncIteration
+        else:
+            raise KeyboardInterrupt
 
 
 class FakeProcess:
