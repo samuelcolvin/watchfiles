@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from multiprocessing import Process
 from pathlib import Path
-from time import sleep, time
+from time import time
 from typing import Any, Awaitable, Callable, Dict, Set, Tuple, Type, Union
 
 from .watcher import AllWatcher, Change, DefaultWatcher, PythonWatcher
@@ -20,46 +20,22 @@ def unix_ms():
     return int(round(time() * 1000))
 
 
-def watch(path: Union[Path, str], *,
-          watcher_cls: Type[AllWatcher]=DefaultWatcher,
-          debounce=1600,
-          normal_sleep=400,
-          min_sleep=50,
-          stop_event=None):
+def watch(path: Union[Path, str], **kwargs):
     """
     Watch a directory and yield a set of changes whenever files change in that directory or its subdirectories.
     """
-    w = watcher_cls(path)
-    changes = set()
-    last_change = unix_ms()
+    loop = asyncio.new_event_loop()
     try:
+        _awatch = awatch(path, loop=loop, **kwargs)
         while True:
-            if stop_event and stop_event.is_set():
-                return
-            s = unix_ms()
-            new_changes = w.check()
-            changes.update(new_changes)
-            now = unix_ms()
-            check_time = now - s
-            debounced = now - last_change
-            if logger.isEnabledFor(logging.DEBUG) and changes:
-                logger.debug('%s time=%0.0fms debounced=%0.0fms files=%d changes=%d (%d)', path,
-                             check_time, debounced, len(w.files), len(changes), len(new_changes))
-
-            if changes and (not new_changes or debounced > debounce):
-                logger.debug('%s changes released debounced=%0.0fms', path, debounced)
-                yield changes
-                changes = set()
-
-            if changes:
-                sleep_time = min_sleep
-            else:
-                sleep_time = max(normal_sleep - check_time, min_sleep)
-                last_change = unix_ms()
-
-            sleep(sleep_time / 1000)
+            try:
+                yield loop.run_until_complete(_awatch.__anext__())
+            except StopAsyncIteration:
+                break
     except KeyboardInterrupt:
         logger.debug('KeyboardInterrupt, exiting')
+    finally:
+        loop.close()
 
 
 def correct_aiter(func):  # pragma: no cover
@@ -85,8 +61,9 @@ class awatch:
                  debounce=1600,
                  normal_sleep=400,
                  min_sleep=50,
-                 stop_event: asyncio.Event=None):
-        self._loop = asyncio.get_event_loop()
+                 stop_event: asyncio.Event=None,
+                 loop=None):
+        self._loop = loop or asyncio.get_event_loop()
         self._executor = ThreadPoolExecutor(max_workers=4)
         self._path = path
         self._watcher_cls = watcher_cls
@@ -95,7 +72,7 @@ class awatch:
         self._min_sleep = min_sleep
         self._stop_event = stop_event
         self._w = None
-        self.lock = asyncio.Lock()
+        self.lock = asyncio.Lock(loop=self._loop)
 
     @correct_aiter
     def __aiter__(self):
