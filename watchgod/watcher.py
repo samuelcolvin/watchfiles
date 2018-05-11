@@ -1,8 +1,10 @@
+import logging
 import os
 import re
 from enum import IntEnum
 
 __all__ = 'Change', 'AllWatcher', 'DefaultDirWatcher', 'DefaultWatcher', 'PythonWatcher'
+logger = logging.getLogger('watchgod.watcher')
 
 
 class Change(IntEnum):
@@ -40,7 +42,11 @@ class AllWatcher:
     def check(self):
         changes = set()
         new_files = {}
-        self._walk(str(self.root_path), changes, new_files)
+        try:
+            self._walk(str(self.root_path), changes, new_files)
+        except OSError as e:
+            # happens when a directory has been deleted between checks
+            logger.warning('error walking file system: %s %s', e.__class__.__name__, e)
 
         # look for deleted
         deleted = self.files.keys() - new_files.keys()

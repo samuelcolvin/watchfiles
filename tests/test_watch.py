@@ -91,6 +91,11 @@ def test_python(tmpdir):
     assert watcher.check() == {(Change.modified, str(tmpdir.join('foo/spam.py')))}
 
 
+def test_does_not_exist(caplog):
+    AllWatcher('/foo/bar')
+    assert "error walking file system: FileNotFoundError [Errno 2] No such file or directory: '/foo/bar'" in caplog.text
+
+
 def test_watch(mocker):
     class FakeWatcher:
         def __init__(self, path):
