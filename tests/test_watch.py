@@ -1,4 +1,5 @@
 import asyncio
+import re
 import threading
 from time import sleep
 
@@ -176,7 +177,7 @@ def test_watch_log(mocker, caplog):
     iter = watch('xxx', watcher_cls=FakeWatcher, debounce=5, min_sleep=10)
     assert next(iter) == {'r1'}
 
-    assert caplog(('\dms', 'Xms')) == 'watchgod.main DEBUG: time=Xms files=3 changes=1\n'
+    assert 'DEBUG    time=Xms files=3 changes=1\n' in re.sub('\dms', 'Xms', caplog.text)
 
 
 async def test_awatch(mocker):
@@ -234,4 +235,4 @@ async def test_awatch_log(mocker, caplog):
         assert v == {'r1'}
         break
 
-    assert caplog(('\dms', 'Xms')) == 'watchgod.main DEBUG: time=Xms files=3 changes=1\n'
+    assert 'DEBUG    time=Xms files=3 changes=1\n' in re.sub('\dms', 'Xms', caplog.text)

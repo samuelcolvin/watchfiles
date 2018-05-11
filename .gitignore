@@ -10,3 +10,4 @@ test.py
 .coverage
 htmlcov/
 docs/_build/
+/.pytest_cache/
