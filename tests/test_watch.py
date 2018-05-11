@@ -5,7 +5,6 @@ from time import sleep
 
 from pytest_toolbox import mktree
 
-import watchgod.main
 from watchgod import AllWatcher, Change, DefaultWatcher, PythonWatcher, awatch, watch
 
 tree = {
@@ -105,13 +104,9 @@ def test_watch(mocker):
         def check(self):
             return next(self._results)
 
-    mocker.spy(watchgod.main, 'sleep')
     iter_ = watch('xxx', watcher_cls=FakeWatcher, debounce=5, normal_sleep=2, min_sleep=1)
     assert next(iter_) == {'r1'}
     assert next(iter_) == {'r2'}
-    assert watchgod.main.sleep.call_count == 3
-    assert watchgod.main.sleep.call_args_list[0][0][0] == 0.001
-    assert watchgod.main.sleep.call_args_list[1][0][0] > 0.001
 
 
 def test_watch_stop():
@@ -144,24 +139,6 @@ def test_watch_keyboard_error():
 
     iter = watch('xxx', watcher_cls=FakeWatcher, debounce=5, min_sleep=1)
     assert list(iter) == []
-
-
-def test_watch_min_sleep(mocker):
-    class FakeWatcher:
-        def __init__(self, path):
-            pass
-
-        def check(self):
-            return {'x'}
-
-    mocker.spy(watchgod.main, 'sleep')
-    mocker.spy(watchgod.main.logger, 'debug')
-    iter = watch('xxx', watcher_cls=FakeWatcher, debounce=5, normal_sleep=5, min_sleep=10)
-    assert next(iter) == {'x'}
-    assert next(iter) == {'x'}
-    assert watchgod.main.sleep.call_count == 2
-    assert watchgod.main.sleep.call_args[0][0] == 0.01
-    assert watchgod.main.logger.debug.call_count == 2
 
 
 def test_watch_log(mocker, caplog):
