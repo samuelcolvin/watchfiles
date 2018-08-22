@@ -25,7 +25,21 @@ class AllWatcher:
     def should_watch_file(self, entry):
         return True
 
+    def _watch_file(self, mtime, path, new_files, changes):
+        new_files[path] = mtime
+        old_mtime = self.files.get(path)
+        if not old_mtime:
+            changes.add((Change.added, path))
+        elif old_mtime != mtime:
+            changes.add((Change.modified, path))
+
     def _walk(self, dir_path, changes, new_files):
+        if os.path.isfile(dir_path):
+            self._watch_file(mtime=os.stat(dir_path).st_mtime, path=dir_path, new_files=new_files, changes=changes)
+            return
+        self._walk_recursion(dir_path, changes, new_files)
+
+    def _walk_recursion(self, dir_path, changes, new_files):
         for entry in os.scandir(dir_path):
             if entry.is_dir():
                 if self.should_watch_dir(entry):
