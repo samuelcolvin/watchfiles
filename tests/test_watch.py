@@ -137,6 +137,26 @@ def test_watch(mocker):
     assert next(iter_) == {'r2'}
 
 
+def test_watch_watcher_args(mocker):
+    class FakeWatcher:
+        def __init__(self, path, arg1, arg2):
+            self._results = iter([
+                {arg1},
+                set(),
+                {arg2},
+                set(),
+            ])
+
+        def check(self):
+            return next(self._results)
+
+    args = ["ahoy", "borec"]
+
+    iter_ = watch('xxx', watcher_cls=FakeWatcher, watcher_args=args, debounce=5, normal_sleep=2, min_sleep=1)
+    assert next(iter_) == {args[0]}
+    assert next(iter_) == {args[1]}
+
+
 def test_watch_stop():
     class FakeWatcher:
         def __init__(self, path):
