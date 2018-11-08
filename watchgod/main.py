@@ -8,8 +8,7 @@ from functools import partial
 from multiprocessing import Process
 from pathlib import Path
 from time import time
-from typing import (Any, Awaitable, Callable, Dict, Optional, Sequence, Set,
-                    Tuple, Type, Union)
+from typing import Any, Awaitable, Callable, Dict, Optional, Sequence, Set, Tuple, Type, Union
 
 from .watcher import AllWatcher, Change, DefaultWatcher, PythonWatcher
 
