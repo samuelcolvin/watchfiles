@@ -53,8 +53,8 @@ class awatch:
     3.5 doesn't support yield in coroutines so we need all this fluff. Yawwwwn.
     """
     __slots__ = (
-        '_loop', '_path', '_watcher_cls', '_watcher_args', '_debounce', '_min_sleep', '_stop_event', '_normal_sleep', '_w', 'lock',
-        '_executor'
+        '_loop', '_path', '_watcher_cls', '_watcher_args', '_debounce', '_min_sleep', '_stop_event', '_normal_sleep',
+        '_w', 'lock', '_executor'
     )
 
     def __init__(self, path: Union[Path, str], *,
