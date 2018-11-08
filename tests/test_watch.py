@@ -5,7 +5,7 @@ from time import sleep
 
 from pytest_toolbox import mktree
 
-from watchgod import AllWatcher, Change, DefaultWatcher, PythonWatcher, awatch, watch
+from watchgod import AllWatcher, Change, DefaultWatcher, PythonWatcher, RegExpWatcher, awatch, watch
 
 tree = {
     'foo': {
@@ -89,6 +89,29 @@ def test_python(tmpdir):
     tmpdir.join('foo/bar.txt').write('xxx')
 
     assert watcher.check() == {(Change.modified, str(tmpdir.join('foo/spam.py')))}
+
+
+def test_regexp(tmpdir):
+    mktree(tmpdir, tree)
+
+    re_files = r"^.*(\.txt|\.js)$"
+    re_dirs = r"^(?:(?!recursive_dir).)*$"
+
+    watcher = RegExpWatcher(str(tmpdir), re_files, re_dirs)
+    changes = watcher.check()
+    assert changes == set()
+
+    sleep(0.01)
+    tmpdir.join('foo/spam.py').write('xxx')
+    tmpdir.join('foo/bar.txt').write('change')
+    tmpdir.join('foo/borec.txt').write('ahoy')
+    tmpdir.join('foo/borec-js.js').write('peace')
+    tmpdir.join('foo/recursive_dir/b.js').write('borec')
+
+    assert watcher.check() == {
+        (Change.modified, str(tmpdir.join('foo/bar.txt'))),
+        (Change.added, str(tmpdir.join('foo/borec.txt'))),
+        (Change.added, str(tmpdir.join('foo/borec-js.js')))}
 
 
 def test_does_not_exist(caplog):
