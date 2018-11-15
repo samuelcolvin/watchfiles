@@ -1,4 +1,5 @@
 import asyncio
+import functools
 import logging
 import os
 import signal
@@ -8,7 +9,7 @@ from functools import partial
 from multiprocessing import Process
 from pathlib import Path
 from time import time
-from typing import Any, Awaitable, Callable, Dict, Set, Tuple, Type, Union
+from typing import Any, Awaitable, Callable, Dict, Optional, Set, Tuple, Type, Union
 
 from .watcher import AllWatcher, Change, DefaultWatcher, PythonWatcher
 
@@ -52,12 +53,13 @@ class awatch:
     3.5 doesn't support yield in coroutines so we need all this fluff. Yawwwwn.
     """
     __slots__ = (
-        '_loop', '_path', '_watcher_cls', '_debounce', '_min_sleep', '_stop_event', '_normal_sleep', '_w', 'lock',
-        '_executor'
+        '_loop', '_path', '_watcher_cls', '_watcher_kwargs', '_debounce', '_min_sleep', '_stop_event', '_normal_sleep',
+        '_w', 'lock', '_executor'
     )
 
     def __init__(self, path: Union[Path, str], *,
                  watcher_cls: Type[AllWatcher]=DefaultWatcher,
+                 watcher_kwargs: Optional[Dict[str, Any]]=None,
                  debounce=1600,
                  normal_sleep=400,
                  min_sleep=50,
@@ -67,6 +69,7 @@ class awatch:
         self._executor = ThreadPoolExecutor(max_workers=4)
         self._path = path
         self._watcher_cls = watcher_cls
+        self._watcher_kwargs = watcher_kwargs or dict()
         self._debounce = debounce
         self._normal_sleep = normal_sleep
         self._min_sleep = min_sleep
@@ -80,7 +83,8 @@ class awatch:
 
     async def __anext__(self):
         if not self._w:
-            self._w = await self.run_in_executor(self._watcher_cls, self._path)
+            self._w = await self.run_in_executor(
+                functools.partial(self._watcher_cls, self._path, **self._watcher_kwargs))
         check_time = 0
         changes = set()
         last_change = 0

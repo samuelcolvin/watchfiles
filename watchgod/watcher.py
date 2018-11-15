@@ -3,7 +3,7 @@ import os
 import re
 from enum import IntEnum
 
-__all__ = 'Change', 'AllWatcher', 'DefaultDirWatcher', 'DefaultWatcher', 'PythonWatcher'
+__all__ = 'Change', 'AllWatcher', 'DefaultDirWatcher', 'DefaultWatcher', 'PythonWatcher', 'RegExpWatcher'
 logger = logging.getLogger('watchgod.watcher')
 
 
@@ -78,3 +78,16 @@ class DefaultWatcher(DefaultDirWatcher):
 class PythonWatcher(DefaultDirWatcher):
     def should_watch_file(self, entry):
         return entry.name.endswith(('.py', '.pyx', '.pyd'))
+
+
+class RegExpWatcher(AllWatcher):
+    def __init__(self, root_path, re_files=None, re_dirs=None):
+        self.re_files = re.compile(re_files) if re_files is not None else re_files
+        self.re_dirs = re.compile(re_dirs) if re_files is not None else re_dirs
+        super().__init__(root_path)
+
+    def should_watch_file(self, entry):
+        return self.re_files.match(entry.path)
+
+    def should_watch_dir(self, entry):
+        return self.re_dirs.match(entry.path)
