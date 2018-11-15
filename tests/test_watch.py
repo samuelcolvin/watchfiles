@@ -94,8 +94,8 @@ def test_python(tmpdir):
 def test_regexp(tmpdir):
     mktree(tmpdir, tree)
 
-    re_files = r"^.*(\.txt|\.js)$"
-    re_dirs = r"^(?:(?!recursive_dir).)*$"
+    re_files = r'^.*(\.txt|\.js)$'
+    re_dirs = r'^(?:(?!recursive_dir).)*$'
 
     watcher = RegExpWatcher(str(tmpdir), re_files, re_dirs)
     changes = watcher.check()
