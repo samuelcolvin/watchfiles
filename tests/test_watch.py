@@ -137,9 +137,9 @@ def test_watch(mocker):
     assert next(iter_) == {'r2'}
 
 
-def test_watch_watcher_args(mocker):
+def test_watch_watcher_kwargs(mocker):
     class FakeWatcher:
-        def __init__(self, path, arg1, arg2):
+        def __init__(self, path, arg1=None, arg2=None):
             self._results = iter([
                 {arg1},
                 set(),
@@ -150,11 +150,11 @@ def test_watch_watcher_args(mocker):
         def check(self):
             return next(self._results)
 
-    args = ["ahoy", "borec"]
+    kwargs = dict(arg1='foo', arg2='bar')
 
-    iter_ = watch('xxx', watcher_cls=FakeWatcher, watcher_args=args, debounce=5, normal_sleep=2, min_sleep=1)
-    assert next(iter_) == {args[0]}
-    assert next(iter_) == {args[1]}
+    iter_ = watch('xxx', watcher_cls=FakeWatcher, watcher_kwargs=kwargs, debounce=5, normal_sleep=2, min_sleep=1)
+    assert next(iter_) == {kwargs['arg1']}
+    assert next(iter_) == {kwargs['arg2']}
 
 
 def test_watch_stop():
