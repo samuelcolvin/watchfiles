@@ -82,12 +82,10 @@ class PythonWatcher(DefaultDirWatcher):
 
 class RegExpWatcher(AllWatcher):
     def __init__(self, root_path, re_files=None, re_dirs=None):
-        self.re_files = re.compile(re_files) if re_files is not None else re_files
-        self.re_dirs = re.compile(re_dirs) if re_dirs is not None else re_dirs
+        if re_files is not None:
+            self.re_files = re.compile(re_files)
+            self.should_watch_file = lambda entry: self.re_files.match(entry.path)
+        if re_dirs is not None:
+            self.re_dirs = re.compile(re_dirs)
+            self.should_watch_dir = lambda entry: self.re_dirs.match(entry.path)
         super().__init__(root_path)
-
-    def should_watch_file(self, entry):
-        return self.re_files.match(entry.path)
-
-    def should_watch_dir(self, entry):
-        return self.re_dirs.match(entry.path)
