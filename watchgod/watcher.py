@@ -87,7 +87,13 @@ class RegExpWatcher(AllWatcher):
         super().__init__(root_path)
 
     def should_watch_file(self, entry):
-        return self.re_files.match(entry.path)
+        if self.re_files is not None:
+            return self.re_files.match(entry.path)
+        else:
+            return super().should_watch_file(entry)
 
     def should_watch_dir(self, entry):
-        return self.re_dirs.match(entry.path)
+        if self.re_dirs is not None:
+            return self.re_dirs.match(entry.path)
+        else:
+            return super().should_watch_dir(entry)

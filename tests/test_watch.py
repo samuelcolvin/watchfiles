@@ -111,7 +111,67 @@ def test_regexp(tmpdir):
     assert watcher.check() == {
         (Change.modified, str(tmpdir.join('foo/bar.txt'))),
         (Change.added, str(tmpdir.join('foo/borec.txt'))),
-        (Change.added, str(tmpdir.join('foo/borec-js.js')))}
+        (Change.added, str(tmpdir.join('foo/borec-js.js')))
+    }
+
+
+def test_regexp_no_re_dirs(tmpdir):
+    mktree(tmpdir, tree)
+
+    re_files = r'^.*(\.txt|\.js)$'
+
+    watcher_no_re_dirs = RegExpWatcher(str(tmpdir), re_files)
+    changes = watcher_no_re_dirs.check()
+    assert changes == set()
+
+    sleep(0.01)
+    tmpdir.join('foo/spam.py').write('xxx')
+    tmpdir.join('foo/bar.txt').write('change')
+    tmpdir.join('foo/recursive_dir/foo.js').write('change')
+
+    assert watcher_no_re_dirs.check() == {
+        (Change.modified, str(tmpdir.join('foo/bar.txt'))),
+        (Change.added, str(tmpdir.join('foo/recursive_dir/foo.js')))
+    }
+
+
+def test_regexp_no_re_files(tmpdir):
+    mktree(tmpdir, tree)
+
+    re_dirs = r'^(?:(?!recursive_dir).)*$'
+
+    watcher_no_re_files = RegExpWatcher(str(tmpdir), re_dirs=re_dirs)
+    changes = watcher_no_re_files.check()
+    assert changes == set()
+
+    sleep(0.01)
+    tmpdir.join('foo/spam.py').write('xxx')
+    tmpdir.join('foo/bar.txt').write('change')
+    tmpdir.join('foo/recursive_dir/foo.js').write('change')
+
+    assert watcher_no_re_files.check() == {
+        (Change.modified, str(tmpdir.join('foo/spam.py'))),
+        (Change.modified, str(tmpdir.join('foo/bar.txt')))
+    }
+
+
+def test_regexp_no_args(tmpdir):
+    mktree(tmpdir, tree)
+
+    watcher_no_args = RegExpWatcher(str(tmpdir))
+    changes = watcher_no_args.check()
+    assert changes == set()
+
+    sleep(0.01)
+    tmpdir.join('foo/spam.py').write('xxx')
+    tmpdir.join('foo/bar.txt').write('change')
+    tmpdir.join('foo/recursive_dir/foo.js').write('change')
+
+    assert watcher_no_args.check() == {
+        (Change.modified, str(tmpdir.join('foo/spam.py'))),
+        (Change.modified, str(tmpdir.join('foo/bar.txt'))),
+        (Change.added, str(tmpdir.join('foo/recursive_dir/foo.js')))
+    }
 
 
 def test_does_not_exist(caplog):
