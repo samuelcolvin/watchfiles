@@ -111,7 +111,8 @@ def test_regexp(tmpdir):
     assert watcher.check() == {
         (Change.modified, str(tmpdir.join('foo/bar.txt'))),
         (Change.added, str(tmpdir.join('foo/borec.txt'))),
-        (Change.added, str(tmpdir.join('foo/borec-js.js')))}
+        (Change.added, str(tmpdir.join('foo/borec-js.js')))
+    }
 
 
 def test_regexp_no_re_dirs(tmpdir):
@@ -130,7 +131,8 @@ def test_regexp_no_re_dirs(tmpdir):
 
     assert watcher_no_re_dirs.check() == {
         (Change.modified, str(tmpdir.join('foo/bar.txt'))),
-        (Change.added, str(tmpdir.join('foo/recursive_dir/foo.js')))}
+        (Change.added, str(tmpdir.join('foo/recursive_dir/foo.js')))
+    }
 
 
 def test_regexp_no_re_files(tmpdir):
@@ -149,7 +151,8 @@ def test_regexp_no_re_files(tmpdir):
 
     assert watcher_no_re_files.check() == {
         (Change.modified, str(tmpdir.join('foo/spam.py'))),
-        (Change.modified, str(tmpdir.join('foo/bar.txt')))}
+        (Change.modified, str(tmpdir.join('foo/bar.txt')))
+    }
 
 
 def test_regexp_no_args(tmpdir):
@@ -167,7 +170,8 @@ def test_regexp_no_args(tmpdir):
     assert watcher_no_args.check() == {
         (Change.modified, str(tmpdir.join('foo/spam.py'))),
         (Change.modified, str(tmpdir.join('foo/bar.txt'))),
-        (Change.added, str(tmpdir.join('foo/recursive_dir/foo.js')))}
+        (Change.added, str(tmpdir.join('foo/recursive_dir/foo.js')))
+    }
 
 
 def test_does_not_exist(caplog):
