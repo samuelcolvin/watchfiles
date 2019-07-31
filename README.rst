@@ -27,7 +27,7 @@ To run a function and restart it when code changes:
    def foobar(a, b, c):
        ...
 
-   run_process('./path/to/dir', foobar, process_args=(1, 2, 3))
+   run_process('./path/to/dir', foobar, args=(1, 2, 3))
 
 ``run_process`` uses ``PythonWatcher`` so only changes to python files will prompt a
 reload, see *custom watchers* below.
@@ -67,7 +67,7 @@ uses ``awatch``:
        ...
 
    async def main():
-       await arun_process('./path/to/dir', foobar, process_args=(1, 2, 3))
+       await arun_process('./path/to/dir', foobar, args=(1, 2, 3))
 
    loop = asyncio.get_event_loop()
    loop.run_until_complete(main())
