@@ -33,8 +33,12 @@ def import_string(dotted_path):
 @contextlib.contextmanager
 def set_tty(tty_path):
     if tty_path:
-        with open(tty_path) as tty:
-            sys.stdin = tty
+        try:
+            with open(tty_path) as tty:
+                sys.stdin = tty
+                yield
+        except OSError:
+            # eg. "No such device or address: '/dev/tty'", see https://github.com/samuelcolvin/watchgod/issues/40
             yield
     else:
         # currently on windows tty_path is None and there's nothing we can do here
