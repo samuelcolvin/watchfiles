@@ -15,7 +15,7 @@ isort:
 lint:
 	python setup.py check -rms
 	flake8 watchgod/ tests/
-	pytest watchgod -p no:sugar -q
+	isort -rc --check-only watchgod tests
 
 .PHONY: test
 test:
