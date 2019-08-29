@@ -58,12 +58,12 @@ class awatch:
     )
 
     def __init__(self, path: Union[Path, str], *,
-                 watcher_cls: Type[AllWatcher]=DefaultWatcher,
-                 watcher_kwargs: Optional[Dict[str, Any]]=None,
+                 watcher_cls: Type[AllWatcher] = DefaultWatcher,
+                 watcher_kwargs: Optional[Dict[str, Any]] = None,
                  debounce=1600,
                  normal_sleep=400,
                  min_sleep=50,
-                 stop_event: asyncio.Event=None,
+                 stop_event: asyncio.Event = None,
                  loop=None):
         self._loop = loop or asyncio.get_event_loop()
         self._executor = ThreadPoolExecutor(max_workers=4)
@@ -145,10 +145,10 @@ def _stop_process(process):
 
 
 def run_process(path: Union[Path, str], target: Callable, *,
-                args: Tuple=(),
-                kwargs: Dict[str, Any]=None,
-                callback: Callable[[Set[Tuple[Change, str]]], None]=None,
-                watcher_cls: Type[AllWatcher]=PythonWatcher,
+                args: Tuple = (),
+                kwargs: Dict[str, Any] = None,
+                callback: Callable[[Set[Tuple[Change, str]]], None] = None,
+                watcher_cls: Type[AllWatcher] = PythonWatcher,
                 debounce=400,
                 min_sleep=100):
     """
@@ -167,10 +167,10 @@ def run_process(path: Union[Path, str], target: Callable, *,
 
 
 async def arun_process(path: Union[Path, str], target: Callable, *,
-                       args: Tuple[Any]=(),
-                       kwargs: Dict[str, Any]=None,
-                       callback: Callable[[Set[Tuple[Change, str]]], Awaitable]=None,
-                       watcher_cls: Type[AllWatcher]=PythonWatcher,
+                       args: Tuple[Any] = (),
+                       kwargs: Dict[str, Any] = None,
+                       callback: Callable[[Set[Tuple[Change, str]]], Awaitable] = None,
+                       watcher_cls: Type[AllWatcher] = PythonWatcher,
                        debounce=400,
                        min_sleep=100):
     """
