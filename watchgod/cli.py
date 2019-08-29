@@ -70,6 +70,7 @@ def cli(*args):
     wg_logger.addHandler(hdlr)
     wg_logger.setLevel(log_level)
 
+    sys.path.append(os.getcwd())
     try:
         import_string(arg_namespace.function)
     except ImportError as e:

@@ -11,3 +11,5 @@ test.py
 htmlcov/
 docs/_build/
 /.pytest_cache/
+/sandbox/
+/foobar.py
