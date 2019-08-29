@@ -1,4 +1,5 @@
 .DEFAULT_GOAL := all
+isort = isort -rc watchgod tests
 
 .PHONY: install
 install:
@@ -7,23 +8,21 @@ install:
 	pip install -U .
 
 .PHONY: isort
-isort:
-	isort -rc -w 120 watchgod
-	isort -rc -w 120 tests
+format:
+	$(isort)
 
 .PHONY: lint
 lint:
 	python setup.py check -rms
 	flake8 watchgod/ tests/
-	isort -rc --check-only watchgod tests
+	$(isort) --check-only
 
 .PHONY: test
 test:
-	pytest --cov=watchgod
+	pytest --cov=watchgod --log-format="%(levelname)s %(message)s"
 
 .PHONY: testcov
-testcov:
-	pytest --cov=watchgod
+testcov: test
 	@echo "building coverage html"
 	@coverage html
 
