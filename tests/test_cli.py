@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from watchgod.cli import callback, cli, run_function
+from watchgod.cli import callback, cli, run_function, set_tty
 
 
 def foobar():
@@ -93,3 +93,8 @@ def test_callback(mocker):
     mock_logger = mocker.patch('watchgod.cli.logger.info')
     callback({1, 2, 3})
     mock_logger.assert_called_once_with('%d files changed, reloading', 3)
+
+
+def test_set_tty_error():
+    with set_tty('/foo/bar'):
+        pass
