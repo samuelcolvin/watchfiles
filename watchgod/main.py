@@ -187,5 +187,5 @@ async def arun_process(path: Union[Path, str], target: Callable, *,
         await watcher.run_in_executor(_stop_process, process)
         process = await watcher.run_in_executor(start_process)
         reloads += 1
-        await watcher.run_in_executor(_stop_process, process)
+    await watcher.run_in_executor(_stop_process, process)
     return reloads
