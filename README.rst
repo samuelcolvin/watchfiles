@@ -33,7 +33,7 @@ To run a function and restart it when code changes:
 reload, see *custom watchers* below.
 
 If you need notifications about change events as well as to restart a process you can
-use the ``callback`` argument to pass a function will will be called on every file change
+use the ``callback`` argument to pass a function which will be called on every file change
 with one argument: the set of file changes.
 
 Asynchronous Methods
@@ -76,7 +76,7 @@ uses ``awatch``:
 reload, see *custom watchers* below.
 
 The signature of ``arun_process`` is almost identical to ``run_process`` except that
-the ``callback`` argument if provide must be a coroutine, not a function.
+the optional ``callback`` argument must be a coroutine, not a function.
 
 Custom Watchers
 ...............
@@ -100,13 +100,13 @@ it's pretty simple.
     Specific to python files, only ``*.py``, ``*.pyx`` and ``*.pyd`` files are watched.
 
 **DefaultDirWatcher**
-    Is the base for ``DefaultWatcher`` and ``DefaultDirWatcher`` and takes care of ignoring
+    Is the base for ``DefaultWatcher`` and ``DefaultDirWatcher``. It takes care of ignoring
     some regular directories.
 
 
 If these classes aren't sufficient you can define your own watcher, in particular
 you will want to override ``should_watch_dir`` and ``should_watch_file``. Unless you're
-doing something very odd you'll want to inherit from ``DefaultDirWatcher``.
+doing something very odd, you'll want to inherit from ``DefaultDirWatcher``.
 
 CLI
 ...
@@ -145,20 +145,20 @@ This is not an oversight, it's a decision with the following rationale:
 1. Polling is "fast enough", particularly since PEP 471 introduced fast ``scandir``.
 
    With a reasonably large project like the TutorCruncher code base with 850 files and 300k lines
-   of code *watchgod* can scan the entire tree in ~24ms. With a scan interval of 400ms that's roughly
+   of code *watchgod* can scan the entire tree in ~24ms. The scan interval is 400ms which is roughly
    5% of one CPU - perfectly acceptable load during development.
 
 2. The clue is in the title, there are at least 4 different file notification systems to integrate
-   with, most of them not trivial. And that's before we get to changes between different OS versions.
+   with, most of them not trivial. That is all before we get to changes between different OS versions.
 
 3. Polling works well when you want to group or "debounce" changes.
 
-   Let's say you're running a dev server and you change branch in git, 100 files change.
-   Do you want to reload the dev server 100 times or once? Right.
+   Let's say you're running a dev server and you change branches in git. With that branch change, 100 files are altered.
+   Do you want to reload the dev server 100 times or once? Exactly!
 
    Polling periodically will likely group these changes into one event. If you're receiving a
    stream of events you need to delay execution of the reload when you receive the first event
-   to see if it's part of a whole bunch of file changes, this is not completely trivial.
+   to see if it's part of a group of file changes. This is not trivial.
 
 
 All that said, I might still implement ``inotify`` support. I don't use anything other
