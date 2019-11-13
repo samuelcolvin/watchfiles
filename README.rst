@@ -144,8 +144,8 @@ This is not an oversight, it's a decision with the following rationale:
 
 1. Polling is "fast enough", particularly since PEP 471 introduced fast ``scandir``.
 
-   With a reasonably large project like the TutorCruncher code base with 850 files and 300k lines
-   of code *watchgod* can scan the entire tree in ~24ms. The scan interval is 400ms which is roughly
+   For reasonably large projects like the TutorCruncher code base with 850 files and 300k lines
+   of code, *watchgod* can scan the entire tree in ~24ms. With a scan interval of 400ms that is roughly
    5% of one CPU - perfectly acceptable load during development.
 
 2. The clue is in the title, there are at least 4 different file notification systems to integrate
@@ -153,8 +153,8 @@ This is not an oversight, it's a decision with the following rationale:
 
 3. Polling works well when you want to group or "debounce" changes.
 
-   Let's say you're running a dev server and you change branches in git. With that branch change, 100 files are altered.
-   Do you want to reload the dev server 100 times or once? Exactly!
+   Let's say you're running a dev server and you change branch in git, 100 files change.
+   Do you want to reload the dev server 100 times or once? Right.
 
    Polling periodically will likely group these changes into one event. If you're receiving a
    stream of events you need to delay execution of the reload when you receive the first event
