@@ -111,7 +111,7 @@ doing something very odd, you'll want to inherit from ``DefaultDirWatcher``.
 CLI
 ...
 
-*wathgod* also comes with a CLI for running and reloading python code.
+*watchgod* also comes with a CLI for running and reloading python code.
 
 Lets say you have ``foobar.py``:
 
