@@ -1,11 +1,25 @@
+import argparse
+import sys
 from pathlib import Path
 
-from watchgod.cli import callback, cli, run_function, set_tty
+import pytest
+
+from watchgod.cli import callback, cli, patch_sys_argv, run_function, set_tty
 
 
 def foobar():
     # used by tests below
     Path('sentinel').write_text('ok')
+
+
+def with_parser():
+    # used by tests below
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--version', default=2)
+    parser.add_argument('--foo')
+    parser.add_argument('-a')
+    args = parser.parse_args()
+    Path('sentinel').write_text('{} {} {}'.format(args.version, args.foo, args.a))
 
 
 def test_simple(mocker, tmpdir):
@@ -98,3 +112,39 @@ def test_callback(mocker):
 def test_set_tty_error():
     with set_tty('/foo/bar'):
         pass
+
+
+@pytest.mark.parametrize("initial, expected", [
+    ([], []),
+    (['--foo', 'bar'], []),
+    (['--foo', 'bar', '-a'], []),
+    (['--foo', 'bar', '--args'], []),
+    (['--foo', 'bar', '-a', '--foo', 'bar'], ['--foo', 'bar']),
+    (['--foo', 'bar', '-f', 'b', '--args', '-f', '-b', '-z', 'x'], ['-f', '-b', '-z', 'x']),
+])
+def test_patch_sys_argv(initial, expected, mocker):
+    mocker.patch('sys.argv', ['script.py', *initial])  # mocker will restore initial sys.argv after test
+    patch_sys_argv('path.to.func')
+    assert sys.argv[0] == str(Path('path/to.py').absolute())
+    assert sys.argv[1:] == expected
+
+
+def test_func_with_parser(tmpworkdir, mocker):
+    # setup
+    mocker.patch('sys.argv', ['foo.py', '-a', '--foo', 'bar', '-a', 'baz'])
+    mocker.patch('watchgod.cli.set_start_method')
+    mocker.patch('watchgod.cli.sys.stdin.fileno', side_effect=AttributeError)
+    mock_run_process = mocker.patch('watchgod.cli.run_process')
+    # test
+    assert not tmpworkdir.join('sentinel').exists()
+    cli('tests.test_cli.with_parser', str(tmpworkdir))  # run til mock_run_process
+    run_function('tests.test_cli.with_parser', None)  # run target function once
+    file = tmpworkdir.join('sentinel')
+    mock_run_process.assert_called_once_with(
+        Path(str(tmpworkdir)),
+        run_function,
+        args=('tests.test_cli.with_parser', None),
+        callback=callback
+    )
+    assert file.exists()
+    assert file.read_text(encoding='utf-8') == '2 bar baz'

@@ -55,6 +55,21 @@ def callback(changes):
     logger.info('%d files changed, reloading', len(changes))
 
 
+def patch_sys_argv(function: str):
+    """
+    Remove watchgod-related arguments from sys.argv and prepend with func's script path.
+    """
+    base = function.split('.')[:-1]  # remove function and leave only file path
+    base = os.path.join(*base) + '.py'
+    base = os.path.abspath(base)
+    for i, arg in enumerate(sys.argv):
+        if arg in {'-a', '--args'}:
+            sys.argv = [base] + sys.argv[i + 1:]
+            break
+    else:
+        sys.argv = [base]  # strip all args if no additional args were provided
+
+
 def cli(*args):
     args = args or sys.argv[1:]
     parser = argparse.ArgumentParser(
@@ -64,6 +79,11 @@ def cli(*args):
     parser.add_argument('function', help='Path to python function to execute.')
     parser.add_argument('path', nargs='?', default='.', help='Filesystem path to watch, defaults to current directory.')
     parser.add_argument('--verbosity', nargs='?', type=int, default=1, help='0, 1 (default) or 2')
+    parser.add_argument(
+        '--args', '-a',
+        nargs=argparse.REMAINDER,
+        help='Arguments for argparser inside executed function. Ex.: module.func path --args --inner arg -v',
+    )
     arg_namespace = parser.parse_args(args)
 
     log_level = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}[arg_namespace.verbosity]
@@ -97,4 +117,5 @@ def cli(*args):
         tty_path = None
     logger.info('watching "%s/" and reloading "%s" on changes...', path, arg_namespace.function)
     set_start_method('spawn')
+    patch_sys_argv(arg_namespace.function)
     run_process(path, run_function, args=(arg_namespace.function, tty_path), callback=callback)
