@@ -42,7 +42,7 @@ def test_alive_terminates(mocker):
 
     assert run_process('/x/y/z', object(), watcher_cls=FakeWatcher, debounce=5, min_sleep=1) == 1
     assert mock_start_process.call_count == 2
-    assert mock_kill.call_count == 1
+    assert mock_kill.call_count == 2  # kill in loop + final kill
 
 
 def test_dead_callback(mocker):
@@ -65,7 +65,7 @@ def test_alive_doesnt_terminate(mocker):
 
     assert run_process('/x/y/z', object(), watcher_cls=FakeWatcher, debounce=5, min_sleep=1) == 1
     assert mock_start_process.call_count == 2
-    assert mock_kill.call_count == 2
+    assert mock_kill.call_count == 4  # 2 kills in loop (graceful and termination) + 2 final kills
 
 
 def test_start_process(mocker):
@@ -87,6 +87,6 @@ async def test_async_alive_terminates(mocker):
     reloads = await arun_process('/x/y/async', object(), watcher_cls=FakeWatcher, callback=c, debounce=5, min_sleep=1)
     assert reloads == 1
     assert mock_start_process.call_count == 2
-    assert mock_kill.call_count == 1
+    assert mock_kill.call_count == 2  # kill in loop + final kill
     assert c.call_count == 1
     c.assert_called_with({'x'})
