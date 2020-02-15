@@ -25,7 +25,15 @@ class AllWatcher:
     def should_watch_file(self, entry):
         return True
 
-    def _watch_file(self, mtime, path, new_files, changes):
+    def _walk(self, path, changes, new_files):
+        if os.path.isfile(path):
+            self._watch_file(path, changes, new_files)
+        else:
+            self._walk_dir(path, changes, new_files)
+
+    def _watch_file(self, path, changes, new_files, mtime=None):
+        if mtime is None:
+            mtime = os.stat(path).st_mtime
         new_files[path] = mtime
         old_mtime = self.files.get(path)
         if not old_mtime:
@@ -33,25 +41,13 @@ class AllWatcher:
         elif old_mtime != mtime:
             changes.add((Change.modified, path))
 
-    def _walk(self, dir_path, changes, new_files):
-        if os.path.isfile(dir_path):
-            self._watch_file(mtime=os.stat(dir_path).st_mtime, path=dir_path, new_files=new_files, changes=changes)
-            return
-        self._walk_recursion(dir_path, changes, new_files)
-
-    def _walk_recursion(self, dir_path, changes, new_files):
+    def _walk_dir(self, dir_path, changes, new_files):
         for entry in os.scandir(dir_path):
-            if entry.is_dir():
-                if self.should_watch_dir(entry):
-                    self._walk(entry.path, changes, new_files)
-            elif self.should_watch_file(entry):
+            if entry.is_dir() and self.should_watch_dir(entry):
+                self._walk_dir(entry.path, changes, new_files)
+            elif entry.is_file() and self.should_watch_file(entry):
                 mtime = entry.stat().st_mtime
-                new_files[entry.path] = mtime
-                old_mtime = self.files.get(entry.path)
-                if not old_mtime:
-                    changes.add((Change.added, entry.path))
-                elif old_mtime != mtime:
-                    changes.add((Change.modified, entry.path))
+                self._watch_file(entry.path, changes, new_files, mtime)
 
     def check(self):
         changes = set()

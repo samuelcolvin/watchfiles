@@ -46,7 +46,7 @@ def test_invalid_path(mocker, capsys):
     sys_exit.assert_called_once_with(1)
     out, err = capsys.readouterr()
     assert out == ''
-    assert err == 'path "/does/not/exist" is not a directory\n'
+    assert err == 'path "/does/not/exist" does not exist\n'
 
 
 def test_tty_os_error(mocker, tmpworkdir):

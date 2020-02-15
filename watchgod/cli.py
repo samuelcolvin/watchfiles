@@ -82,8 +82,8 @@ def cli(*args):
         return sys.exit(1)
 
     path = Path(arg_namespace.path)
-    if not path.is_dir():
-        print('path "{}" is not a directory'.format(path), file=sys.stderr)
+    if not path.exists():
+        print('path "{}" does not exist'.format(path), file=sys.stderr)
         return sys.exit(1)
     path = path.resolve()
 
@@ -95,6 +95,6 @@ def cli(*args):
     except AttributeError:
         # on windows. No idea of a better solution
         tty_path = None
-    logger.info('watching "%s/" and reloading "%s" on changes...', path, arg_namespace.function)
+    logger.info('watching "%s" and reloading "%s" on changes...', path, arg_namespace.function)
     set_start_method('spawn')
     run_process(path, run_function, args=(arg_namespace.function, tty_path), callback=callback)
