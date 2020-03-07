@@ -41,7 +41,7 @@ with one argument: the set of file changes.
 
 ## Asynchronous Methods
 
-**watchgod** comes with an asynchronous equivalents of `watch`: `awatch` which uses
+*watchgod* comes with an asynchronous equivalents of `watch`: `awatch` which uses
 a `ThreadPoolExecutor` to iterate over files.
 
 ```python
@@ -82,7 +82,7 @@ the optional `callback` argument must be a coroutine, not a function.
 ## Custom Watchers
 
 
-**watchgod** comes with the following watcher classes which can be used via the `watcher_cls`
+*watchgod* comes with the following watcher classes which can be used via the `watcher_cls`
 keyword argument to any of the methods above.
 
 For more details, checkout
@@ -107,7 +107,7 @@ doing something very odd, you'll want to inherit from `DefaultDirWatcher`.
 
 ## CLI
 
-**watchgod** also comes with a CLI for running and reloading python code.
+*watchgod* also comes with a CLI for running and reloading python code.
 
 Lets say you have `foobar.py`:
 
@@ -128,18 +128,18 @@ You could run this and reload it when any file in the current directory changes 
 
     watchgod foobar.main
 
-Run `watchgod --help` for more options. **watchgod** is also available as a python executable module
+Run `watchgod --help` for more options. *watchgod* is also available as a python executable module
 via `python -m watchgod ...`.
 
 ## Why no inotify / kqueue / fsevent / winapi support
 
-**watchgod** (for now) uses file polling rather than the OS's built in file change notifications.
+*watchgod* (for now) uses file polling rather than the OS's built in file change notifications.
 
 This is not an oversight, it's a decision with the following rationale:
 
 1. Polling is "fast enough", particularly since PEP 471 introduced fast `scandir`.
   For reasonably large projects like the TutorCruncher code base with 850 files and 300k lines
-  of code, **watchgod** can scan the entire tree in ~24ms. With a scan interval of 400ms that is roughly
+  of code, *watchgod* can scan the entire tree in ~24ms. With a scan interval of 400ms that is roughly
   5% of one CPU - perfectly acceptable load during development.
 2. The clue is in the title, there are at least 4 different file notification systems to integrate
   with, most of them not trivial. That is all before we get to changes between different OS versions.
@@ -150,5 +150,5 @@ This is not an oversight, it's a decision with the following rationale:
   stream of events you need to delay execution of the reload when you receive the first event
   to see if it's part of a group of file changes. This is not trivial.
 
-All that said, I might still implement `inotify` support. I don't use anything other
-than Linux so I definitely won't be working on dedicated support for any other OS.
+All that said, I might still use rust's "notify" crate to do the heavy lifting of file watching,
+see[#25](https://github.com/samuelcolvin/watchgod/issues/25).
