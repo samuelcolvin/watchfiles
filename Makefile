@@ -13,7 +13,7 @@ format:
 
 .PHONY: lint
 lint:
-	python setup.py check -rms
+	python setup.py check -ms
 	flake8 watchgod/ tests/
 	$(isort) --check-only
 
@@ -27,7 +27,7 @@ testcov: test
 	@coverage html
 
 .PHONY: all
-all: testcov lint
+all: lint testcov
 
 .PHONY: clean
 clean:
