@@ -31,9 +31,8 @@ class AllWatcher:
         else:
             self._walk_dir(path, changes, new_files)
 
-    def _watch_file(self, path, changes, new_files, mtime=None):
-        if mtime is None:
-            mtime = os.stat(path).st_mtime
+    def _watch_file(self, path, changes, new_files):
+        mtime = os.stat(path).st_mtime
         new_files[path] = mtime
         old_mtime = self.files.get(path)
         if not old_mtime:
@@ -43,11 +42,11 @@ class AllWatcher:
 
     def _walk_dir(self, dir_path, changes, new_files):
         for entry in os.scandir(dir_path):
-            if entry.is_dir() and self.should_watch_dir(entry):
-                self._walk_dir(entry.path, changes, new_files)
-            elif entry.is_file() and self.should_watch_file(entry):
-                mtime = entry.stat().st_mtime
-                self._watch_file(entry.path, changes, new_files, mtime)
+            if entry.is_dir():
+                if self.should_watch_dir(entry):
+                    self._walk_dir(entry.path, changes, new_files)
+            elif self.should_watch_file(entry):
+                self._watch_file(entry.path, changes, new_files)
 
     def check(self):
         changes = set()
