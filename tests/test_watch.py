@@ -34,6 +34,17 @@ def test_add(tmpdir):
     assert changes == {(Change.added, str(tmpdir.join('foo.txt')))}
 
 
+def test_add_watched_file(tmpdir):
+    file = tmpdir.join('bar.txt')
+
+    watcher = AllWatcher(str(file))
+    assert watcher.check() == set()
+
+    sleep(0.01)
+    file.write('foobar')
+    assert watcher.check() == {(Change.added, str(file))}
+
+
 def test_modify(tmpdir):
     mktree(tmpdir, tree)
 
@@ -46,6 +57,22 @@ def test_modify(tmpdir):
     assert watcher.check() == {(Change.modified, str(tmpdir.join('foo/bar.txt')))}
 
 
+def test_modify_watched_file(tmpdir):
+    file = tmpdir.join('bar.txt')
+    file.write('foobar')
+
+    watcher = AllWatcher(str(file))
+    assert watcher.check() == set()
+
+    sleep(0.01)
+    file.write('foobar')
+    assert watcher.check() == {(Change.modified, str(file))}  # same content but time updated
+
+    sleep(0.01)
+    file.write('baz')
+    assert watcher.check() == {(Change.modified, str(file))}
+
+
 def test_delete(tmpdir):
     mktree(tmpdir, tree)
 
@@ -55,6 +82,18 @@ def test_delete(tmpdir):
     tmpdir.join('foo/bar.txt').remove()
 
     assert watcher.check() == {(Change.deleted, str(tmpdir.join('foo/bar.txt')))}
+
+
+def test_delete_watched_file(tmpdir):
+    file = tmpdir.join('bar.txt')
+    file.write('foobar')
+
+    watcher = AllWatcher(str(file))
+    assert watcher.check() == set()
+
+    sleep(0.01)
+    file.remove()
+    assert watcher.check() == {(Change.deleted, str(file))}
 
 
 def test_ignore_file(tmpdir):
