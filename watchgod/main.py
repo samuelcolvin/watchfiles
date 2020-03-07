@@ -75,7 +75,8 @@ class awatch:
         self._min_sleep = min_sleep
         self._stop_event = stop_event
         self._w = None
-        self.lock = asyncio.Lock(loop=self._loop)
+        asyncio.set_event_loop(self._loop)
+        self.lock = asyncio.Lock()
 
     @correct_aiter
     def __aiter__(self):
