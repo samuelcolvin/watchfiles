@@ -3,7 +3,7 @@ from pathlib import Path
 from setuptools import setup
 
 THIS_DIR = Path(__file__).resolve().parent
-long_description = THIS_DIR.joinpath('README.rst').read_text()
+long_description = THIS_DIR.joinpath('README.md').read_text()
 
 # avoid loading the package before requirements are installed:
 version = SourceFileLoader('version', 'watchgod/version.py').load_module()
@@ -13,8 +13,9 @@ setup(
     version=str(version.VERSION),
     description='Simple, modern file watching and code reload in python.',
     long_description=long_description,
+    long_description_content_type='text/markdown',
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
@@ -22,6 +23,7 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
         'Intended Audience :: Developers',
         'Intended Audience :: Information Technology',
         'Intended Audience :: System Administrators',
