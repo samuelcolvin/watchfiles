@@ -1,11 +1,19 @@
+import sys
 from pathlib import Path
 
-from watchgod.cli import callback, cli, run_function, set_tty
+import pytest
+
+from watchgod.cli import callback, cli, run_function, set_tty, sys_argv
 
 
 def foobar():
     # used by tests below
     Path('sentinel').write_text('ok')
+
+
+def with_parser():
+    # used by tests below
+    Path('sentinel').write_text(' '.join(map(str, sys.argv[1:])))
 
 
 def test_simple(mocker, tmpdir):
@@ -98,3 +106,47 @@ def test_callback(mocker):
 def test_set_tty_error():
     with set_tty('/foo/bar'):
         pass
+
+
+@pytest.mark.parametrize("initial, expected", [
+    ([], []),
+    (['--foo', 'bar'], []),
+    (['--foo', 'bar', '-a'], []),
+    (['--foo', 'bar', '--args'], []),
+    (['--foo', 'bar', '-a', '--foo', 'bar'], ['--foo', 'bar']),
+    (['--foo', 'bar', '-f', 'b', '--args', '-f', '-b', '-z', 'x'], ['-f', '-b', '-z', 'x']),
+])
+def test_sys_argv(initial, expected, mocker):
+    mocker.patch('sys.argv', ['script.py', *initial])  # mocker will restore initial sys.argv after test
+    argv = sys_argv('path.to.func')
+    assert argv[0] == str(Path('path/to.py').absolute())
+    assert argv[1:] == expected
+
+
+@pytest.mark.parametrize("initial, expected", [
+    ([], []),
+    (['--foo', 'bar'], []),
+    (['--foo', 'bar', '-a'], []),
+    (['--foo', 'bar', '--args'], []),
+    (['--foo', 'bar', '-a', '--foo', 'bar'], ['--foo', 'bar']),
+    (['--foo', 'bar', '-f', 'b', '--args', '-f', '-b', '-z', 'x'], ['-f', '-b', '-z', 'x']),
+])
+def test_func_with_parser(tmpworkdir, mocker, initial, expected):
+    # setup
+    mocker.patch('sys.argv', ['foo.py', *initial])
+    mocker.patch('watchgod.cli.set_start_method')
+    mocker.patch('watchgod.cli.sys.stdin.fileno', side_effect=AttributeError)
+    mock_run_process = mocker.patch('watchgod.cli.run_process')
+    # test
+    assert not tmpworkdir.join('sentinel').exists()
+    cli('tests.test_cli.with_parser', str(tmpworkdir))  # run til mock_run_process
+    run_function('tests.test_cli.with_parser', None)  # run target function once
+    file = tmpworkdir.join('sentinel')
+    mock_run_process.assert_called_once_with(
+        Path(str(tmpworkdir)),
+        run_function,
+        args=('tests.test_cli.with_parser', None),
+        callback=callback
+    )
+    assert file.exists()
+    assert file.read_text(encoding='utf-8') == ' '.join(expected)
