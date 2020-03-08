@@ -302,7 +302,7 @@ def test_watch_log(mocker, caplog):
     iter = watch('xxx', watcher_cls=FakeWatcher, debounce=5, min_sleep=10)
     assert next(iter) == {'r1'}
 
-    assert 'DEBUG xxx time=Xms debounced=Xms files=3 changes=1 (1)' in re.sub(r'\dms', 'Xms', caplog.text)
+    assert 'xxx time=Xms debounced=Xms files=3 changes=1 (1)' in re.sub(r'\dms', 'Xms', caplog.text)
 
 
 async def test_awatch(mocker):
@@ -363,4 +363,5 @@ async def test_awatch_log(mocker, caplog):
         assert v == {'r1'}
         break
 
-    assert 'DEBUG xxx time=Xms debounced=Xms files=3 changes=1 (1)' in re.sub(r'\dms', 'Xms', caplog.text)
+    assert caplog.text.count('DEBUG') > 3
+    assert 'xxx time=Xms debounced=Xms files=3 changes=1 (1)' in re.sub(r'\dms', 'Xms', caplog.text)
