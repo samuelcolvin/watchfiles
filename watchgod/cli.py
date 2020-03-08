@@ -6,7 +6,7 @@ import sys
 from importlib import import_module
 from multiprocessing import set_start_method
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 from watchgod import run_process
 
@@ -55,7 +55,7 @@ def callback(changes):
     logger.info('%d files changed, reloading', len(changes))
 
 
-def patch_sys_argv(function: str):
+def sys_argv(function: str) -> List[str]:
     """
     Remove watchgod-related arguments from sys.argv and prepend with func's script path.
     """
@@ -64,10 +64,8 @@ def patch_sys_argv(function: str):
     base = os.path.abspath(base)
     for i, arg in enumerate(sys.argv):
         if arg in {'-a', '--args'}:
-            sys.argv = [base] + sys.argv[i + 1:]
-            break
-    else:
-        sys.argv = [base]  # strip all args if no additional args were provided
+            return [base] + sys.argv[i + 1:]
+    return [base]  # strip all args if no additional args were provided
 
 
 def cli(*args):
@@ -117,5 +115,5 @@ def cli(*args):
         tty_path = None
     logger.info('watching "%s/" and reloading "%s" on changes...', path, arg_namespace.function)
     set_start_method('spawn')
-    patch_sys_argv(arg_namespace.function)
+    sys.argv = sys_argv(arg_namespace.function)
     run_process(path, run_function, args=(arg_namespace.function, tty_path), callback=callback)

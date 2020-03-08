@@ -1,10 +1,9 @@
-import argparse
 import sys
 from pathlib import Path
 
 import pytest
 
-from watchgod.cli import callback, cli, patch_sys_argv, run_function, set_tty
+from watchgod.cli import callback, cli, run_function, set_tty, sys_argv
 
 
 def foobar():
@@ -14,12 +13,7 @@ def foobar():
 
 def with_parser():
     # used by tests below
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--version', default=2)
-    parser.add_argument('--foo')
-    parser.add_argument('-a')
-    args = parser.parse_args()
-    Path('sentinel').write_text('{} {} {}'.format(args.version, args.foo, args.a))
+    Path('sentinel').write_text(' '.join(map(str, sys.argv[1:])))
 
 
 def test_simple(mocker, tmpdir):
@@ -122,16 +116,24 @@ def test_set_tty_error():
     (['--foo', 'bar', '-a', '--foo', 'bar'], ['--foo', 'bar']),
     (['--foo', 'bar', '-f', 'b', '--args', '-f', '-b', '-z', 'x'], ['-f', '-b', '-z', 'x']),
 ])
-def test_patch_sys_argv(initial, expected, mocker):
+def test_sys_argv(initial, expected, mocker):
     mocker.patch('sys.argv', ['script.py', *initial])  # mocker will restore initial sys.argv after test
-    patch_sys_argv('path.to.func')
-    assert sys.argv[0] == str(Path('path/to.py').absolute())
-    assert sys.argv[1:] == expected
+    argv = sys_argv('path.to.func')
+    assert argv[0] == str(Path('path/to.py').absolute())
+    assert argv[1:] == expected
 
 
-def test_func_with_parser(tmpworkdir, mocker):
+@pytest.mark.parametrize("initial, expected", [
+    ([], []),
+    (['--foo', 'bar'], []),
+    (['--foo', 'bar', '-a'], []),
+    (['--foo', 'bar', '--args'], []),
+    (['--foo', 'bar', '-a', '--foo', 'bar'], ['--foo', 'bar']),
+    (['--foo', 'bar', '-f', 'b', '--args', '-f', '-b', '-z', 'x'], ['-f', '-b', '-z', 'x']),
+])
+def test_func_with_parser(tmpworkdir, mocker, initial, expected):
     # setup
-    mocker.patch('sys.argv', ['foo.py', '-a', '--foo', 'bar', '-a', 'baz'])
+    mocker.patch('sys.argv', ['foo.py', *initial])
     mocker.patch('watchgod.cli.set_start_method')
     mocker.patch('watchgod.cli.sys.stdin.fileno', side_effect=AttributeError)
     mock_run_process = mocker.patch('watchgod.cli.run_process')
@@ -147,4 +149,4 @@ def test_func_with_parser(tmpworkdir, mocker):
         callback=callback
     )
     assert file.exists()
-    assert file.read_text(encoding='utf-8') == '2 bar baz'
+    assert file.read_text(encoding='utf-8') == ' '.join(expected)
