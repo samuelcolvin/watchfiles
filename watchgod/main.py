@@ -163,6 +163,7 @@ def run_process(path: Union[Path, str], target: Callable, *,
         _stop_process(process)
         process = _start_process(target=target, args=args, kwargs=kwargs)
         reloads += 1
+    _stop_process(process)
     return reloads
 
 
@@ -186,4 +187,5 @@ async def arun_process(path: Union[Path, str], target: Callable, *,
         await watcher.run_in_executor(_stop_process, process)
         process = await watcher.run_in_executor(start_process)
         reloads += 1
+    await watcher.run_in_executor(_stop_process, process)
     return reloads
