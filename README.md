@@ -86,7 +86,7 @@ the optional `callback` argument must be a coroutine, not a function.
 keyword argument to any of the methods above.
 
 For more details, checkout
-`watcher.py <https://github.com/samuelcolvin/watchgod/blob/master/watchgod/watcher.py>`_,
+[`watcher.py`](https://github.com/samuelcolvin/watchgod/blob/master/watchgod/watcher.py),
 it's pretty simple.
 
 * **AllWatcher** The base watcher, all files are checked for changes.
