@@ -128,6 +128,9 @@ You could run this and reload it when any file in the current directory changes 
 
     watchgod foobar.main
 
+In case you need to ignore certain files or directories, you can use the argument
+ `--ignore-paths`. 
+
 Run `watchgod --help` for more options. *watchgod* is also available as a python executable module
 via `python -m watchgod ...`.
 

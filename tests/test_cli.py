@@ -26,7 +26,8 @@ def test_simple(mocker, tmpdir):
         Path(str(tmpdir)),
         run_function,
         args=('tests.test_cli.foobar', '/path/to/tty'),
-        callback=callback
+        callback=callback,
+        watcher_kwargs={'ignored_paths': set()}
     )
 
 
@@ -66,7 +67,8 @@ def test_tty_os_error(mocker, tmpworkdir):
         Path(str(tmpworkdir)),
         run_function,
         args=('tests.test_cli.foobar', '/dev/tty'),
-        callback=callback
+        callback=callback,
+        watcher_kwargs={'ignored_paths': set()}
     )
 
 
@@ -79,7 +81,8 @@ def test_tty_attribute_error(mocker, tmpdir):
         Path(str(tmpdir)),
         run_function,
         args=('tests.test_cli.foobar', None),
-        callback=callback
+        callback=callback,
+        watcher_kwargs={'ignored_paths': set()}
     )
 
 
@@ -146,7 +149,8 @@ def test_func_with_parser(tmpworkdir, mocker, initial, expected):
         Path(str(tmpworkdir)),
         run_function,
         args=('tests.test_cli.with_parser', None),
-        callback=callback
+        callback=callback,
+        watcher_kwargs={'ignored_paths': set()}
     )
     assert file.exists()
     assert file.read_text(encoding='utf-8') == ' '.join(expected)
