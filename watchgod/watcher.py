@@ -74,7 +74,7 @@ class DefaultDirWatcher(AllWatcher):
 
 
 class DefaultWatcher(DefaultDirWatcher):
-    ignored_file_regexes = r'\.py[cod]$', r'\.___jb_...___$', r'\.sw.$', '~$'
+    ignored_file_regexes = r'\.py[cod]$', r'\.___jb_...___$', r'\.sw.$', '~$',  r'^\.\#',  r'^flycheck_'
 
     def __init__(self, root_path):
         self._ignored_file_regexes = tuple(re.compile(r) for r in self.ignored_file_regexes)
