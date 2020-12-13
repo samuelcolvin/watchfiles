@@ -105,7 +105,7 @@ If these classes aren't sufficient you can define your own watcher, in particula
 you will want to override `should_watch_dir` and `should_watch_file`. Unless you're
 doing something very odd, you'll want to inherit from `DefaultDirWatcher`.
 
-Note that events regarding to *directories* are not watched (e.g. creation of a
+Note that events related to *directories* are not reported (e.g. creation of a
 directory), but new files in new directories will be reported.
 
 ## CLI
