@@ -74,8 +74,8 @@ class awatch:
         debounce: int = 1600,
         normal_sleep: int = 400,
         min_sleep: int = 50,
-        stop_event: asyncio.Event = None,
-        loop: asyncio.AbstractEventLoop = None,
+        stop_event: Optional[asyncio.Event] = None,
+        loop: Optional[asyncio.AbstractEventLoop] = None,
     ) -> None:
         self._loop = loop or asyncio.get_event_loop()
         self._executor = ThreadPoolExecutor(max_workers=4)
@@ -172,8 +172,8 @@ def run_process(
     target: 'AnyCallable',
     *,
     args: Tuple[Any, ...] = (),
-    kwargs: Dict[str, Any] = None,
-    callback: Callable[[Set['FileChange']], None] = None,
+    kwargs: Optional[Dict[str, Any]] = None,
+    callback: Optional[Callable[[Set['FileChange']], None]] = None,
     watcher_cls: Type['AllWatcher'] = PythonWatcher,
     watcher_kwargs: Optional[Dict[str, Any]] = None,
     debounce: int = 400,
@@ -204,8 +204,8 @@ async def arun_process(
     target: 'AnyCallable',
     *,
     args: Tuple[Any, ...] = (),
-    kwargs: Dict[str, Any] = None,
-    callback: Callable[['FileChanges'], Awaitable[None]] = None,
+    kwargs: Optional[Dict[str, Any]] = None,
+    callback: Optional[Callable[['FileChanges'], Awaitable[None]]] = None,
     watcher_cls: Type['AllWatcher'] = PythonWatcher,
     debounce: int = 400,
     min_sleep: int = 100,

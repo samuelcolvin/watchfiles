@@ -104,7 +104,7 @@ class PythonWatcher(DefaultDirWatcher):
 
 
 class RegExpWatcher(AllWatcher):
-    def __init__(self, root_path: str, re_files: str = None, re_dirs: str = None):
+    def __init__(self, root_path: str, re_files: Optional[str] = None, re_dirs: Optional[str] = None):
         self.re_files: Optional[Pattern[str]] = re.compile(re_files) if re_files is not None else re_files
         self.re_dirs: Optional[Pattern[str]] = re.compile(re_dirs) if re_dirs is not None else re_dirs
         super().__init__(root_path)
