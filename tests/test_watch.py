@@ -366,5 +366,6 @@ async def test_awatch_log(mocker, caplog):
         assert v == {'r1'}
         break
 
+    print(caplog.text)
     assert caplog.text.count('DEBUG') > 3
     assert 'xxx time=Xms debounced=Xms files=3 changes=1 (1)' in re.sub(r'\dms', 'Xms', caplog.text)
