@@ -62,6 +62,7 @@ def test_modify(tmpdir):
     assert watcher.check() == {(Change.modified, str(tmpdir.join('foo/bar.txt')))}
 
 
+@skip_on_windows
 def test_ignore_root(tmpdir):
     mktree(tmpdir, tree)
     watcher = AllWatcher(str(tmpdir), ignored_paths={tmpdir.join('foo')})
@@ -74,6 +75,7 @@ def test_ignore_root(tmpdir):
     assert watcher.check() == set()
 
 
+@skip_on_windows
 def test_ignore_file_path(tmpdir):
     mktree(tmpdir, tree)
     watcher = AllWatcher(str(tmpdir), ignored_paths={tmpdir.join('foo', 'bar.txt')})
@@ -90,6 +92,7 @@ def test_ignore_file_path(tmpdir):
         (Change.modified, tmpdir.join('foo', 'spam.py'))}
 
 
+@skip_on_windows
 def test_ignore_subdir(tmpdir):
     mktree(tmpdir, tree)
     watcher = AllWatcher(str(tmpdir), ignored_paths={tmpdir.join('dir', 'ignored')})
