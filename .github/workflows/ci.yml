@@ -31,7 +31,8 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - run: make install
+    - run: pip install -r tests/requirements.txt
+    - run: pip install .
     - run: pip freeze
 
     - run: make test
