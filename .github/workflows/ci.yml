@@ -74,7 +74,9 @@ jobs:
           python-version: '3.8'
 
       - name: install
-        run: pip install -U pip setuptools twine wheel
+        run: |
+          pip install -U pip setuptools twine wheel
+          pip install .
 
       - name: check tag
         run: PACKAGE=watchgod python <(curl -Ls https://git.io/JvQsH)
