@@ -45,6 +45,6 @@ setup(
     license='MIT',
     packages=['watchgod'],
     package_data={'watchgod': ['py.typed']},
-    python_requires='>=3.5',
+    python_requires='>=3.6',
     zip_safe=True,
 )
