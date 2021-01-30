@@ -22,7 +22,7 @@ tree = {
         },
         '.git': {
             'x': 'y',
-        }
+        },
     }
 }
 
@@ -89,7 +89,8 @@ def test_ignore_file_path(tmpdir):
 
     assert watcher.check() == {
         (Change.added, tmpdir.join('foo', 'new_not_ignored.txt')),
-        (Change.modified, tmpdir.join('foo', 'spam.py'))}
+        (Change.modified, tmpdir.join('foo', 'spam.py')),
+    }
 
 
 @skip_on_windows
@@ -106,8 +107,7 @@ def test_ignore_subdir(tmpdir):
     tmpdir.join('dir', 'ignored', 'file.txt').write('content')
     tmpdir.join('dir', 'not_ignored', 'file.txt').write('content')
 
-    assert watcher.check() == {
-        (Change.added, tmpdir.join('dir', 'not_ignored', 'file.txt'))}
+    assert watcher.check() == {(Change.added, tmpdir.join('dir', 'not_ignored', 'file.txt'))}
 
 
 def test_modify_watched_file(tmpdir):
@@ -203,7 +203,7 @@ def test_regexp(tmpdir):
     assert watcher.check() == {
         (Change.modified, str(tmpdir.join('foo/bar.txt'))),
         (Change.added, str(tmpdir.join('foo/borec.txt'))),
-        (Change.added, str(tmpdir.join('foo/borec-js.js')))
+        (Change.added, str(tmpdir.join('foo/borec-js.js'))),
     }
 
 
@@ -223,7 +223,7 @@ def test_regexp_no_re_dirs(tmpdir):
 
     assert watcher_no_re_dirs.check() == {
         (Change.modified, str(tmpdir.join('foo/bar.txt'))),
-        (Change.added, str(tmpdir.join('foo/recursive_dir/foo.js')))
+        (Change.added, str(tmpdir.join('foo/recursive_dir/foo.js'))),
     }
 
 
@@ -243,7 +243,7 @@ def test_regexp_no_re_files(tmpdir):
 
     assert watcher_no_re_files.check() == {
         (Change.modified, str(tmpdir.join('foo/spam.py'))),
-        (Change.modified, str(tmpdir.join('foo/bar.txt')))
+        (Change.modified, str(tmpdir.join('foo/bar.txt'))),
     }
 
 
@@ -262,7 +262,7 @@ def test_regexp_no_args(tmpdir):
     assert watcher_no_args.check() == {
         (Change.modified, str(tmpdir.join('foo/spam.py'))),
         (Change.modified, str(tmpdir.join('foo/bar.txt'))),
-        (Change.added, str(tmpdir.join('foo/recursive_dir/foo.js')))
+        (Change.added, str(tmpdir.join('foo/recursive_dir/foo.js'))),
     }
 
 
@@ -276,12 +276,14 @@ def test_does_not_exist(caplog, tmp_path):
 def test_watch(mocker):
     class FakeWatcher:
         def __init__(self, path):
-            self._results = iter([
-                {'r1'},
-                set(),
-                {'r2'},
-                set(),
-            ])
+            self._results = iter(
+                [
+                    {'r1'},
+                    set(),
+                    {'r2'},
+                    set(),
+                ]
+            )
 
         def check(self):
             return next(self._results)
@@ -294,12 +296,14 @@ def test_watch(mocker):
 def test_watch_watcher_kwargs(mocker):
     class FakeWatcher:
         def __init__(self, path, arg1=None, arg2=None):
-            self._results = iter([
-                {arg1},
-                set(),
-                {arg2},
-                set(),
-            ])
+            self._results = iter(
+                [
+                    {arg1},
+                    set(),
+                    {arg2},
+                    set(),
+                ]
+            )
 
         def check(self):
             return next(self._results)
@@ -314,11 +318,13 @@ def test_watch_watcher_kwargs(mocker):
 def test_watch_stop():
     class FakeWatcher:
         def __init__(self, path):
-            self._results = iter([
-                {'r1'},
-                set(),
-                {'r2'},
-            ])
+            self._results = iter(
+                [
+                    {'r1'},
+                    set(),
+                    {'r2'},
+                ]
+            )
 
         def check(self):
             return next(self._results)
@@ -363,14 +369,16 @@ def test_watch_log(mocker, caplog):
 async def test_awatch(mocker):
     class FakeWatcher:
         def __init__(self, path):
-            self._results = iter([
-                set(),
-                set(),
-                {'r1'},
-                set(),
-                {'r2'},
-                set(),
-            ])
+            self._results = iter(
+                [
+                    set(),
+                    set(),
+                    {'r1'},
+                    set(),
+                    {'r2'},
+                    set(),
+                ]
+            )
 
         def check(self):
             return next(self._results)
@@ -386,11 +394,13 @@ async def test_awatch(mocker):
 async def test_awatch_stop():
     class FakeWatcher:
         def __init__(self, path):
-            self._results = iter([
-                {'r1'},
-                set(),
-                {'r2'},
-            ])
+            self._results = iter(
+                [
+                    {'r1'},
+                    set(),
+                    {'r2'},
+                ]
+            )
 
         def check(self):
             return next(self._results)

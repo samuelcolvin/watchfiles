@@ -64,23 +64,28 @@ def sys_argv(function: str) -> List[str]:
     base = os.path.abspath(base)
     for i, arg in enumerate(sys.argv):
         if arg in {'-a', '--args'}:
-            return [base] + sys.argv[i + 1:]
+            return [base] + sys.argv[i + 1 :]
     return [base]  # strip all args if no additional args were provided
 
 
 def cli(*args):
     args = args or sys.argv[1:]
     parser = argparse.ArgumentParser(
-        prog='watchgod',
-        description='Watch a directory and execute a python function on changes.'
+        prog='watchgod', description='Watch a directory and execute a python function on changes.'
     )
     parser.add_argument('function', help='Path to python function to execute.')
     parser.add_argument('path', nargs='?', default='.', help='Filesystem path to watch, defaults to current directory.')
     parser.add_argument('--verbosity', nargs='?', type=int, default=1, help='0, 1 (default) or 2')
-    parser.add_argument('--ignore-paths', nargs='*', type=str, default=[],
-                        help='Specify paths to files or directories to ignore their updates')
     parser.add_argument(
-        '--args', '-a',
+        '--ignore-paths',
+        nargs='*',
+        type=str,
+        default=[],
+        help='Specify paths to files or directories to ignore their updates',
+    )
+    parser.add_argument(
+        '--args',
+        '-a',
         nargs=argparse.REMAINDER,
         help='Arguments for argparser inside executed function. Ex.: module.func path --args --inner arg -v',
     )
@@ -121,5 +126,10 @@ def cli(*args):
 
     ignored_paths = {str(Path(p).resolve()) for p in arg_namespace.ignore_paths}
 
-    run_process(path, run_function, args=(arg_namespace.function, tty_path),
-                callback=callback, watcher_kwargs={'ignored_paths': ignored_paths})
+    run_process(
+        path,
+        run_function,
+        args=(arg_namespace.function, tty_path),
+        callback=callback,
+        watcher_kwargs={'ignored_paths': ignored_paths},
+    )

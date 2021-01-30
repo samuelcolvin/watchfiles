@@ -52,19 +52,33 @@ class awatch:
 
     3.5 doesn't support yield in coroutines so we need all this fluff. Yawwwwn.
     """
+
     __slots__ = (
-        '_loop', '_path', '_watcher_cls', '_watcher_kwargs', '_debounce', '_min_sleep', '_stop_event', '_normal_sleep',
-        '_w', 'lock', '_executor'
+        '_loop',
+        '_path',
+        '_watcher_cls',
+        '_watcher_kwargs',
+        '_debounce',
+        '_min_sleep',
+        '_stop_event',
+        '_normal_sleep',
+        '_w',
+        'lock',
+        '_executor',
     )
 
-    def __init__(self, path: Union[Path, str], *,
-                 watcher_cls: Type[AllWatcher] = DefaultWatcher,
-                 watcher_kwargs: Optional[Dict[str, Any]] = None,
-                 debounce=1600,
-                 normal_sleep=400,
-                 min_sleep=50,
-                 stop_event: asyncio.Event = None,
-                 loop=None):
+    def __init__(
+        self,
+        path: Union[Path, str],
+        *,
+        watcher_cls: Type[AllWatcher] = DefaultWatcher,
+        watcher_kwargs: Optional[Dict[str, Any]] = None,
+        debounce=1600,
+        normal_sleep=400,
+        min_sleep=50,
+        stop_event: asyncio.Event = None,
+        loop=None,
+    ):
         self._loop = loop or asyncio.get_event_loop()
         self._executor = ThreadPoolExecutor(max_workers=4)
         self._path = path
@@ -85,7 +99,8 @@ class awatch:
     async def __anext__(self):
         if not self._w:
             self._w = await self.run_in_executor(
-                functools.partial(self._watcher_cls, self._path, **self._watcher_kwargs))
+                functools.partial(self._watcher_cls, self._path, **self._watcher_kwargs)
+            )
         check_time = 0
         changes = set()
         last_change = 0
@@ -110,8 +125,15 @@ class awatch:
                 check_time = now - s
                 debounced = now - last_change
                 if logger.isEnabledFor(logging.DEBUG) and changes:
-                    logger.debug('%s time=%0.0fms debounced=%0.0fms files=%d changes=%d (%d)',
-                                 self._path, check_time, debounced, len(self._w.files), len(changes), len(new_changes))
+                    logger.debug(
+                        '%s time=%0.0fms debounced=%0.0fms files=%d changes=%d (%d)',
+                        self._path,
+                        check_time,
+                        debounced,
+                        len(self._w.files),
+                        len(changes),
+                        len(new_changes),
+                    )
 
                 if changes and (not new_changes or debounced > self._debounce):
                     logger.debug('%s changes released debounced=%0.0fms', self._path, debounced)
@@ -145,14 +167,18 @@ def _stop_process(process):
         logger.warning('process already dead, exit code: %d', process.exitcode)
 
 
-def run_process(path: Union[Path, str], target: Callable, *,
-                args: Tuple = (),
-                kwargs: Dict[str, Any] = None,
-                callback: Callable[[Set[Tuple[Change, str]]], None] = None,
-                watcher_cls: Type[AllWatcher] = PythonWatcher,
-                watcher_kwargs: Optional[Dict[str, Any]] = None,
-                debounce=400,
-                min_sleep=100):
+def run_process(
+    path: Union[Path, str],
+    target: Callable,
+    *,
+    args: Tuple = (),
+    kwargs: Dict[str, Any] = None,
+    callback: Callable[[Set[Tuple[Change, str]]], None] = None,
+    watcher_cls: Type[AllWatcher] = PythonWatcher,
+    watcher_kwargs: Optional[Dict[str, Any]] = None,
+    debounce=400,
+    min_sleep=100,
+):
     """
     Run a function in a subprocess using multiprocessing.Process, restart it whenever files change in path.
     """
@@ -161,8 +187,9 @@ def run_process(path: Union[Path, str], target: Callable, *,
     reloads = 0
 
     try:
-        for changes in watch(path, watcher_cls=watcher_cls, debounce=debounce,
-                             min_sleep=min_sleep, watcher_kwargs=watcher_kwargs):
+        for changes in watch(
+            path, watcher_cls=watcher_cls, debounce=debounce, min_sleep=min_sleep, watcher_kwargs=watcher_kwargs
+        ):
             callback and callback(changes)
             _stop_process(process)
             process = _start_process(target=target, args=args, kwargs=kwargs)
@@ -172,13 +199,17 @@ def run_process(path: Union[Path, str], target: Callable, *,
     return reloads
 
 
-async def arun_process(path: Union[Path, str], target: Callable, *,
-                       args: Tuple[Any] = (),
-                       kwargs: Dict[str, Any] = None,
-                       callback: Callable[[Set[Tuple[Change, str]]], Awaitable] = None,
-                       watcher_cls: Type[AllWatcher] = PythonWatcher,
-                       debounce=400,
-                       min_sleep=100):
+async def arun_process(
+    path: Union[Path, str],
+    target: Callable,
+    *,
+    args: Tuple[Any] = (),
+    kwargs: Dict[str, Any] = None,
+    callback: Callable[[Set[Tuple[Change, str]]], Awaitable] = None,
+    watcher_cls: Type[AllWatcher] = PythonWatcher,
+    debounce=400,
+    min_sleep=100,
+):
     """
     Run a function in a subprocess using multiprocessing.Process, restart it whenever files change in path.
     """

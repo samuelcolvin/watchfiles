@@ -22,7 +22,7 @@ lint:
 	python setup.py check -ms
 	flake8 watchgod/ tests/
 	$(isort) --check-only --df
-	#$(black) --check --diff
+	$(black) --check --diff
 
 .PHONY: test
 test:

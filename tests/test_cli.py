@@ -29,7 +29,7 @@ def test_simple(mocker, tmpdir):
         run_function,
         args=('tests.test_cli.foobar', '/path/to/tty'),
         callback=callback,
-        watcher_kwargs={'ignored_paths': set()}
+        watcher_kwargs={'ignored_paths': set()},
     )
 
 
@@ -70,7 +70,7 @@ def test_tty_os_error(mocker, tmpworkdir):
         run_function,
         args=('tests.test_cli.foobar', '/dev/tty'),
         callback=callback,
-        watcher_kwargs={'ignored_paths': set()}
+        watcher_kwargs={'ignored_paths': set()},
     )
 
 
@@ -84,7 +84,7 @@ def test_tty_attribute_error(mocker, tmpdir):
         run_function,
         args=('tests.test_cli.foobar', None),
         callback=callback,
-        watcher_kwargs={'ignored_paths': set()}
+        watcher_kwargs={'ignored_paths': set()},
     )
 
 
@@ -113,14 +113,17 @@ def test_set_tty_error():
         pass
 
 
-@pytest.mark.parametrize('initial, expected', [
-    ([], []),
-    (['--foo', 'bar'], []),
-    (['--foo', 'bar', '-a'], []),
-    (['--foo', 'bar', '--args'], []),
-    (['--foo', 'bar', '-a', '--foo', 'bar'], ['--foo', 'bar']),
-    (['--foo', 'bar', '-f', 'b', '--args', '-f', '-b', '-z', 'x'], ['-f', '-b', '-z', 'x']),
-])
+@pytest.mark.parametrize(
+    'initial, expected',
+    [
+        ([], []),
+        (['--foo', 'bar'], []),
+        (['--foo', 'bar', '-a'], []),
+        (['--foo', 'bar', '--args'], []),
+        (['--foo', 'bar', '-a', '--foo', 'bar'], ['--foo', 'bar']),
+        (['--foo', 'bar', '-f', 'b', '--args', '-f', '-b', '-z', 'x'], ['-f', '-b', '-z', 'x']),
+    ],
+)
 def test_sys_argv(initial, expected, mocker):
     mocker.patch('sys.argv', ['script.py', *initial])  # mocker will restore initial sys.argv after test
     argv = sys_argv('path.to.func')
@@ -128,14 +131,17 @@ def test_sys_argv(initial, expected, mocker):
     assert argv[1:] == expected
 
 
-@pytest.mark.parametrize('initial, expected', [
-    ([], []),
-    (['--foo', 'bar'], []),
-    (['--foo', 'bar', '-a'], []),
-    (['--foo', 'bar', '--args'], []),
-    (['--foo', 'bar', '-a', '--foo', 'bar'], ['--foo', 'bar']),
-    (['--foo', 'bar', '-f', 'b', '--args', '-f', '-b', '-z', 'x'], ['-f', '-b', '-z', 'x']),
-])
+@pytest.mark.parametrize(
+    'initial, expected',
+    [
+        ([], []),
+        (['--foo', 'bar'], []),
+        (['--foo', 'bar', '-a'], []),
+        (['--foo', 'bar', '--args'], []),
+        (['--foo', 'bar', '-a', '--foo', 'bar'], ['--foo', 'bar']),
+        (['--foo', 'bar', '-f', 'b', '--args', '-f', '-b', '-z', 'x'], ['-f', '-b', '-z', 'x']),
+    ],
+)
 def test_func_with_parser(tmpworkdir, mocker, initial, expected):
     # setup
     mocker.patch('sys.argv', ['foo.py', *initial])
@@ -152,7 +158,7 @@ def test_func_with_parser(tmpworkdir, mocker, initial, expected):
         run_function,
         args=('tests.test_cli.with_parser', None),
         callback=callback,
-        watcher_kwargs={'ignored_paths': set()}
+        watcher_kwargs={'ignored_paths': set()},
     )
     assert file.exists()
     assert file.read_text(encoding='utf-8') == ' '.join(expected)
