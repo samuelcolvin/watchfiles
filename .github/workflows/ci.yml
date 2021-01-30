@@ -1,0 +1,89 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - '**'
+  pull_request: {}
+
+jobs:
+  test:
+    name: test py${{ matrix.python-version }} on ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu, macos, windows]
+        python-version: ['3.6', '3.7', '3.8', '3.9']
+
+    runs-on: ${{ matrix.os }}-latest
+
+    env:
+      PYTHON: ${{ matrix.python-version }}
+      OS: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: set up python
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - run: pip install -r tests/requirements.txt
+    - run: pip install .
+    - run: pip freeze
+
+    - run: make test
+    - run: coverage xml
+
+    - uses: codecov/codecov-action@v1.0.13
+      with:
+        file: ./coverage.xml
+        env_vars: PYTHON,OS
+
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - uses: actions/setup-python@v1
+      with:
+        python-version: '3.8'
+
+    - run: pip install -r tests/requirements-linting.txt
+
+    - run: make lint
+
+  deploy:
+    needs:
+      - test
+      - lint
+    if: "success() && startsWith(github.ref, 'refs/tags/')"
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: set up python
+        uses: actions/setup-python@v1
+        with:
+          python-version: '3.8'
+
+      - name: install
+        run: pip install -U pip setuptools twine wheel
+
+      - name: check tag
+        run: PACKAGE=watchgod python <(curl -Ls https://git.io/JvQsH)
+
+      - run: python setup.py sdist bdist_wheel
+
+      - run: twine check dist/*
+
+      - name: upload to pypi
+        run: twine upload dist/*
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.pypi_token }}

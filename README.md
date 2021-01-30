@@ -85,6 +85,13 @@ the optional `callback` argument must be a coroutine, not a function.
 *watchgod* comes with the following watcher classes which can be used via the `watcher_cls`
 keyword argument to any of the methods above.
 
+For example:
+
+```py
+for changes in watch(directoryin, watcher_cls=RegExpWatcher, watcher_kwargs=dict(re_files=r'^.*(\.mp3)$')):
+   print (changes)
+```
+
 For more details, checkout
 [`watcher.py`](https://github.com/samuelcolvin/watchgod/blob/master/watchgod/watcher.py),
 it's pretty simple.
@@ -104,6 +111,9 @@ it's pretty simple.
 If these classes aren't sufficient you can define your own watcher, in particular
 you will want to override `should_watch_dir` and `should_watch_file`. Unless you're
 doing something very odd, you'll want to inherit from `DefaultDirWatcher`.
+
+Note that events related to *directories* are not reported (e.g. creation of a
+directory), but new files in new directories will be reported.
 
 ## CLI
 
@@ -127,6 +137,9 @@ def main():
 You could run this and reload it when any file in the current directory changes with::
 
     watchgod foobar.main
+
+In case you need to ignore certain files or directories, you can use the argument
+ `--ignore-paths`. 
 
 Run `watchgod --help` for more options. *watchgod* is also available as a python executable module
 via `python -m watchgod ...`.

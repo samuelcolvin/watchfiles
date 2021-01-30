@@ -34,7 +34,7 @@ def import_string(dotted_path):
 def set_tty(tty_path):
     if tty_path:
         try:
-            with open(tty_path) as tty:
+            with open(tty_path) as tty:  # pragma: no cover
                 sys.stdin = tty
                 yield
         except OSError:
@@ -77,6 +77,8 @@ def cli(*args):
     parser.add_argument('function', help='Path to python function to execute.')
     parser.add_argument('path', nargs='?', default='.', help='Filesystem path to watch, defaults to current directory.')
     parser.add_argument('--verbosity', nargs='?', type=int, default=1, help='0, 1 (default) or 2')
+    parser.add_argument('--ignore-paths', nargs='*', type=str, default=[],
+                        help='Specify paths to files or directories to ignore their updates')
     parser.add_argument(
         '--args', '-a',
         nargs=argparse.REMAINDER,
@@ -116,4 +118,8 @@ def cli(*args):
     logger.info('watching "%s" and reloading "%s" on changes...', path, arg_namespace.function)
     set_start_method('spawn')
     sys.argv = sys_argv(arg_namespace.function)
-    run_process(path, run_function, args=(arg_namespace.function, tty_path), callback=callback)
+
+    ignored_paths = {str(Path(p).resolve()) for p in arg_namespace.ignore_paths}
+
+    run_process(path, run_function, args=(arg_namespace.function, tty_path),
+                callback=callback, watcher_kwargs={'ignored_paths': ignored_paths})

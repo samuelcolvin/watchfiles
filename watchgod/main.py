@@ -150,6 +150,7 @@ def run_process(path: Union[Path, str], target: Callable, *,
                 kwargs: Dict[str, Any] = None,
                 callback: Callable[[Set[Tuple[Change, str]]], None] = None,
                 watcher_cls: Type[AllWatcher] = PythonWatcher,
+                watcher_kwargs: Optional[Dict[str, Any]] = None,
                 debounce=400,
                 min_sleep=100):
     """
@@ -159,7 +160,8 @@ def run_process(path: Union[Path, str], target: Callable, *,
     process = _start_process(target=target, args=args, kwargs=kwargs)
     reloads = 0
 
-    for changes in watch(path, watcher_cls=watcher_cls, debounce=debounce, min_sleep=min_sleep):
+    for changes in watch(path, watcher_cls=watcher_cls, debounce=debounce,
+                         min_sleep=min_sleep, watcher_kwargs=watcher_kwargs):
         callback and callback(changes)
         _stop_process(process)
         process = _start_process(target=target, args=args, kwargs=kwargs)
