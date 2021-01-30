@@ -5,6 +5,8 @@ import pytest
 
 from watchgod.cli import callback, cli, run_function, set_tty, sys_argv
 
+pytestmark = pytest.mark.skipif(sys.platform == 'win32', reason='many tests fail on windows')
+
 
 def foobar():
     # used by tests below
@@ -111,7 +113,7 @@ def test_set_tty_error():
         pass
 
 
-@pytest.mark.parametrize("initial, expected", [
+@pytest.mark.parametrize('initial, expected', [
     ([], []),
     (['--foo', 'bar'], []),
     (['--foo', 'bar', '-a'], []),
@@ -126,7 +128,7 @@ def test_sys_argv(initial, expected, mocker):
     assert argv[1:] == expected
 
 
-@pytest.mark.parametrize("initial, expected", [
+@pytest.mark.parametrize('initial, expected', [
     ([], []),
     (['--foo', 'bar'], []),
     (['--foo', 'bar', '-a'], []),

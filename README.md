@@ -18,7 +18,7 @@ To watch for changes in a directory:
 from watchgod import watch
 
 for changes in watch('./path/to/dir'):
-   print(changes)
+    print(changes)
 ```
 
 To run a function and restart it when code changes:
@@ -27,7 +27,7 @@ To run a function and restart it when code changes:
 from watchgod import run_process
 
 def foobar(a, b, c):
-   ...
+    ...
 
 run_process('./path/to/dir', foobar, args=(1, 2, 3))
 ```
@@ -49,8 +49,8 @@ import asyncio
 from watchgod import awatch
 
 async def main():
-   async for changes in awatch('/path/to/dir'):
-       print(changes)
+    async for changes in awatch('/path/to/dir'):
+        print(changes)
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(main())
@@ -64,10 +64,10 @@ import asyncio
 from watchgod import arun_process
 
 def foobar(a, b, c):
-   ...
+    ...
 
 async def main():
-   await arun_process('./path/to/dir', foobar, args=(1, 2, 3))
+    await arun_process('./path/to/dir', foobar, args=(1, 2, 3))
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(main())
@@ -115,13 +115,13 @@ Lets say you have `foobar.py`:
 from aiohttp import web
 
 async def handle(request):
-   return web.Response(text='testing')
+    return web.Response(text='testing')
 
 app = web.Application()
 app.router.add_get('/', handle)
 
 def main():
-   web.run_app(app, port=8000)
+    web.run_app(app, port=8000)
 ```
 
 You could run this and reload it when any file in the current directory changes with::
