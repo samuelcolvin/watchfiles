@@ -160,13 +160,15 @@ def run_process(path: Union[Path, str], target: Callable, *,
     process = _start_process(target=target, args=args, kwargs=kwargs)
     reloads = 0
 
-    for changes in watch(path, watcher_cls=watcher_cls, debounce=debounce,
-                         min_sleep=min_sleep, watcher_kwargs=watcher_kwargs):
-        callback and callback(changes)
+    try:
+        for changes in watch(path, watcher_cls=watcher_cls, debounce=debounce,
+                             min_sleep=min_sleep, watcher_kwargs=watcher_kwargs):
+            callback and callback(changes)
+            _stop_process(process)
+            process = _start_process(target=target, args=args, kwargs=kwargs)
+            reloads += 1
+    finally:
         _stop_process(process)
-        process = _start_process(target=target, args=args, kwargs=kwargs)
-        reloads += 1
-    _stop_process(process)
     return reloads
 
 
