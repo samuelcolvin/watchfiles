@@ -5,6 +5,8 @@ import pytest
 
 from watchgod.cli import callback, cli, run_function, set_tty, sys_argv
 
+pytestmark = pytest.mark.skipif(sys.platform == 'win32', reason='many tests fail on windows')
+
 
 def foobar():
     # used by tests below
@@ -16,6 +18,7 @@ def with_parser():
     Path('sentinel').write_text(' '.join(map(str, sys.argv[1:])))
 
 
+@skip_windows
 def test_simple(mocker, tmpdir):
     mocker.patch('watchgod.cli.set_start_method')
     mocker.patch('watchgod.cli.sys.stdin.fileno')

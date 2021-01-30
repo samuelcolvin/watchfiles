@@ -6,6 +6,7 @@ from watchgod import arun_process, run_process
 from watchgod.main import _start_process
 
 pytestmark = pytest.mark.asyncio
+skip_on_windows = pytest.mark.skipif(sys.platform == 'win32', reason='fails on windows')
 
 
 class FakeWatcher:
@@ -62,6 +63,7 @@ def test_dead_callback(mocker):
     c.assert_called_with({'x'})
 
 
+@skip_on_windows
 def test_alive_doesnt_terminate(mocker):
     mock_start_process = mocker.patch('watchgod.main._start_process')
     mock_start_process.return_value = FakeProcess(exitcode=None)

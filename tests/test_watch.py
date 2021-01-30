@@ -215,9 +215,10 @@ def test_regexp_no_args(tmpdir):
     }
 
 
-def test_does_not_exist(caplog):
-    AllWatcher('/foo/bar')
-    assert "error walking file system: FileNotFoundError [Errno 2] No such file or directory: '/foo/bar'" in caplog.text
+def test_does_not_exist(caplog, tmp_path):
+    p = str(tmp_path / 'missing')
+    AllWatcher(p)
+    assert f"error walking file system: FileNotFoundError [Errno 2] No such file or directory: '{p}'" in caplog.text
 
 
 def test_watch(mocker):
