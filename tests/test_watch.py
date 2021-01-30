@@ -1,5 +1,6 @@
 import asyncio
 import re
+import sys
 import threading
 from time import sleep
 
@@ -9,6 +10,7 @@ from pytest_toolbox import mktree
 from watchgod import AllWatcher, Change, DefaultWatcher, PythonWatcher, RegExpWatcher, awatch, watch
 
 pytestmark = pytest.mark.asyncio
+skip_on_windows = pytest.mark.skipif(sys.platform == 'win32', reason='fails on windows')
 tree = {
     'foo': {
         'bar.txt': 'bar',
@@ -215,6 +217,7 @@ def test_regexp_no_args(tmpdir):
     }
 
 
+@skip_on_windows
 def test_does_not_exist(caplog, tmp_path):
     p = str(tmp_path / 'missing')
     AllWatcher(p)
