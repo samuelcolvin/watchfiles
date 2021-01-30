@@ -18,7 +18,7 @@ class AllWatcher:
     def __init__(self, root_path, ignored_paths: Optional[Set] = None):
         self.files = {}
         self.root_path = root_path
-        self.ignored_paths = ignored_paths or set()
+        self.ignored_paths = ignored_paths
         self.check()
 
     def should_watch_dir(self, entry):
@@ -43,9 +43,8 @@ class AllWatcher:
             changes.add((Change.modified, path))
 
     def _walk_dir(self, dir_path, changes, new_files):
-
         for entry in os.scandir(dir_path):
-            if os.path.join(dir_path, entry) in self.ignored_paths:
+            if self.ignored_paths is not None and os.path.join(dir_path, entry) in self.ignored_paths:
                 continue
 
             if entry.is_dir():
