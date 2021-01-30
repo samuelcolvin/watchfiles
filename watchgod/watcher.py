@@ -2,7 +2,8 @@ import logging
 import os
 import re
 from enum import IntEnum
-from typing import Optional, Set
+from pathlib import Path
+from typing import TYPE_CHECKING, Dict, Optional, Pattern, Set, Tuple, Union
 
 __all__ = 'Change', 'AllWatcher', 'DefaultDirWatcher', 'DefaultWatcher', 'PythonWatcher', 'RegExpWatcher'
 logger = logging.getLogger('watchgod.watcher')
@@ -14,26 +15,34 @@ class Change(IntEnum):
     deleted = 3
 
 
+if TYPE_CHECKING:
+    FileChange = Tuple[Change, str]
+    DirEntry = os.DirEntry[str]
+    StatResult = os.stat_result
+
+
 class AllWatcher:
-    def __init__(self, root_path, ignored_paths: Optional[Set] = None):
-        self.files = {}
-        self.root_path = root_path
+    def __init__(self, root_path: Union[Path, str], ignored_paths: Optional[Set[str]] = None) -> None:
+        self.files: Dict[str, float] = {}
+        self.root_path = str(root_path)
         self.ignored_paths = ignored_paths
         self.check()
 
-    def should_watch_dir(self, entry):
+    def should_watch_dir(self, entry: 'DirEntry') -> bool:
         return True
 
-    def should_watch_file(self, entry):
+    def should_watch_file(self, entry: 'DirEntry') -> bool:
         return True
 
-    def _walk(self, path, changes, new_files):
+    def _walk(self, path: str, changes: Set['FileChange'], new_files: Dict[str, float]) -> None:
         if os.path.isfile(path):
             self._watch_file(path, changes, new_files, os.stat(path))
         else:
             self._walk_dir(path, changes, new_files)
 
-    def _watch_file(self, path, changes, new_files, stat):
+    def _watch_file(
+        self, path: str, changes: Set['FileChange'], new_files: Dict[str, float], stat: 'StatResult'
+    ) -> None:
         mtime = stat.st_mtime
         new_files[path] = mtime
         old_mtime = self.files.get(path)
@@ -42,7 +51,7 @@ class AllWatcher:
         elif old_mtime != mtime:
             changes.add((Change.modified, path))
 
-    def _walk_dir(self, dir_path, changes, new_files):
+    def _walk_dir(self, dir_path: str, changes: Set['FileChange'], new_files: Dict[str, float]) -> None:
         for entry in os.scandir(dir_path):
             if self.ignored_paths is not None and os.path.join(dir_path, entry) in self.ignored_paths:
                 continue
@@ -53,11 +62,11 @@ class AllWatcher:
             elif self.should_watch_file(entry):
                 self._watch_file(entry.path, changes, new_files, entry.stat())
 
-    def check(self):
-        changes = set()
-        new_files = {}
+    def check(self) -> Set['FileChange']:
+        changes: Set['FileChange'] = set()
+        new_files: Dict[str, float] = {}
         try:
-            self._walk(str(self.root_path), changes, new_files)
+            self._walk(self.root_path, changes, new_files)
         except OSError as e:
             # happens when a directory has been deleted between checks
             logger.warning('error walking file system: %s %s', e.__class__.__name__, e)
@@ -74,40 +83,40 @@ class AllWatcher:
 class DefaultDirWatcher(AllWatcher):
     ignored_dirs = {'.git', '__pycache__', 'site-packages', '.idea', 'node_modules'}
 
-    def should_watch_dir(self, entry):
+    def should_watch_dir(self, entry: 'DirEntry') -> bool:
         return entry.name not in self.ignored_dirs
 
 
 class DefaultWatcher(DefaultDirWatcher):
     ignored_file_regexes = r'\.py[cod]$', r'\.___jb_...___$', r'\.sw.$', '~$', r'^\.\#', r'^flycheck_'
 
-    def __init__(self, root_path):
+    def __init__(self, root_path: str) -> None:
         self._ignored_file_regexes = tuple(re.compile(r) for r in self.ignored_file_regexes)
         super().__init__(root_path)
 
-    def should_watch_file(self, entry):
+    def should_watch_file(self, entry: 'DirEntry') -> bool:
         return not any(r.search(entry.name) for r in self._ignored_file_regexes)
 
 
 class PythonWatcher(DefaultDirWatcher):
-    def should_watch_file(self, entry):
+    def should_watch_file(self, entry: 'DirEntry') -> bool:
         return entry.name.endswith(('.py', '.pyx', '.pyd'))
 
 
 class RegExpWatcher(AllWatcher):
-    def __init__(self, root_path, re_files=None, re_dirs=None):
-        self.re_files = re.compile(re_files) if re_files is not None else re_files
-        self.re_dirs = re.compile(re_dirs) if re_dirs is not None else re_dirs
+    def __init__(self, root_path: str, re_files: Optional[str] = None, re_dirs: Optional[str] = None):
+        self.re_files: Optional[Pattern[str]] = re.compile(re_files) if re_files is not None else re_files
+        self.re_dirs: Optional[Pattern[str]] = re.compile(re_dirs) if re_dirs is not None else re_dirs
         super().__init__(root_path)
 
-    def should_watch_file(self, entry):
+    def should_watch_file(self, entry: 'DirEntry') -> bool:
         if self.re_files is not None:
-            return self.re_files.match(entry.path)
+            return bool(self.re_files.match(entry.path))
         else:
             return super().should_watch_file(entry)
 
-    def should_watch_dir(self, entry):
+    def should_watch_dir(self, entry: 'DirEntry') -> bool:
         if self.re_dirs is not None:
-            return self.re_dirs.match(entry.path)
+            return bool(self.re_dirs.match(entry.path))
         else:
             return super().should_watch_dir(entry)
