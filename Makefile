@@ -24,6 +24,10 @@ lint:
 	$(isort) --check-only --df
 	$(black) --check --diff
 
+.PHONY: mypy
+mypy:
+	mypy watchgod
+
 .PHONY: test
 test:
 	pytest --cov=watchgod --log-format="%(levelname)s %(message)s"
@@ -34,7 +38,7 @@ testcov: test
 	@coverage html
 
 .PHONY: all
-all: lint testcov
+all: lint mypy testcov
 
 .PHONY: clean
 clean:

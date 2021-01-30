@@ -1,8 +1,9 @@
 # watchgod
 
-[![BuildStatus](https://travis-ci.org/samuelcolvin/watchgod.svg?branch=master)](https://travis-ci.org/samuelcolvin/watchgod)
+[![CI](https://github.com/samuelcolvin/watchgod/workflows/CI/badge.svg?event=push)](https://github.com/samuelcolvin/watchgod/actions?query=event%3Apush+branch%3Amaster+workflow%3ACI)
 [![Coverage](https://codecov.io/gh/samuelcolvin/watchgod/branch/master/graph/badge.svg)](https://codecov.io/gh/samuelcolvin/watchgod)
 [![pypi](https://img.shields.io/pypi/v/watchgod.svg)](https://pypi.python.org/pypi/watchgod)
+[![license](https://img.shields.io/github/license/samuelcolvin/watchgod.svg)](https://github.com/samuelcolvin/watchgod/blob/master/LICENSE)
 
 Simple, modern file watching and code reload in python.
 
@@ -87,7 +88,7 @@ keyword argument to any of the methods above.
 
 For example:
 
-```py
+```python
 for changes in watch(directoryin, watcher_cls=RegExpWatcher, watcher_kwargs=dict(re_files=r'^.*(\.mp3)$')):
    print (changes)
 ```
