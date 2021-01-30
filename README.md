@@ -85,6 +85,13 @@ the optional `callback` argument must be a coroutine, not a function.
 *watchgod* comes with the following watcher classes which can be used via the `watcher_cls`
 keyword argument to any of the methods above.
 
+For example:
+
+```py
+for changes in watch(directoryin, watcher_cls=RegExpWatcher, watcher_kwargs=dict(re_files=r'^.*(\.mp3)$')):
+   print (changes)
+```
+
 For more details, checkout
 [`watcher.py`](https://github.com/samuelcolvin/watchgod/blob/master/watchgod/watcher.py),
 it's pretty simple.
