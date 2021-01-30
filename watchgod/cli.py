@@ -34,7 +34,7 @@ def import_string(dotted_path):
 def set_tty(tty_path):
     if tty_path:
         try:
-            with open(tty_path) as tty:
+            with open(tty_path) as tty:  # pragma: no cover
                 sys.stdin = tty
                 yield
         except OSError:

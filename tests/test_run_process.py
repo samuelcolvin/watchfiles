@@ -1,3 +1,4 @@
+import sys
 from asyncio import Future
 
 import pytest

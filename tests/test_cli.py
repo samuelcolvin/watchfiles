@@ -18,7 +18,6 @@ def with_parser():
     Path('sentinel').write_text(' '.join(map(str, sys.argv[1:])))
 
 
-@skip_windows
 def test_simple(mocker, tmpdir):
     mocker.patch('watchgod.cli.set_start_method')
     mocker.patch('watchgod.cli.sys.stdin.fileno')
