@@ -1,12 +1,16 @@
 import asyncio
 import re
+import sys
 import threading
 from time import sleep
 
+import pytest
 from pytest_toolbox import mktree
 
 from watchgod import AllWatcher, Change, DefaultWatcher, PythonWatcher, RegExpWatcher, awatch, watch
 
+pytestmark = pytest.mark.asyncio
+skip_on_windows = pytest.mark.skipif(sys.platform == 'win32', reason='fails on windows')
 tree = {
     'foo': {
         'bar.txt': 'bar',
@@ -213,9 +217,11 @@ def test_regexp_no_args(tmpdir):
     }
 
 
-def test_does_not_exist(caplog):
-    AllWatcher('/foo/bar')
-    assert "error walking file system: FileNotFoundError [Errno 2] No such file or directory: '/foo/bar'" in caplog.text
+@skip_on_windows
+def test_does_not_exist(caplog, tmp_path):
+    p = str(tmp_path / 'missing')
+    AllWatcher(p)
+    assert f"error walking file system: FileNotFoundError [Errno 2] No such file or directory: '{p}'" in caplog.text
 
 
 def test_watch(mocker):
@@ -363,5 +369,6 @@ async def test_awatch_log(mocker, caplog):
         assert v == {'r1'}
         break
 
+    print(caplog.text)
     assert caplog.text.count('DEBUG') > 3
     assert 'xxx time=Xms debounced=Xms files=3 changes=1 (1)' in re.sub(r'\dms', 'Xms', caplog.text)
