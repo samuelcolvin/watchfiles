@@ -159,7 +159,12 @@ def run_process(path: Union[Path, str], target: Callable, *,
     process = _start_process(target=target, args=args, kwargs=kwargs)
     reloads = 0
 
+<<<<<<< Updated upstream
     for changes in watch(path, watcher_cls=watcher_cls, debounce=debounce, min_sleep=min_sleep):
+=======
+    for changes in watch(path, watcher_cls=watcher_cls, debounce=debounce,
+                         min_sleep=min_sleep, watcher_kwargs=watcher_kwargs):
+>>>>>>> Stashed changes
         callback and callback(changes)
         _stop_process(process)
         process = _start_process(target=target, args=args, kwargs=kwargs)
