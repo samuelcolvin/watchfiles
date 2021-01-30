@@ -31,15 +31,11 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: install dependencies
-      run: |
-        make install
-        pip freeze
+    - run: make install
+    - run: pip freeze
 
-    - name: test
-      run: |
-        make test
-        coverage xml
+    - run: make test
+    - run: coverage xml
 
     - uses: codecov/codecov-action@v1.0.13
       with:

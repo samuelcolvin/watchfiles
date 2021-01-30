@@ -3,10 +3,12 @@ import re
 import threading
 from time import sleep
 
+import pytest
 from pytest_toolbox import mktree
 
 from watchgod import AllWatcher, Change, DefaultWatcher, PythonWatcher, RegExpWatcher, awatch, watch
 
+pytestmark = pytest.mark.asyncio
 tree = {
     'foo': {
         'bar.txt': 'bar',

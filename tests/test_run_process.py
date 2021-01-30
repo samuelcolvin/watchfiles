@@ -1,7 +1,11 @@
 from asyncio import Future
 
+import pytest
+
 from watchgod import arun_process, run_process
 from watchgod.main import _start_process
+
+pytestmark = pytest.mark.asyncio
 
 
 class FakeWatcher:
