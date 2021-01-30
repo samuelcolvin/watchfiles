@@ -2,6 +2,7 @@ import logging
 import os
 import re
 from enum import IntEnum
+from typing import Optional, Set
 
 __all__ = 'Change', 'AllWatcher', 'DefaultDirWatcher', 'DefaultWatcher', 'PythonWatcher', 'RegExpWatcher'
 logger = logging.getLogger('watchgod.watcher')
@@ -14,9 +15,10 @@ class Change(IntEnum):
 
 
 class AllWatcher:
-    def __init__(self, root_path):
+    def __init__(self, root_path, ignored_paths: Optional[Set] = None):
         self.files = {}
         self.root_path = root_path
+        self.ignored_paths = ignored_paths
         self.check()
 
     def should_watch_dir(self, entry):
@@ -42,6 +44,9 @@ class AllWatcher:
 
     def _walk_dir(self, dir_path, changes, new_files):
         for entry in os.scandir(dir_path):
+            if self.ignored_paths is not None and os.path.join(dir_path, entry) in self.ignored_paths:
+                continue
+
             if entry.is_dir():
                 if self.should_watch_dir(entry):
                     self._walk_dir(entry.path, changes, new_files)
