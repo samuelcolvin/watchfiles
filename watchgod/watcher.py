@@ -67,8 +67,12 @@ class AllWatcher:
         new_files: Dict[str, float] = {}
         try:
             self._walk(self.root_path, changes, new_files)
+        except FileNotFoundError as e:
+            # happens when a directory has been deleted between checks, or when
+            # checking a broken symlink
+            pass
         except OSError as e:
-            # happens when a directory has been deleted between checks
+            # check for unexpected errors
             logger.warning('error walking file system: %s %s', e.__class__.__name__, e)
 
         # look for deleted
