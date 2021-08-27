@@ -99,8 +99,8 @@ class DefaultWatcher(DefaultDirWatcher):
 
 
 class PythonWatcher(DefaultDirWatcher):
-    def __init__(self, extenstions: List[str]=[], *args, **kwargs):
-        exts = extenstions
+    def __init__(self, *args, extensions: List[str]=[], **kwargs):
+        exts = extensions
         exts += ['.py', '.pyx', '.pyd']
         self.exts = tuple(exts)
         super().__init__(*args, **kwargs)

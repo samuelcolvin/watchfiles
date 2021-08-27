@@ -142,5 +142,5 @@ def cli(*args_: str) -> None:
         run_function,
         args=(arg_namespace.function, tty_path),
         callback=callback,
-        watcher_kwargs={'ignored_paths': ignored_paths, 'extenstions': extensions},
+        watcher_kwargs={'ignored_paths': ignored_paths, 'extensions': extensions},
     )
