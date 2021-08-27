@@ -84,6 +84,13 @@ def cli(*args_: str) -> None:
         help='Specify paths to files or directories to ignore their updates',
     )
     parser.add_argument(
+        "--extensions",
+        nargs='*',
+        type="str",
+        default=[],
+        help='File extensions to additionally watch'
+    )
+    parser.add_argument(
         '--args',
         '-a',
         nargs=argparse.REMAINDER,
@@ -128,11 +135,12 @@ def cli(*args_: str) -> None:
     sys.argv = sys_argv(arg_namespace.function)
 
     ignored_paths = {str(Path(p).resolve()) for p in arg_namespace.ignore_paths}
+    extensions = arg_namespace.extensions
 
     run_process(
         path,
         run_function,
         args=(arg_namespace.function, tty_path),
         callback=callback,
-        watcher_kwargs={'ignored_paths': ignored_paths},
+        watcher_kwargs={'ignored_paths': ignored_paths, 'extenstions': extensions},
     )
