@@ -86,7 +86,7 @@ def cli(*args_: str) -> None:
     parser.add_argument(
         "--extensions",
         nargs='*',
-        type="str",
+        type=str,
         default=[],
         help='File extensions to additionally watch'
     )
