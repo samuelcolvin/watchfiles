@@ -56,21 +56,27 @@ class AllWatcher:
             if self.ignored_paths is not None and os.path.join(dir_path, entry) in self.ignored_paths:
                 continue
 
-            if entry.is_dir():
-                if self.should_watch_dir(entry):
-                    self._walk_dir(entry.path, changes, new_files)
-            elif self.should_watch_file(entry):
-                self._watch_file(entry.path, changes, new_files, entry.stat())
+            try:
+                if entry.is_dir():
+                    if self.should_watch_dir(entry):
+                        self._walk_dir(entry.path, changes, new_files)
+                elif self.should_watch_file(entry):
+                        self._watch_file(entry.path, changes, new_files, entry.stat())
+            except FileNotFoundError as e:
+                # sometimes we can't find the file. If it was deleted since
+                # `entry` was allocated, then it doesn't matter and can be
+                # ignored.  It might also be a bad symlink, in which case we
+                # should silently skip it - users don't want to constantly spam
+                # warnings, esp if they can't remove the symlink (eg from a
+                # node_modules directory).
+                pass
+
 
     def check(self) -> Set['FileChange']:
         changes: Set['FileChange'] = set()
         new_files: Dict[str, float] = {}
         try:
             self._walk(self.root_path, changes, new_files)
-        except FileNotFoundError as e:
-            # happens when a directory has been deleted between checks, or when
-            # checking a broken symlink
-            pass
         except OSError as e:
             # check for unexpected errors
             logger.warning('error walking file system: %s %s', e.__class__.__name__, e)
