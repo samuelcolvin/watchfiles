@@ -52,7 +52,6 @@ class awatch:
     """
 
     __slots__ = (
-        '_loop',
         '_path',
         '_watcher_cls',
         '_watcher_kwargs',
@@ -77,7 +76,6 @@ class awatch:
         stop_event: Optional[asyncio.Event] = None,
         loop: Optional[asyncio.AbstractEventLoop] = None,
     ) -> None:
-        self._loop = loop or asyncio.get_event_loop()
         self._executor = ThreadPoolExecutor(max_workers=4)
         self._path = path
         self._watcher_cls = watcher_cls
@@ -87,7 +85,6 @@ class awatch:
         self._min_sleep = min_sleep
         self._stop_event = stop_event
         self._w: Optional['AllWatcher'] = None
-        asyncio.set_event_loop(self._loop)
         self.lock = asyncio.Lock()
 
     def __aiter__(self) -> 'awatch':
@@ -139,7 +136,8 @@ class awatch:
                     return changes
 
     async def run_in_executor(self, func: 'AnyCallable', *args: Any) -> Any:
-        return await self._loop.run_in_executor(self._executor, func, *args)
+        # TODO(PY39): asyncio.to_thread(...)
+        return await asyncio.get_running_loop().run_in_executor(self._executor, func, *args)
 
     def __del__(self) -> None:
         self._executor.shutdown()
