@@ -5,7 +5,7 @@ import os
 import signal
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
-from multiprocessing import Process
+from multiprocessing import Process, get_context
 from pathlib import Path
 from time import time
 from typing import TYPE_CHECKING, Any, Awaitable, Callable, Dict, Generator, Optional, Set, Tuple, Type, Union, cast
@@ -20,6 +20,10 @@ if TYPE_CHECKING:
 
     FileChanges = Set[FileChange]
     AnyCallable = Callable[..., Any]
+
+# Use spawn context to make sure code run in subprocess
+# does not reuse imported modules in main process/context
+spawn_context = get_context('spawn')
 
 
 def unix_ms() -> int:
@@ -146,7 +150,7 @@ class awatch:
 
 
 def _start_process(target: 'AnyCallable', args: Tuple[Any, ...], kwargs: Optional[Dict[str, Any]]) -> Process:
-    process = Process(target=target, args=args, kwargs=kwargs or {})
+    process = spawn_context.Process(target=target, args=args, kwargs=kwargs or {})
     process.start()
     return process
 
