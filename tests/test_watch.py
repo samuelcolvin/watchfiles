@@ -1,15 +1,15 @@
-import asyncio
 import re
 import sys
 import threading
 from time import sleep
 
+import anyio
 import pytest
 from pytest_toolbox import mktree
 
 from watchgod import AllWatcher, Change, DefaultWatcher, PythonWatcher, RegExpWatcher, awatch, watch
 
-pytestmark = pytest.mark.asyncio
+pytestmark = pytest.mark.anyio
 skip_on_windows = pytest.mark.skipif(sys.platform == 'win32', reason='fails on windows')
 skip_unless_linux = pytest.mark.skipif(sys.platform != 'linux', reason='test only on linux')
 tree = {
@@ -405,7 +405,7 @@ async def test_awatch_stop():
         def check(self):
             return next(self._results)
 
-    stop_event = asyncio.Event()
+    stop_event = anyio.Event()
     stop_event.set()
     ans = []
     async for v in awatch('xxx', watcher_cls=FakeWatcher, debounce=5, min_sleep=1, stop_event=stop_event):

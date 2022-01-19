@@ -1,14 +1,14 @@
-import asyncio
 import functools
 import logging
 import os
 import signal
-from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from multiprocessing import Process
 from pathlib import Path
 from time import time
 from typing import TYPE_CHECKING, Any, Awaitable, Callable, Dict, Generator, Optional, Set, Tuple, Type, Union, cast
+
+import anyio
 
 from .watcher import DefaultWatcher, PythonWatcher
 
@@ -30,18 +30,15 @@ def watch(path: Union[Path, str], **kwargs: Any) -> Generator['FileChanges', Non
     """
     Watch a directory and yield a set of changes whenever files change in that directory or its subdirectories.
     """
-    loop = asyncio.new_event_loop()
     try:
-        _awatch = awatch(path, loop=loop, **kwargs)
+        _awatch = awatch(path, **kwargs)
         while True:
             try:
-                yield loop.run_until_complete(_awatch.__anext__())
+                yield anyio.run(_awatch.__anext__)
             except StopAsyncIteration:
                 break
     except KeyboardInterrupt:
         logger.debug('KeyboardInterrupt, exiting')
-    finally:
-        loop.close()
 
 
 class awatch:
@@ -52,7 +49,6 @@ class awatch:
     """
 
     __slots__ = (
-        '_loop',
         '_path',
         '_watcher_cls',
         '_watcher_kwargs',
@@ -62,7 +58,7 @@ class awatch:
         '_normal_sleep',
         '_w',
         'lock',
-        '_executor',
+        '_thread_semaphore',
     )
 
     def __init__(
@@ -74,11 +70,9 @@ class awatch:
         debounce: int = 1600,
         normal_sleep: int = 400,
         min_sleep: int = 50,
-        stop_event: Optional[asyncio.Event] = None,
-        loop: Optional[asyncio.AbstractEventLoop] = None,
+        stop_event: Optional[anyio.Event] = None,
     ) -> None:
-        self._loop = loop or asyncio.get_event_loop()
-        self._executor = ThreadPoolExecutor(max_workers=4)
+        self._thread_semaphore = anyio.Semaphore(4)
         self._path = path
         self._watcher_cls = watcher_cls
         self._watcher_kwargs = watcher_kwargs or dict()
@@ -87,8 +81,7 @@ class awatch:
         self._min_sleep = min_sleep
         self._stop_event = stop_event
         self._w: Optional['AllWatcher'] = None
-        asyncio.set_event_loop(self._loop)
-        self.lock = asyncio.Lock()
+        self.lock = anyio.Lock()
 
     def __aiter__(self) -> 'awatch':
         return self
@@ -115,7 +108,7 @@ class awatch:
                         sleep_time = self._min_sleep
                     else:
                         sleep_time = max(self._normal_sleep - check_time, self._min_sleep)
-                    await asyncio.sleep(sleep_time / 1000)
+                    await anyio.sleep(sleep_time / 1000)
 
                 s = unix_ms()
                 new_changes = await self.run_in_executor(watcher.check)
@@ -139,10 +132,8 @@ class awatch:
                     return changes
 
     async def run_in_executor(self, func: 'AnyCallable', *args: Any) -> Any:
-        return await self._loop.run_in_executor(self._executor, func, *args)
-
-    def __del__(self) -> None:
-        self._executor.shutdown()
+        async with self._thread_semaphore:
+            return await anyio.to_thread.run_sync(func, *args)
 
 
 def _start_process(target: 'AnyCallable', args: Tuple[Any, ...], kwargs: Optional[Dict[str, Any]]) -> Process:

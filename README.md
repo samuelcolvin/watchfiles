@@ -46,22 +46,21 @@ with one argument: the set of file changes.
 a `ThreadPoolExecutor` to iterate over files.
 
 ```python
-import asyncio
+import anyio
 from watchgod import awatch
 
 async def main():
     async for changes in awatch('/path/to/dir'):
         print(changes)
 
-loop = asyncio.get_event_loop()
-loop.run_until_complete(main())
+anyio.run(main)
 ```
 
 There's also an asynchronous equivalents of `run_process`: `arun_process` which in turn
 uses `awatch`:
 
 ```python
-import asyncio
+import anyio
 from watchgod import arun_process
 
 def foobar(a, b, c):
@@ -70,8 +69,7 @@ def foobar(a, b, c):
 async def main():
     await arun_process('./path/to/dir', foobar, args=(1, 2, 3))
 
-loop = asyncio.get_event_loop()
-loop.run_until_complete(main())
+anyio.run(main)
 ```
 
 `arun_process` uses `PythonWatcher` so only changes to python files will prompt a
@@ -140,7 +138,7 @@ You could run this and reload it when any file in the current directory changes 
     watchgod foobar.main
 
 In case you need to ignore certain files or directories, you can use the argument
- `--ignore-paths`. 
+ `--ignore-paths`.
 
 Run `watchgod --help` for more options. *watchgod* is also available as a python executable module
 via `python -m watchgod ...`.
