@@ -83,14 +83,15 @@ def test_start_process(mocker):
     mock_process.assert_called_with(target=v, args=(1, 2, 3), kwargs={})
 
 
-@pytest.mark.skip(reason="Not working on anyio")
 async def test_async_alive_terminates(mocker):
     mock_start_process = mocker.patch('watchgod.main._start_process')
     mock_start_process.return_value = FakeProcess()
     mock_kill = mocker.patch('watchgod.main.os.kill')
-    f = Future()
-    f.set_result(1)
-    c = mocker.MagicMock(return_value=f)
+
+    async def f():
+        return 1
+
+    c = mocker.AsyncMock(return_value=f)
 
     reloads = await arun_process('/x/y/async', object(), watcher_cls=FakeWatcher, callback=c, debounce=5, min_sleep=1)
     assert reloads == 1
