@@ -34,6 +34,7 @@ setup(
         'Environment :: MacOS X',
         'Topic :: Software Development :: Libraries :: Python Modules',
         'Topic :: System :: Filesystems',
+        'Framework :: AnyIO',
     ],
     author='Samuel Colvin',
     author_email='s@muelcolvin.com',
