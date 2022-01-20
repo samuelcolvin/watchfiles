@@ -87,11 +87,7 @@ async def test_async_alive_terminates(mocker):
     mock_start_process = mocker.patch('watchgod.main._start_process')
     mock_start_process.return_value = FakeProcess()
     mock_kill = mocker.patch('watchgod.main.os.kill')
-
-    async def f():
-        return 1
-
-    c = mocker.AsyncMock(return_value=f)
+    c = mocker.AsyncMock(return_value=1)
 
     reloads = await arun_process('/x/y/async', object(), watcher_cls=FakeWatcher, callback=c, debounce=5, min_sleep=1)
     assert reloads == 1

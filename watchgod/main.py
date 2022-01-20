@@ -58,7 +58,7 @@ class awatch:
         '_normal_sleep',
         '_w',
         'lock',
-        '_thread_semaphore',
+        '_thread_limiter',
     )
 
     def __init__(
@@ -72,7 +72,7 @@ class awatch:
         min_sleep: int = 50,
         stop_event: Optional[anyio.Event] = None,
     ) -> None:
-        self._thread_semaphore = anyio.Semaphore(4)
+        self._thread_limiter = anyio.CapacityLimiter(4)
         self._path = path
         self._watcher_cls = watcher_cls
         self._watcher_kwargs = watcher_kwargs or dict()
@@ -132,8 +132,7 @@ class awatch:
                     return changes
 
     async def run_in_executor(self, func: 'AnyCallable', *args: Any) -> Any:
-        async with self._thread_semaphore:
-            return await anyio.to_thread.run_sync(func, *args)
+        return await anyio.to_thread.run_sync(func, *args, limiter=self._thread_limiter)
 
 
 def _start_process(target: 'AnyCallable', args: Tuple[Any, ...], kwargs: Optional[Dict[str, Any]]) -> Process:
