@@ -1,6 +1,6 @@
 /.idea/
 /env/
-/env35/
+/env*/
 *.py[cod]
 *.egg-info/
 build/

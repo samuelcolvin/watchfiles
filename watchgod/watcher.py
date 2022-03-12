@@ -61,16 +61,15 @@ class AllWatcher:
                     if self.should_watch_dir(entry):
                         self._walk_dir(entry.path, changes, new_files)
                 elif self.should_watch_file(entry):
-                        self._watch_file(entry.path, changes, new_files, entry.stat())
-            except FileNotFoundError as e:
+                    self._watch_file(entry.path, changes, new_files, entry.stat())
+            except FileNotFoundError:
                 # sometimes we can't find the file. If it was deleted since
                 # `entry` was allocated, then it doesn't matter and can be
                 # ignored.  It might also be a bad symlink, in which case we
                 # should silently skip it - users don't want to constantly spam
-                # warnings, esp if they can't remove the symlink (eg from a
+                # warnings, esp if they can't remove the symlink (e.g. from a
                 # node_modules directory).
                 pass
-
 
     def check(self) -> Set['FileChange']:
         changes: Set['FileChange'] = set()
