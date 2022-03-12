@@ -8,7 +8,7 @@ from pathlib import Path
 from time import time
 from typing import TYPE_CHECKING, Any, Awaitable, Callable, Dict, Generator, Optional, Set, Tuple, Type, Union, cast
 
-import anyio
+import anyio  # type: ignore
 
 from .watcher import DefaultWatcher, PythonWatcher
 
