@@ -1,4 +1,4 @@
-black==20.8b1
+black==22.1.0
 flake8==3.8.4
 flake8-quotes==3.2.0
 isort==5.7.0
