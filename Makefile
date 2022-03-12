@@ -48,6 +48,8 @@ clean:
 	rm -f `find . -type f -name '.*~' `
 	rm -rf .cache
 	rm -rf htmlcov
+	rm -rf .pytest_cache
+	rm -rf .mypy_cache
 	rm -rf *.egg-info
 	rm -f .coverage
 	rm -f .coverage.*
