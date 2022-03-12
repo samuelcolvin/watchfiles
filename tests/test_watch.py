@@ -1,15 +1,16 @@
 import re
 import sys
 import threading
+from pathlib import Path
 from time import sleep
 
 import anyio
 import pytest
-from pytest_toolbox import mktree
 
 from watchgod import AllWatcher, Change, DefaultWatcher, PythonWatcher, RegExpWatcher, awatch, watch
 
-pytestmark = pytest.mark.anyio
+from .conftest import mktree
+
 skip_on_windows = pytest.mark.skipif(sys.platform == 'win32', reason='fails on windows')
 skip_unless_linux = pytest.mark.skipif(sys.platform != 'linux', reason='test only on linux')
 tree = {
@@ -27,248 +28,248 @@ tree = {
 }
 
 
-def test_add(tmpdir):
-    watcher = AllWatcher(str(tmpdir))
+def test_add(tmp_path):
+    watcher = AllWatcher(tmp_path)
     changes = watcher.check()
     assert changes == set()
 
     sleep(0.01)
-    tmpdir.join('foo.txt').write('foobar')
+    (tmp_path / 'foo.txt').write_text('foobar')
 
     changes = watcher.check()
-    assert changes == {(Change.added, str(tmpdir.join('foo.txt')))}
+    assert changes == {(Change.added, str((tmp_path / 'foo.txt')))}
 
 
-def test_add_watched_file(tmpdir):
-    file = tmpdir.join('bar.txt')
+def test_add_watched_file(tmp_path):
+    file = tmp_path / 'bar.txt'
 
-    watcher = AllWatcher(str(file))
+    watcher = AllWatcher(file)
     assert watcher.check() == set()
 
     sleep(0.01)
-    file.write('foobar')
+    file.write_text('foobar')
     assert watcher.check() == {(Change.added, str(file))}
 
 
-def test_modify(tmpdir):
-    mktree(tmpdir, tree)
+def test_modify(tmp_path: Path):
+    mktree(tmp_path, tree)
 
-    watcher = AllWatcher(str(tmpdir))
+    watcher = AllWatcher(tmp_path)
     assert watcher.check() == set()
 
     sleep(0.01)
-    tmpdir.join('foo/bar.txt').write('foobar')
+    (tmp_path / 'foo/bar.txt').write_text('foobar')
 
-    assert watcher.check() == {(Change.modified, str(tmpdir.join('foo/bar.txt')))}
+    assert watcher.check() == {(Change.modified, str(tmp_path / 'foo/bar.txt'))}
 
 
 @skip_on_windows
-def test_ignore_root(tmpdir):
-    mktree(tmpdir, tree)
-    watcher = AllWatcher(str(tmpdir), ignored_paths={tmpdir.join('foo')})
+def test_ignore_root(tmp_path):
+    mktree(tmp_path, tree)
+    watcher = AllWatcher(tmp_path, ignored_paths={str(tmp_path / 'foo')})
 
     assert watcher.check() == set()
 
     sleep(0.01)
-    tmpdir.join('foo/bar.txt').write('foobar')
+    (tmp_path / 'foo/bar.txt').write_text('foobar')
 
     assert watcher.check() == set()
 
 
 @skip_on_windows
-def test_ignore_file_path(tmpdir):
-    mktree(tmpdir, tree)
-    watcher = AllWatcher(str(tmpdir), ignored_paths={tmpdir.join('foo', 'bar.txt')})
+def test_ignore_file_path(tmp_path):
+    mktree(tmp_path, tree)
+    watcher = AllWatcher(tmp_path, ignored_paths={str(tmp_path / 'foo' / 'bar.txt')})
 
     assert watcher.check() == set()
 
     sleep(0.01)
-    tmpdir.join('foo', 'bar.txt').write('foobar')
-    tmpdir.join('foo', 'new_not_ignored.txt').write('foobar')
-    tmpdir.join('foo', 'spam.py').write('foobar')
+    (tmp_path / 'foo' / 'bar.txt').write_text('foobar')
+    (tmp_path / 'foo' / 'new_not_ignored.txt').write_text('foobar')
+    (tmp_path / 'foo' / 'spam.py').write_text('foobar')
 
     assert watcher.check() == {
-        (Change.added, tmpdir.join('foo', 'new_not_ignored.txt')),
-        (Change.modified, tmpdir.join('foo', 'spam.py')),
+        (Change.added, str(tmp_path / 'foo' / 'new_not_ignored.txt')),
+        (Change.modified, str(tmp_path / 'foo' / 'spam.py')),
     }
 
 
 @skip_on_windows
-def test_ignore_subdir(tmpdir):
-    mktree(tmpdir, tree)
-    watcher = AllWatcher(str(tmpdir), ignored_paths={tmpdir.join('dir', 'ignored')})
+def test_ignore_subdir(tmp_path):
+    mktree(tmp_path, tree)
+    watcher = AllWatcher(tmp_path, ignored_paths={str(tmp_path / 'dir' / 'ignored')})
     assert watcher.check() == set()
 
     sleep(0.01)
-    tmpdir.mkdir('dir')
-    tmpdir.mkdir('dir', 'ignored')
-    tmpdir.mkdir('dir', 'not_ignored')
+    (tmp_path / 'dir').mkdir()
+    (tmp_path / 'dir' / 'ignored').mkdir()
+    (tmp_path / 'dir' / 'not_ignored').mkdir()
 
-    tmpdir.join('dir', 'ignored', 'file.txt').write('content')
-    tmpdir.join('dir', 'not_ignored', 'file.txt').write('content')
+    (tmp_path / 'dir' / 'ignored' / 'file.txt').write_text('content')
+    (tmp_path / 'dir' / 'not_ignored' / 'file.txt').write_text('content')
 
-    assert watcher.check() == {(Change.added, tmpdir.join('dir', 'not_ignored', 'file.txt'))}
+    assert watcher.check() == {(Change.added, str(tmp_path / 'dir' / 'not_ignored' / 'file.txt'))}
 
 
-def test_modify_watched_file(tmpdir):
-    file = tmpdir.join('bar.txt')
-    file.write('foobar')
+def test_modify_watched_file(tmp_path):
+    file = tmp_path / 'bar.txt'
+    file.write_text('foobar')
 
-    watcher = AllWatcher(str(file))
+    watcher = AllWatcher(file)
     assert watcher.check() == set()
 
     sleep(0.01)
-    file.write('foobar')
+    file.write_text('foobar')
     assert watcher.check() == {(Change.modified, str(file))}  # same content but time updated
 
     sleep(0.01)
-    file.write('baz')
+    file.write_text('baz')
     assert watcher.check() == {(Change.modified, str(file))}
 
 
-def test_delete(tmpdir):
-    mktree(tmpdir, tree)
+def test_delete(tmp_path):
+    mktree(tmp_path, tree)
 
-    watcher = AllWatcher(str(tmpdir))
+    watcher = AllWatcher(tmp_path)
 
     sleep(0.01)
-    tmpdir.join('foo/bar.txt').remove()
+    (tmp_path / 'foo/bar.txt').unlink()
 
-    assert watcher.check() == {(Change.deleted, str(tmpdir.join('foo/bar.txt')))}
+    assert watcher.check() == {(Change.deleted, str((tmp_path / 'foo/bar.txt')))}
 
 
-def test_delete_watched_file(tmpdir):
-    file = tmpdir.join('bar.txt')
-    file.write('foobar')
+def test_delete_watched_file(tmp_path):
+    file = tmp_path / 'bar.txt'
+    file.write_text('foobar')
 
-    watcher = AllWatcher(str(file))
+    watcher = AllWatcher(file)
     assert watcher.check() == set()
 
     sleep(0.01)
-    file.remove()
+    file.unlink()
     assert watcher.check() == {(Change.deleted, str(file))}
 
 
-def test_ignore_file(tmpdir):
-    mktree(tmpdir, tree)
+def test_ignore_file(tmp_path):
+    mktree(tmp_path, tree)
 
-    watcher = DefaultWatcher(str(tmpdir))
+    watcher = DefaultWatcher(tmp_path)
 
     sleep(0.01)
-    tmpdir.join('foo/spam.pyc').write('foobar')
+    (tmp_path / 'foo/spam.pyc').write_text('foobar')
 
     assert watcher.check() == set()
 
 
-def test_ignore_dir(tmpdir):
-    mktree(tmpdir, tree)
+def test_ignore_dir(tmp_path):
+    mktree(tmp_path, tree)
 
-    watcher = DefaultWatcher(str(tmpdir))
+    watcher = DefaultWatcher(tmp_path)
 
     sleep(0.01)
-    tmpdir.join('foo/.git/abc').write('xxx')
+    (tmp_path / 'foo/.git/abc').write_text('xxx')
 
     assert watcher.check() == set()
 
 
-def test_python(tmpdir):
-    mktree(tmpdir, tree)
+def test_python(tmp_path):
+    mktree(tmp_path, tree)
 
-    watcher = PythonWatcher(str(tmpdir))
+    watcher = PythonWatcher(tmp_path)
 
     sleep(0.01)
-    tmpdir.join('foo/spam.py').write('xxx')
-    tmpdir.join('foo/bar.txt').write('xxx')
+    (tmp_path / 'foo/spam.py').write_text('xxx')
+    (tmp_path / 'foo/bar.txt').write_text('xxx')
 
-    assert watcher.check() == {(Change.modified, str(tmpdir.join('foo/spam.py')))}
+    assert watcher.check() == {(Change.modified, str((tmp_path / 'foo/spam.py')))}
 
 
-def test_regexp(tmpdir):
-    mktree(tmpdir, tree)
+def test_regexp(tmp_path):
+    mktree(tmp_path, tree)
 
     re_files = r'^.*(\.txt|\.js)$'
     re_dirs = r'^(?:(?!recursive_dir).)*$'
 
-    watcher = RegExpWatcher(str(tmpdir), re_files, re_dirs)
+    watcher = RegExpWatcher(tmp_path, re_files, re_dirs)
     changes = watcher.check()
     assert changes == set()
 
     sleep(0.01)
-    tmpdir.join('foo/spam.py').write('xxx')
-    tmpdir.join('foo/bar.txt').write('change')
-    tmpdir.join('foo/borec.txt').write('ahoy')
-    tmpdir.join('foo/borec-js.js').write('peace')
-    tmpdir.join('foo/recursive_dir/b.js').write('borec')
+    (tmp_path / 'foo/spam.py').write_text('xxx')
+    (tmp_path / 'foo/bar.txt').write_text('change')
+    (tmp_path / 'foo/borec.txt').write_text('ahoy')
+    (tmp_path / 'foo/borec-js.js').write_text('peace')
+    (tmp_path / 'foo/recursive_dir/b.js').write_text('borec')
 
     assert watcher.check() == {
-        (Change.modified, str(tmpdir.join('foo/bar.txt'))),
-        (Change.added, str(tmpdir.join('foo/borec.txt'))),
-        (Change.added, str(tmpdir.join('foo/borec-js.js'))),
+        (Change.modified, str((tmp_path / 'foo/bar.txt'))),
+        (Change.added, str((tmp_path / 'foo/borec.txt'))),
+        (Change.added, str((tmp_path / 'foo/borec-js.js'))),
     }
 
 
-def test_regexp_no_re_dirs(tmpdir):
-    mktree(tmpdir, tree)
+def test_regexp_no_re_dirs(tmp_path):
+    mktree(tmp_path, tree)
 
     re_files = r'^.*(\.txt|\.js)$'
 
-    watcher_no_re_dirs = RegExpWatcher(str(tmpdir), re_files)
+    watcher_no_re_dirs = RegExpWatcher(tmp_path, re_files)
     changes = watcher_no_re_dirs.check()
     assert changes == set()
 
     sleep(0.01)
-    tmpdir.join('foo/spam.py').write('xxx')
-    tmpdir.join('foo/bar.txt').write('change')
-    tmpdir.join('foo/recursive_dir/foo.js').write('change')
+    (tmp_path / 'foo/spam.py').write_text('xxx')
+    (tmp_path / 'foo/bar.txt').write_text('change')
+    (tmp_path / 'foo/recursive_dir/foo.js').write_text('change')
 
     assert watcher_no_re_dirs.check() == {
-        (Change.modified, str(tmpdir.join('foo/bar.txt'))),
-        (Change.added, str(tmpdir.join('foo/recursive_dir/foo.js'))),
+        (Change.modified, str((tmp_path / 'foo/bar.txt'))),
+        (Change.added, str((tmp_path / 'foo/recursive_dir/foo.js'))),
     }
 
 
-def test_regexp_no_re_files(tmpdir):
-    mktree(tmpdir, tree)
+def test_regexp_no_re_files(tmp_path):
+    mktree(tmp_path, tree)
 
     re_dirs = r'^(?:(?!recursive_dir).)*$'
 
-    watcher_no_re_files = RegExpWatcher(str(tmpdir), re_dirs=re_dirs)
+    watcher_no_re_files = RegExpWatcher(tmp_path, re_dirs=re_dirs)
     changes = watcher_no_re_files.check()
     assert changes == set()
 
     sleep(0.01)
-    tmpdir.join('foo/spam.py').write('xxx')
-    tmpdir.join('foo/bar.txt').write('change')
-    tmpdir.join('foo/recursive_dir/foo.js').write('change')
+    (tmp_path / 'foo/spam.py').write_text('xxx')
+    (tmp_path / 'foo/bar.txt').write_text('change')
+    (tmp_path / 'foo/recursive_dir/foo.js').write_text('change')
 
     assert watcher_no_re_files.check() == {
-        (Change.modified, str(tmpdir.join('foo/spam.py'))),
-        (Change.modified, str(tmpdir.join('foo/bar.txt'))),
+        (Change.modified, str((tmp_path / 'foo/spam.py'))),
+        (Change.modified, str((tmp_path / 'foo/bar.txt'))),
     }
 
 
-def test_regexp_no_args(tmpdir):
-    mktree(tmpdir, tree)
+def test_regexp_no_args(tmp_path):
+    mktree(tmp_path, tree)
 
-    watcher_no_args = RegExpWatcher(str(tmpdir))
+    watcher_no_args = RegExpWatcher(tmp_path)
     changes = watcher_no_args.check()
     assert changes == set()
 
     sleep(0.01)
-    tmpdir.join('foo/spam.py').write('xxx')
-    tmpdir.join('foo/bar.txt').write('change')
-    tmpdir.join('foo/recursive_dir/foo.js').write('change')
+    (tmp_path / 'foo/spam.py').write_text('xxx')
+    (tmp_path / 'foo/bar.txt').write_text('change')
+    (tmp_path / 'foo/recursive_dir/foo.js').write_text('change')
 
     assert watcher_no_args.check() == {
-        (Change.modified, str(tmpdir.join('foo/spam.py'))),
-        (Change.modified, str(tmpdir.join('foo/bar.txt'))),
-        (Change.added, str(tmpdir.join('foo/recursive_dir/foo.js'))),
+        (Change.modified, str((tmp_path / 'foo/spam.py'))),
+        (Change.modified, str((tmp_path / 'foo/bar.txt'))),
+        (Change.added, str((tmp_path / 'foo/recursive_dir/foo.js'))),
     }
 
 
 @skip_on_windows
 def test_does_not_exist(caplog, tmp_path):
-    p = str(tmp_path / 'missing')
+    p = tmp_path / 'missing'
     AllWatcher(p)
     assert f"error walking file system: FileNotFoundError [Errno 2] No such file or directory: '{p}'" in caplog.text
 

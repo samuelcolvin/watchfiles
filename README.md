@@ -40,6 +40,12 @@ If you need notifications about change events as well as to restart a process yo
 use the `callback` argument to pass a function which will be called on every file change
 with one argument: the set of file changes.
 
+## Installation
+
+```bash
+pip install watchgod
+```
+
 ## Asynchronous Methods
 
 *watchgod* comes with an asynchronous equivalents of `watch`: `awatch` which uses
