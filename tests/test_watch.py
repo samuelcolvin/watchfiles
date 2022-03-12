@@ -30,7 +30,7 @@ tree = {
 
 
 def test_add(tmp_path):
-    watcher = AllWatcher(str(tmp_path))
+    watcher = AllWatcher(tmp_path)
     changes = watcher.check()
     assert changes == set()
 
@@ -44,7 +44,7 @@ def test_add(tmp_path):
 def test_add_watched_file(tmp_path):
     file = tmp_path / 'bar.txt'
 
-    watcher = AllWatcher(str(file))
+    watcher = AllWatcher(file)
     assert watcher.check() == set()
 
     sleep(0.01)
@@ -55,7 +55,7 @@ def test_add_watched_file(tmp_path):
 def test_modify(tmp_path: Path):
     mktree(tmp_path, tree)
 
-    watcher = AllWatcher(str(tmp_path))
+    watcher = AllWatcher(tmp_path)
     assert watcher.check() == set()
 
     sleep(0.01)
@@ -67,7 +67,7 @@ def test_modify(tmp_path: Path):
 @skip_on_windows
 def test_ignore_root(tmp_path):
     mktree(tmp_path, tree)
-    watcher = AllWatcher(str(tmp_path), ignored_paths={str(tmp_path / 'foo')})
+    watcher = AllWatcher(tmp_path, ignored_paths={str(tmp_path / 'foo')})
 
     assert watcher.check() == set()
 
@@ -80,7 +80,7 @@ def test_ignore_root(tmp_path):
 @skip_on_windows
 def test_ignore_file_path(tmp_path):
     mktree(tmp_path, tree)
-    watcher = AllWatcher(str(tmp_path), ignored_paths={str(tmp_path / 'foo' / 'bar.txt')})
+    watcher = AllWatcher(tmp_path, ignored_paths={str(tmp_path / 'foo' / 'bar.txt')})
 
     assert watcher.check() == set()
 
@@ -98,7 +98,7 @@ def test_ignore_file_path(tmp_path):
 @skip_on_windows
 def test_ignore_subdir(tmp_path):
     mktree(tmp_path, tree)
-    watcher = AllWatcher(str(tmp_path), ignored_paths={str(tmp_path / 'dir' / 'ignored')})
+    watcher = AllWatcher(tmp_path, ignored_paths={str(tmp_path / 'dir' / 'ignored')})
     assert watcher.check() == set()
 
     sleep(0.01)
@@ -116,7 +116,7 @@ def test_modify_watched_file(tmp_path):
     file = tmp_path / 'bar.txt'
     file.write_text('foobar')
 
-    watcher = AllWatcher(str(file))
+    watcher = AllWatcher(file)
     assert watcher.check() == set()
 
     sleep(0.01)
@@ -131,7 +131,7 @@ def test_modify_watched_file(tmp_path):
 def test_delete(tmp_path):
     mktree(tmp_path, tree)
 
-    watcher = AllWatcher(str(tmp_path))
+    watcher = AllWatcher(tmp_path)
 
     sleep(0.01)
     (tmp_path / 'foo/bar.txt').unlink()
@@ -143,7 +143,7 @@ def test_delete_watched_file(tmp_path):
     file = tmp_path / 'bar.txt'
     file.write_text('foobar')
 
-    watcher = AllWatcher(str(file))
+    watcher = AllWatcher(file)
     assert watcher.check() == set()
 
     sleep(0.01)
@@ -154,7 +154,7 @@ def test_delete_watched_file(tmp_path):
 def test_ignore_file(tmp_path):
     mktree(tmp_path, tree)
 
-    watcher = DefaultWatcher(str(tmp_path))
+    watcher = DefaultWatcher(tmp_path)
 
     sleep(0.01)
     (tmp_path / 'foo/spam.pyc').write_text('foobar')
@@ -165,7 +165,7 @@ def test_ignore_file(tmp_path):
 def test_ignore_dir(tmp_path):
     mktree(tmp_path, tree)
 
-    watcher = DefaultWatcher(str(tmp_path))
+    watcher = DefaultWatcher(tmp_path)
 
     sleep(0.01)
     (tmp_path / 'foo/.git/abc').write_text('xxx')
@@ -176,7 +176,7 @@ def test_ignore_dir(tmp_path):
 def test_python(tmp_path):
     mktree(tmp_path, tree)
 
-    watcher = PythonWatcher(str(tmp_path))
+    watcher = PythonWatcher(tmp_path)
 
     sleep(0.01)
     (tmp_path / 'foo/spam.py').write_text('xxx')
@@ -191,7 +191,7 @@ def test_regexp(tmp_path):
     re_files = r'^.*(\.txt|\.js)$'
     re_dirs = r'^(?:(?!recursive_dir).)*$'
 
-    watcher = RegExpWatcher(str(tmp_path), re_files, re_dirs)
+    watcher = RegExpWatcher(tmp_path, re_files, re_dirs)
     changes = watcher.check()
     assert changes == set()
 
@@ -214,7 +214,7 @@ def test_regexp_no_re_dirs(tmp_path):
 
     re_files = r'^.*(\.txt|\.js)$'
 
-    watcher_no_re_dirs = RegExpWatcher(str(tmp_path), re_files)
+    watcher_no_re_dirs = RegExpWatcher(tmp_path, re_files)
     changes = watcher_no_re_dirs.check()
     assert changes == set()
 
@@ -234,7 +234,7 @@ def test_regexp_no_re_files(tmp_path):
 
     re_dirs = r'^(?:(?!recursive_dir).)*$'
 
-    watcher_no_re_files = RegExpWatcher(str(tmp_path), re_dirs=re_dirs)
+    watcher_no_re_files = RegExpWatcher(tmp_path, re_dirs=re_dirs)
     changes = watcher_no_re_files.check()
     assert changes == set()
 
@@ -252,7 +252,7 @@ def test_regexp_no_re_files(tmp_path):
 def test_regexp_no_args(tmp_path):
     mktree(tmp_path, tree)
 
-    watcher_no_args = RegExpWatcher(str(tmp_path))
+    watcher_no_args = RegExpWatcher(tmp_path)
     changes = watcher_no_args.check()
     assert changes == set()
 
@@ -270,7 +270,7 @@ def test_regexp_no_args(tmp_path):
 
 @skip_on_windows
 def test_does_not_exist(caplog, tmp_path):
-    p = str(tmp_path / 'missing')
+    p = tmp_path / 'missing'
     AllWatcher(p)
     assert f"error walking file system: FileNotFoundError [Errno 2] No such file or directory: '{p}'" in caplog.text
 

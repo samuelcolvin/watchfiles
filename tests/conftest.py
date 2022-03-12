@@ -1,10 +1,10 @@
 import os
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Union
 
 import pytest
 
-PathDict = Dict[str, 'PathDict']
+PathDict = Dict[str, Union['PathDict', str, bytes]]
 
 
 def mktree(root_dir: Path, path_dict: PathDict):
