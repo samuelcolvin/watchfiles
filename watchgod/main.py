@@ -5,7 +5,7 @@ import os
 import signal
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
-from multiprocessing import Process, get_context
+from multiprocessing import get_context
 from pathlib import Path
 from time import time
 from typing import TYPE_CHECKING, Any, Awaitable, Callable, Dict, Generator, Optional, Set, Tuple, Type, Union, cast
@@ -16,6 +16,8 @@ __all__ = 'watch', 'awatch', 'run_process', 'arun_process'
 logger = logging.getLogger('watchgod.main')
 
 if TYPE_CHECKING:
+    from multiprocessing.context import SpawnProcess
+
     from .watcher import AllWatcher, FileChange
 
     FileChanges = Set[FileChange]
@@ -149,13 +151,13 @@ class awatch:
         self._executor.shutdown()
 
 
-def _start_process(target: 'AnyCallable', args: Tuple[Any, ...], kwargs: Optional[Dict[str, Any]]) -> Process:
+def _start_process(target: 'AnyCallable', args: Tuple[Any, ...], kwargs: Optional[Dict[str, Any]]) -> 'SpawnProcess':
     process = spawn_context.Process(target=target, args=args, kwargs=kwargs or {})
     process.start()
     return process
 
 
-def _stop_process(process: Process) -> None:
+def _stop_process(process: 'SpawnProcess') -> None:
     if process.is_alive():
         logger.debug('stopping process...')
         pid = cast(int, process.pid)
