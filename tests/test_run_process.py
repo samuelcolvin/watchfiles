@@ -72,7 +72,7 @@ def test_alive_doesnt_terminate(mocker):
 
 
 def test_start_process(mocker):
-    mock_process = mocker.patch('watchgod.main.Process')
+    mock_process = mocker.patch('watchgod.main.spawn_context.Process')
     v = object()
     _start_process(v, (1, 2, 3), {})
     assert mock_process.call_count == 1

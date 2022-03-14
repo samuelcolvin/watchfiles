@@ -3,7 +3,7 @@ import logging
 import os
 import signal
 from functools import partial
-from multiprocessing import Process
+from multiprocessing import get_context
 from pathlib import Path
 from time import time
 from typing import TYPE_CHECKING, Any, Awaitable, Callable, Dict, Generator, Optional, Set, Tuple, Type, Union, cast
@@ -16,10 +16,16 @@ __all__ = 'watch', 'awatch', 'run_process', 'arun_process'
 logger = logging.getLogger('watchgod.main')
 
 if TYPE_CHECKING:
+    from multiprocessing.context import SpawnProcess
+
     from .watcher import AllWatcher, FileChange
 
     FileChanges = Set[FileChange]
     AnyCallable = Callable[..., Any]
+
+# Use spawn context to make sure code run in subprocess
+# does not reuse imported modules in main process/context
+spawn_context = get_context('spawn')
 
 
 def unix_ms() -> int:
@@ -137,13 +143,13 @@ class awatch:
         return await anyio.to_thread.run_sync(func, *args, limiter=self._thread_limiter)
 
 
-def _start_process(target: 'AnyCallable', args: Tuple[Any, ...], kwargs: Optional[Dict[str, Any]]) -> Process:
-    process = Process(target=target, args=args, kwargs=kwargs or {})
+def _start_process(target: 'AnyCallable', args: Tuple[Any, ...], kwargs: Optional[Dict[str, Any]]) -> 'SpawnProcess':
+    process = spawn_context.Process(target=target, args=args, kwargs=kwargs or {})
     process.start()
     return process
 
 
-def _stop_process(process: Process) -> None:
+def _stop_process(process: 'SpawnProcess') -> None:
     if process.is_alive():
         logger.debug('stopping process...')
         pid = cast(int, process.pid)
