@@ -6,7 +6,7 @@ import sys
 from importlib import import_module
 from multiprocessing import set_start_method
 from pathlib import Path
-from typing import Any, Generator, List, Optional, Sized
+from typing import Any, Dict, Generator, List, Optional, Sized
 
 from .main import run_process
 
@@ -83,13 +83,7 @@ def cli(*args_: str) -> None:
         default=[],
         help='Specify paths to files or directories to ignore their updates',
     )
-    parser.add_argument(
-        "--extensions",
-        nargs='*',
-        type=str,
-        default=[],
-        help='File extensions to additionally watch'
-    )
+    parser.add_argument('--extensions', nargs='*', type=str, default=(), help='File extensions to additionally watch')
     parser.add_argument(
         '--args',
         '-a',
@@ -134,13 +128,18 @@ def cli(*args_: str) -> None:
     set_start_method('spawn')
     sys.argv = sys_argv(arg_namespace.function)
 
-    ignored_paths = {str(Path(p).resolve()) for p in arg_namespace.ignore_paths}
+    watcher_kwargs: Dict[str, Any] = {}
+    if arg_namespace.ignore_paths:
+        watcher_kwargs['ignore_paths'] = {str(Path(p).resolve()) for p in arg_namespace.ignore_paths}
+
     extensions = arg_namespace.extensions
+    if arg_namespace.extensions:
+        watcher_kwargs['extensions'] = tuple(extensions)
 
     run_process(
         path,
         run_function,
         args=(arg_namespace.function, tty_path),
         callback=callback,
-        watcher_kwargs={'ignored_paths': ignored_paths, 'extensions': extensions},
+        watcher_kwargs=watcher_kwargs,
     )

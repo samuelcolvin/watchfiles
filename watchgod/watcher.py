@@ -3,7 +3,7 @@ import os
 import re
 from enum import IntEnum
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Optional, Pattern, Set, Tuple, Union, List
+from typing import TYPE_CHECKING, Dict, Optional, Pattern, Set, Tuple, Union
 
 __all__ = 'Change', 'AllWatcher', 'DefaultDirWatcher', 'DefaultWatcher', 'PythonWatcher', 'RegExpWatcher'
 logger = logging.getLogger('watchgod.watcher')
@@ -108,14 +108,18 @@ class DefaultWatcher(DefaultDirWatcher):
 
 
 class PythonWatcher(DefaultDirWatcher):
-    def __init__(self, *args, extensions: List[str]=[], **kwargs):
-        exts = extensions
-        exts += ['.py', '.pyx', '.pyd']
-        self.exts = tuple(exts)
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        root_path: Union[Path, str],
+        ignored_paths: Optional[Set[str]] = None,
+        *,
+        extra_extensions: Tuple[str, ...] = (),
+    ) -> None:
+        self.extensions = ('.py', '.pyx', '.pyd') + extra_extensions
+        super().__init__(root_path, ignored_paths)
 
     def should_watch_file(self, entry: 'DirEntry') -> bool:
-        return entry.name.endswith(self.exts)
+        return entry.name.endswith(self.extensions)
 
 
 class RegExpWatcher(AllWatcher):

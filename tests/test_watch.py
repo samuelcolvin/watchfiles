@@ -181,8 +181,25 @@ def test_python(tmp_path):
     sleep(0.01)
     (tmp_path / 'foo/spam.py').write_text('xxx')
     (tmp_path / 'foo/bar.txt').write_text('xxx')
+    (tmp_path / 'foo/spam.md').write_text('xxx')
 
-    assert watcher.check() == {(Change.modified, str((tmp_path / 'foo/spam.py')))}
+    assert watcher.check() == {(Change.modified, str(tmp_path / 'foo/spam.py'))}
+
+
+def test_python_extensions(tmp_path):
+    mktree(tmp_path, tree)
+
+    watcher = PythonWatcher(tmp_path, extra_extensions=('.md',))
+
+    sleep(0.01)
+    (tmp_path / 'foo/spam.py').write_text('xxx')
+    (tmp_path / 'foo/bar.txt').write_text('xxx')
+    (tmp_path / 'foo/spam.md').write_text('xxx')
+
+    assert watcher.check() == {
+        (Change.modified, str(tmp_path / 'foo/spam.py')),
+        (Change.added, str(tmp_path / 'foo/spam.md')),
+    }
 
 
 def test_regexp(tmp_path):
