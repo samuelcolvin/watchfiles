@@ -52,21 +52,21 @@ pip install watchgod
 a `ThreadPoolExecutor` to iterate over files.
 
 ```python
-import anyio
+import asyncio
 from watchgod import awatch
 
 async def main():
     async for changes in awatch('/path/to/dir'):
         print(changes)
 
-anyio.run(main)
+asyncio.run(main())
 ```
 
 There's also an asynchronous equivalents of `run_process`: `arun_process` which in turn
 uses `awatch`:
 
 ```python
-import anyio
+import asyncio
 from watchgod import arun_process
 
 def foobar(a, b, c):
@@ -75,7 +75,7 @@ def foobar(a, b, c):
 async def main():
     await arun_process('./path/to/dir', foobar, args=(1, 2, 3))
 
-anyio.run(main)
+asyncio.run(main())
 ```
 
 `arun_process` uses `PythonWatcher` so only changes to python files will prompt a
