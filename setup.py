@@ -1,5 +1,6 @@
 from importlib.machinery import SourceFileLoader
 from pathlib import Path
+
 from setuptools import setup
 
 THIS_DIR = Path(__file__).resolve().parent
@@ -46,7 +47,7 @@ setup(
     license='MIT',
     packages=['watchgod'],
     package_data={'watchgod': ['py.typed']},
-    install_requires=["anyio>=3.0.0,<4"],
+    install_requires=['anyio>=3.0.0,<4'],
     python_requires='>=3.7',
     zip_safe=True,
 )
