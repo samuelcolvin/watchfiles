@@ -1,0 +1,12 @@
+[package]
+name = "rust_notify_backend"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+notify = "4.0.17"
+pyo3 = {version = "0.16.1", features = ["extension-module"]}
+
+[lib]
+name = "_rust_notify_backend"
+crate-type = ["cdylib"]

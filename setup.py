@@ -2,6 +2,7 @@ from importlib.machinery import SourceFileLoader
 from pathlib import Path
 
 from setuptools import setup
+from setuptools_rust import Binding, RustExtension
 
 THIS_DIR = Path(__file__).resolve().parent
 long_description = THIS_DIR.joinpath('README.md').read_text()
@@ -47,6 +48,9 @@ setup(
     license='MIT',
     packages=['watchgod'],
     package_data={'watchgod': ['py.typed']},
+    rust_extensions=[
+        RustExtension('watchgod._rust_notify_backend', 'rust_notify_backend/Cargo.toml', binding=Binding.PyO3)
+    ],
     install_requires=['anyio>=3.0.0,<4'],
     python_requires='>=3.7',
     zip_safe=True,

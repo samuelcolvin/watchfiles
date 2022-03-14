@@ -12,10 +12,19 @@ install:
 install-all: install
 	pip install -r tests/requirements-linting.txt
 
+.PHONY: build-dev
+build-dev:
+	python setup.py develop
+
+.PHONY: build-prod
+build-prod:
+	python setup.py install
+
 .PHONY: isort
 format:
 	$(isort)
 	$(black)
+	cd rust_notify_backend && cargo fmt
 
 .PHONY: lint
 lint:
@@ -23,6 +32,10 @@ lint:
 	flake8 watchgod/ tests/ setup.py
 	$(isort) --check-only --df
 	$(black) --check --diff
+	cargo fmt --version
+	cd rust_notify_backend && cargo fmt --all -- --check
+	cargo clippy --version
+	cd rust_notify_backend && cargo clippy -- -D warnings
 
 .PHONY: mypy
 mypy:

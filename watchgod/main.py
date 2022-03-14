@@ -54,8 +54,6 @@ def watch(path: Union[Path, str], **kwargs: Any) -> Generator['FileChanges', Non
 class awatch:
     """
     asynchronous equivalent of watch using a threaded executor.
-
-    3.5 doesn't support yield in coroutines so we need all this fluff. Yawwwwn.
     """
 
     __slots__ = (

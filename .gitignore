@@ -14,3 +14,5 @@ docs/_build/
 /.pytest_cache/
 /sandbox/
 /foobar.py
+/watchgod/*.so
+/rust_notify_backend/target
