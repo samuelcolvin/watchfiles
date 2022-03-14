@@ -62,7 +62,7 @@ class AllWatcher:
                         self._walk_dir(entry.path, changes, new_files)
                 elif self.should_watch_file(entry):
                     self._watch_file(entry.path, changes, new_files, entry.stat())
-            except FileNotFoundError:
+            except FileNotFoundError:  # pragma: no cover
                 # sometimes we can't find the file. If it was deleted since
                 # `entry` was allocated, then it doesn't matter and can be
                 # ignored.  It might also be a bad symlink, in which case we
