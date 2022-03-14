@@ -16,12 +16,18 @@ __all__ = 'watch', 'awatch', 'run_process', 'arun_process'
 logger = logging.getLogger('watchgod.main')
 
 if TYPE_CHECKING:
+    import asyncio
     from multiprocessing.context import SpawnProcess
+
+    import trio
 
     from .watcher import AllWatcher, FileChange
 
     FileChanges = Set[FileChange]
     AnyCallable = Callable[..., Any]
+    AnyEvent = Union[anyio.Event, asyncio.Event, trio.Event]
+else:
+    AnyEvent = anyio.Event
 
 # Use spawn context to make sure code run in subprocess
 # does not reuse imported modules in main process/context
@@ -76,7 +82,7 @@ class awatch:
         debounce: int = 1600,
         normal_sleep: int = 400,
         min_sleep: int = 50,
-        stop_event: Optional[anyio.Event] = None,
+        stop_event: Optional[AnyEvent] = None,
     ) -> None:
         self._thread_limiter: Optional[anyio.CapacityLimiter] = None
         self._path = path
