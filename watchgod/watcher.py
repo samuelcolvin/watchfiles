@@ -108,8 +108,18 @@ class DefaultWatcher(DefaultDirWatcher):
 
 
 class PythonWatcher(DefaultDirWatcher):
+    def __init__(
+        self,
+        root_path: Union[Path, str],
+        ignored_paths: Optional[Set[str]] = None,
+        *,
+        extra_extensions: Tuple[str, ...] = (),
+    ) -> None:
+        self.extensions = ('.py', '.pyx', '.pyd') + extra_extensions
+        super().__init__(root_path, ignored_paths)
+
     def should_watch_file(self, entry: 'DirEntry') -> bool:
-        return entry.name.endswith(('.py', '.pyx', '.pyd'))
+        return entry.name.endswith(self.extensions)
 
 
 class RegExpWatcher(AllWatcher):
