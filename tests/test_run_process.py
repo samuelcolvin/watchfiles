@@ -5,8 +5,6 @@ import pytest
 from watchgod import arun_process, run_process
 from watchgod.main import _start_process
 
-pytestmark = pytest.mark.anyio
-
 
 class FakeWatcher:
     def __init__(self, path):

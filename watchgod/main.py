@@ -8,7 +8,7 @@ from pathlib import Path
 from time import time
 from typing import TYPE_CHECKING, Any, Awaitable, Callable, Dict, Generator, Optional, Set, Tuple, Type, Union, cast
 
-import anyio  # type: ignore
+import anyio
 
 from .watcher import DefaultWatcher, PythonWatcher
 
@@ -72,7 +72,7 @@ class awatch:
         min_sleep: int = 50,
         stop_event: Optional[anyio.Event] = None,
     ) -> None:
-        self._thread_limiter = None
+        self._thread_limiter: Optional[anyio.CapacityLimiter] = None
         self._path = path
         self._watcher_cls = watcher_cls
         self._watcher_kwargs = watcher_kwargs or dict()

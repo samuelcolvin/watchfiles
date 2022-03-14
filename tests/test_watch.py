@@ -11,7 +11,6 @@ from watchgod import AllWatcher, Change, DefaultWatcher, PythonWatcher, RegExpWa
 
 from .conftest import mktree
 
-pytestmark = pytest.mark.anyio
 skip_on_windows = pytest.mark.skipif(sys.platform == 'win32', reason='fails on windows')
 skip_unless_linux = pytest.mark.skipif(sys.platform != 'linux', reason='test only on linux')
 tree = {
