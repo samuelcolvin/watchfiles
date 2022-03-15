@@ -1,10 +1,9 @@
 extern crate notify;
 extern crate pyo3;
 
-use pyo3::exceptions::{PyRuntimeError, PyKeyboardInterrupt};
+use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
-use pyo3::{create_exception};
-use pyo3::ffi::PyErr_CheckSignals;
+use pyo3::create_exception;
 
 use std::collections::HashSet;
 use std::path::PathBuf;
@@ -34,26 +33,12 @@ fn path_to_string(p: PathBuf) -> Option<String> {
     }
 }
 
-fn check_signals() -> bool {
-    unsafe {
-        let v = PyErr_CheckSignals();
-        if v == -1 {
-            true
-        } else {
-            false
-        }
-    }
-}
-
-
 #[pymethods]
 impl RustNotifyWatcher {
     #[new]
     fn py_new(watch_path: String) -> PyResult<Self> {
-        // Create a channel to receive the events.
         let (tx, rx) = channel();
 
-        // The notification back-end is selected based on the platform.
         let mut _watcher = raw_watcher(tx).unwrap();
 
         _watcher.watch(watch_path, RecursiveMode::Recursive).unwrap();
@@ -68,9 +53,7 @@ impl RustNotifyWatcher {
         let recv_timeout = Duration::from_millis(step_size);
         let mut rename_cookies = HashSet::<u32>::new();
         loop {
-            if check_signals() {
-                return Err(PyKeyboardInterrupt::new_err(""));
-            }
+            py.check_signals()?;
             let new_changes = match self.rx.recv_timeout(recv_timeout) {
                 Ok(event) => {
                     // println!("event: {:?}", event);
