@@ -1,14 +1,14 @@
 extern crate notify;
 extern crate pyo3;
 
-use pyo3::create_exception;
-use pyo3::exceptions::PyRuntimeError;
-use pyo3::prelude::*;
-
 use std::collections::HashSet;
 use std::path::PathBuf;
 use std::sync::mpsc::channel;
 use std::time::{Duration, SystemTime};
+
+use pyo3::create_exception;
+use pyo3::exceptions::PyRuntimeError;
+use pyo3::prelude::*;
 
 use notify::{op, raw_watcher, Error as NotifyError, RecursiveMode, Watcher};
 
@@ -31,7 +31,7 @@ fn string_err(e: NotifyError) -> String {
     format!("{:?}", e)
 }
 
-#[pyfunction(watch_path, debounce_ms = 16s00, step_size = 50)]
+#[pyfunction(watch_path, debounce_ms = 1600, step_size = 50)]
 fn check(py: Python, watch_path: String, debounce_ms: u64, step_size: u64) -> PyResult<PyObject> {
     let changes = py
         .allow_threads(move || check_internal(watch_path, debounce_ms, step_size))
@@ -84,10 +84,8 @@ fn check_internal(watch_path: String, debounce_ms: u64, step_size: u64) -> Resul
                                     } else if op == op::Op::empty() {
                                         None
                                     } else {
-                                        print!("event with unknown op {:?}, path={:?}", op, path);
-                                        None
-                                        // let msg = format!("event with unknown op {:?}, path={:?}", op, path);
-                                        // return Err(WatchgodRustInternalError::new_err(msg));
+                                        let msg = format!("event with unknown op {:?}, path={:?}", op, path);
+                                        return Err(msg);
                                     }
                                 }
                             };
@@ -99,7 +97,8 @@ fn check_internal(watch_path: String, debounce_ms: u64, step_size: u64) -> Resul
                                 false
                             }
                         } else {
-                            let msg = format!("event with no path, op={:?}", op);
+                            // not sure how this happens, please report if you see this error
+                            let msg = format!("event unexpected has no path, op={:?}", op);
                             return Err(msg);
                         }
                     }
