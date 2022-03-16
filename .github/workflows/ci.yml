@@ -72,7 +72,11 @@ jobs:
       id: cache
       with:
         path: ${{ env.pythonLocation }}
-        key: ${{ env.pythonLocation }}-${{ hashFiles('tests/requirements-linting.txt') }}-${{ hashFiles('setup.py') }}
+        key: >
+          py-
+          ${{ env.pythonLocation }}-
+          ${{ hashFiles('tests/requirements-linting.txt') }}-
+          ${{ hashFiles('setup.py') }}
 
     - run: pip install -r tests/requirements-linting.txt
       if: steps.cache.outputs.cache-hit != 'true'
@@ -84,6 +88,7 @@ jobs:
 
     - run: make lint
     - run: make mypy
+    - run: ls -lah
 
   deploy:
     needs:
