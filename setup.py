@@ -1,3 +1,4 @@
+import os
 from importlib.machinery import SourceFileLoader
 from pathlib import Path
 
@@ -9,6 +10,10 @@ long_description = THIS_DIR.joinpath('README.md').read_text()
 
 # avoid loading the package before requirements are installed:
 version = SourceFileLoader('version', 'watchgod/version.py').load_module()
+
+extra = {}
+if not os.getenv('SKIP_RUST_EXTENSION'):
+    extra['rust_extensions'] = [RustExtension('watchgod._rust_notify', 'rust_notify/Cargo.toml', binding=Binding.PyO3)]
 
 setup(
     name='watchgod',
@@ -48,10 +53,8 @@ setup(
     license='MIT',
     packages=['watchgod'],
     package_data={'watchgod': ['py.typed']},
-    rust_extensions=[
-        RustExtension('watchgod._rust_notify_backend', 'rust_notify_backend/Cargo.toml', binding=Binding.PyO3)
-    ],
     install_requires=['anyio>=3.0.0,<4'],
     python_requires='>=3.7',
     zip_safe=True,
+    **extra,
 )

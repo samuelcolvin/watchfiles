@@ -350,7 +350,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "rust_notify_backend"
+name = "rust_notify"
 version = "1.0.0"
 dependencies = [
  "crossbeam-channel 0.4.4",

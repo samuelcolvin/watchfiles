@@ -17,7 +17,7 @@ use notify::{
     recommended_watcher, Error as NotifyError, RecommendedWatcher, RecursiveMode, Result as NotifyResult, Watcher,
 };
 
-create_exception!(_rust_notify_backend, WatchgodRustInternalError, PyRuntimeError);
+create_exception!(_rust_notify, WatchgodRustInternalError, PyRuntimeError);
 
 // these need to match `watchgod/watcher.py::Change`
 const CHANGE_ADDED: u8 = 1;
@@ -119,7 +119,7 @@ fn map_notify_error(e: NotifyError) -> PyErr {
 }
 
 #[pymodule]
-fn _rust_notify_backend(py: Python, m: &PyModule) -> PyResult<()> {
+fn _rust_notify(py: Python, m: &PyModule) -> PyResult<()> {
     m.add("WatchgodRustInternalError", py.get_type::<WatchgodRustInternalError>())?;
     m.add_wrapped(wrap_pyfunction!(rust_watch))?;
     Ok(())

@@ -15,4 +15,4 @@ docs/_build/
 /sandbox/
 /foobar.py
 /watchgod/*.so
-/rust_notify_backend/target
+/rust_notify/target

@@ -24,18 +24,18 @@ build-prod:
 format:
 	$(isort)
 	$(black)
-	cd rust_notify_backend && cargo fmt
+	cd rust_notify && cargo fmt
 
 .PHONY: lint
 lint:
 	python setup.py check -ms
-	flake8 watchgod/ tests/ setup.py
+	flake8 --max-complexity 10 --max-line-length 120 --ignore E203,W503 watchgod tests setup.py
 	$(isort) --check-only --df
 	$(black) --check --diff
 	cargo fmt --version
-	cd rust_notify_backend && cargo fmt --all -- --check
+	cd rust_notify && cargo fmt --all -- --check
 	cargo clippy --version
-	cd rust_notify_backend && cargo clippy -- -D warnings
+	cd rust_notify && cargo clippy -- -D warnings
 
 .PHONY: mypy
 mypy:
