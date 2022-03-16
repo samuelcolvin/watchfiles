@@ -115,6 +115,7 @@ jobs:
           rust-stable
           ${{ hashFiles('Cargo.toml') }}
           ${{ hashFiles('Cargo.lock') }}
+          ${{ hashFiles('setup.py') }}
 
     - run: pip install -r tests/requirements-linting.txt
       if: steps.cache-py.outputs.cache-hit != 'true'
