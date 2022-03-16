@@ -119,6 +119,9 @@ jobs:
 
     - run: make lint
     - run: make mypy
+    - run: pwd
+    - run: ls -lah
+    - run: ls -lah ~
 
   deploy:
     needs:
