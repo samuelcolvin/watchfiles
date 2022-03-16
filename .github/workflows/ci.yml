@@ -35,6 +35,7 @@ jobs:
       uses: actions-rs/toolchain@v1
       with:
         profile: minimal
+        toolchain: stable
         override: true
 
     - run: pip install -r tests/requirements.txt
@@ -63,6 +64,7 @@ jobs:
       uses: actions-rs/toolchain@v1
       with:
         profile: minimal
+        toolchain: stable
         override: true
         components: rustfmt, clippy
 
