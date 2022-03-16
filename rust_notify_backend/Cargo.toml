@@ -4,7 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-notify = "4.0.17"
+crossbeam-channel = "0.4.0"
+notify = "5.0.0-pre.14"
 pyo3 = {version = "0.16.1", features = ["extension-module"]}
 
 [lib]

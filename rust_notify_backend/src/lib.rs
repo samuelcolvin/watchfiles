@@ -1,16 +1,19 @@
+extern crate crossbeam_channel;
 extern crate notify;
 extern crate pyo3;
 
-use std::collections::HashSet;
-use std::path::PathBuf;
-use std::sync::mpsc::channel;
+use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::thread::sleep;
 use std::time::{Duration, SystemTime};
 
 use pyo3::create_exception;
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
 
-use notify::{op, raw_watcher, Error as NotifyError, RecursiveMode, Watcher};
+use notify::event::{Event, EventKind, ModifyKind};
+use notify::{recommended_watcher, RecommendedWatcher, RecursiveMode, Result as NotifyResult, Watcher};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 create_exception!(_rust_notify_backend, WatchgodRustInternalError, PyRuntimeError);
@@ -20,103 +23,72 @@ const CHANGE_ADDED: u8 = 1;
 const CHANGE_MODIFIED: u8 = 2;
 const CHANGE_DELETED: u8 = 3;
 
-fn path_to_string(p: PathBuf) -> Result<String, String> {
+fn path_to_string(p: &PathBuf) -> Result<String, PyErr> {
     match p.to_str() {
         Some(s) => Ok(s.to_string()),
-        None => Err(format!("Unable to decode path {:?} to string", p)),
+        None => Err(WatchgodRustInternalError::new_err(format!(
+            "Unable to decode path {:?} to string",
+            p
+        ))),
     }
 }
 
-fn string_err(e: NotifyError) -> String {
-    format!("{:?}", e)
-}
+// fn map_err(e: NotifyError) -> PyErr {
+//     WatchgodRustInternalError::new_err(format!("{:?}", e))
+// }
 
-#[pyfunction(watch_path, debounce_ms = 1600, step_size = 50)]
-fn check(py: Python, watch_path: String, debounce_ms: u64, step_size: u64) -> PyResult<PyObject> {
-    let changes = py
-        .allow_threads(move || check_internal(watch_path, debounce_ms, step_size))
-        .map_err(|msg| WatchgodRustInternalError::new_err(msg))?;
-    Ok(changes.to_object(py))
-}
+#[pyfunction(watch_path, debounce_ms = 1600, step_ms = 50)]
+fn check(py: Python, watch_path: String, debounce_ms: u64, step_ms: u64) -> PyResult<PyObject> {
+    let changes = Arc::new(Mutex::new(Vec::<(u8, String)>::new()));
+    let changes_ref = changes.clone();
+    let last_rename = AtomicBool::new(false);
 
-fn check_internal(watch_path: String, debounce_ms: u64, step_size: u64) -> Result<Vec<(u8, String)>, String> {
-    let (tx, rx) = channel();
-
-    let mut watcher = raw_watcher(tx).map_err(string_err)?;
-
-    watcher
-        .watch(watch_path, RecursiveMode::Recursive)
-        .map_err(string_err)?;
-
-    let mut changes = Vec::<(u8, String)>::new();
-    let max_time = SystemTime::now() + Duration::from_millis(debounce_ms);
-    let recv_timeout = Duration::from_millis(step_size);
-    let mut rename_cookies = HashSet::<u32>::new();
-    loop {
-        let new_changes = match rx.recv_timeout(recv_timeout) {
-            Ok(event) => {
-                // println!("event: {:?}", event);
-                match event.op {
-                    Ok(op) => {
-                        if let Some(path) = event.path {
-                            let change: Option<u8> = match op {
-                                op::CREATE => Some(CHANGE_ADDED),
-                                op::CHMOD | op::WRITE => Some(CHANGE_MODIFIED),
-                                op::REMOVE => Some(CHANGE_DELETED),
-                                op::RENAME => {
-                                    if let Some(cookie) = event.cookie {
-                                        if rename_cookies.contains(&cookie) {
-                                            Some(CHANGE_ADDED)
-                                        } else {
-                                            rename_cookies.insert(cookie);
-                                            Some(CHANGE_DELETED)
-                                        }
-                                    } else {
-                                        None
-                                    }
-                                }
-                                op::RESCAN => None,
-                                _ => {
-                                    if op.contains(op::REMOVE) {
-                                        Some(CHANGE_DELETED)
-                                    } else if op.contains(op::CREATE) {
-                                        Some(CHANGE_ADDED)
-                                    } else if op == op::Op::empty() {
-                                        None
-                                    } else {
-                                        let msg = format!("event with unknown op {:?}, path={:?}", op, path);
-                                        return Err(msg);
-                                    }
-                                }
-                            };
-                            if let Some(change) = change {
-                                let path = path_to_string(path)?;
-                                changes.push((change, path));
-                                true
-                            } else {
-                                false
-                            }
+    let mut watcher: RecommendedWatcher = recommended_watcher(move |res: NotifyResult<Event>| match res {
+        Ok(event) => {
+            println!("event: {:?}", event);
+            if let Some(p) = event.paths.first() {
+                let path = path_to_string(p).unwrap();
+                let change = match event.kind {
+                    EventKind::Create(_) => CHANGE_ADDED,
+                    EventKind::Modify(ModifyKind::Data(_)) => CHANGE_MODIFIED,
+                    EventKind::Modify(ModifyKind::Metadata(_)) => return,
+                    EventKind::Modify(ModifyKind::Name(_)) => {
+                        // this just alternates `last_rename` between true and false
+                        let new_path = last_rename.fetch_xor(true, Ordering::SeqCst);
+                        if new_path {
+                            CHANGE_ADDED
                         } else {
-                            // not sure how this happens, please report if you see this error
-                            let msg = format!("event unexpected has no path, op={:?}", op);
-                            return Err(msg);
+                            CHANGE_DELETED
                         }
-                    }
-                    Err(e) => {
-                        let msg = format!("{}", e);
-                        return Err(msg);
-                    }
-                }
+                    },
+                    EventKind::Remove(_) => CHANGE_DELETED,
+                    _ => return,
+                };
+                changes_ref.lock().unwrap().push((change, path));
             }
-            _ => {
-                // timeout
-                false
-            }
-        };
-
-        if !new_changes || SystemTime::now() > max_time {
-            return Ok(changes);
         }
+        Err(e) => {
+            println!("error: {:?}", e);
+            // let msg = format!("{}", e);
+            // return Err(WatchgodRustInternalError::new_err(msg));
+        }
+    })
+    .unwrap();
+
+    watcher.watch(Path::new(&watch_path), RecursiveMode::Recursive).unwrap();
+
+    let debounce_time = SystemTime::now() + Duration::from_millis(debounce_ms);
+    let step_time = Duration::from_millis(step_ms);
+    let mut last_size: usize = 0;
+    loop {
+        py.allow_threads(|| sleep(step_time));
+        py.check_signals()?;
+        let size = changes.lock().unwrap().len();
+
+        if size > 0 && (size == last_size || SystemTime::now() > debounce_time) {
+            return Ok(changes.lock().unwrap().to_object(py));
+        }
+        last_size = size;
     }
 }
 
