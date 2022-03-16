@@ -6,4 +6,3 @@ pytest-cov==3.0.0
 pytest-mock==3.7.0
 pytest-sugar==0.9.4
 pytest-timeout==2.1.0
-trio==0.20.0
