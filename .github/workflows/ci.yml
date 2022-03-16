@@ -65,7 +65,7 @@ jobs:
     - run: pip install -r tests/requirements.txt
       if: steps.cache-py.outputs.cache-hit != 'true'
 
-    - run: pip install .
+    - run: pip install -e .
     - run: pip freeze
 
     - run: make test
