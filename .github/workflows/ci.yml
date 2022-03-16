@@ -40,7 +40,7 @@ jobs:
 
     - run: pip install -U pip
     - run: pip install -r tests/requirements.txt
-    - run: python ./setup.py develop
+    - run: pip install .
     - run: pip freeze
 
     - run: make test

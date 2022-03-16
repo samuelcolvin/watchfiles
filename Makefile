@@ -28,7 +28,6 @@ format:
 
 .PHONY: lint
 lint:
-	python setup.py check -ms
 	flake8 --max-complexity 10 --max-line-length 120 --ignore E203,W503 watchgod tests setup.py
 	$(isort) --check-only --df
 	$(black) --check --diff
