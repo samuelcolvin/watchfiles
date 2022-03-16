@@ -1,5 +1,5 @@
+from .filters import BaseFilter, Change, DefaultFilter, PythonFilter
 from .main import arun_process, awatch, run_process, watch
-from .filters import Change, BaseFilter, DefaultFilter, PythonFilter
 from .version import VERSION
 
 __version__ = VERSION

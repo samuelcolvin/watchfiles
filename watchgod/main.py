@@ -23,8 +23,8 @@ from typing import (
 
 import anyio
 
-from .filters import Change, DefaultFilter
 from ._rust_notify import RustNotify
+from .filters import Change, DefaultFilter
 
 __all__ = 'watch', 'awatch', 'run_process', 'arun_process'
 logger = logging.getLogger('watchgod.main')
@@ -52,21 +52,24 @@ def watch(
     watch_filter: Optional[Callable[['Change', str], bool]] = default_filter,
     debounce: int = default_debounce,
     step: int = default_step,
-    stop_event: Optional['AnyEvent'] = None,
     debug: bool = False,
+    raise_interrupt: bool = True,
 ) -> Generator['FileChanges', None, None]:
     """
     Watch a directory and yield a set of changes whenever files change in that directory or its subdirectories.
     """
-    _awatch = awatch(path, watch_filter=watch_filter, debug=debug, debounce=debounce, step=step, stop_event=stop_event)
-    try:
-        while True:
-            try:
-                yield anyio.run(_awatch.__anext__)
-            except StopAsyncIteration:
-                break
-    except KeyboardInterrupt:
-        logger.debug('KeyboardInterrupt, exiting')
+    watcher = RustNotify(path, debug)
+    while True:
+        raw_changes = watcher.watch(debounce, step, None)
+        if raw_changes is None:
+            if raise_interrupt:
+                raise KeyboardInterrupt
+            else:
+                return
+
+        changes = _prep_changes(raw_changes, watch_filter)
+        if changes:
+            yield changes
 
 
 async def awatch(
@@ -77,7 +80,7 @@ async def awatch(
     step: int = default_step,
     stop_event: Optional['AnyEvent'] = None,
     debug: bool = False,
-    raise_interrupt: bool = False,
+    raise_interrupt: bool = True,
 ) -> AsyncGenerator['FileChanges', None]:
     """
     asynchronous equivalent of watch using a threaded executor.
@@ -99,17 +102,25 @@ async def awatch(
         tg.start_soon(signal_handler)
         while True:
             raw_changes = await anyio.to_thread.run_sync(watcher.watch, debounce, step, stop_event)
-            if stop_event.is_set():
-                break
+            if raw_changes is None:
+                if interrupted and raise_interrupt:
+                    raise KeyboardInterrupt
+                else:
+                    return
 
-            changes = {(Change(change), path) for change, path in raw_changes}
-            if watch_filter:
-                changes = {c for c in changes if watch_filter(c[0], c[1])}
+            changes = _prep_changes(raw_changes, watch_filter)
             if changes:
                 yield changes
 
-    if interrupted and raise_interrupt:
-        raise KeyboardInterrupt
+
+def _prep_changes(
+    raw_changes: Set[Tuple[int, str]], watch_filter: Optional[Callable[['Change', str], bool]]
+) -> 'FileChanges':
+    # if we wanted to be really snazzy, we could move this into rust
+    changes = {(Change(change), path) for change, path in raw_changes}
+    if watch_filter:
+        changes = {c for c in changes if watch_filter(c[0], c[1])}
+    return changes
 
 
 # Use spawn context to make sure code run in subprocess

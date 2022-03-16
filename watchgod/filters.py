@@ -1,7 +1,7 @@
 import logging
 import re
 from enum import IntEnum
-from typing import Tuple, Sequence
+from typing import Sequence, Tuple
 
 __all__ = 'Change', 'BaseFilter', 'DefaultFilter', 'PythonFilter'
 logger = logging.getLogger('watchgod.watcher')
@@ -29,7 +29,15 @@ class BaseFilter:
 
 
 default_ignore_dirs = '__pycache__', '.git', '.hg', '.svn', '.tox', '.venv', 'site-packages', '.idea', 'node_modules'
-default_ignore_entity_patterns = r'\.py[cod]$', r'\.___jb_...___$', r'\.sw.$', '~$', r'^\.\#', r'^\.DS_Store$', r'^flycheck_'
+default_ignore_entity_patterns = (
+    r'\.py[cod]$',
+    r'\.___jb_...___$',
+    r'\.sw.$',
+    '~$',
+    r'^\.\#',
+    r'^\.DS_Store$',
+    r'^flycheck_',
+)
 
 
 class DefaultFilter(BaseFilter):
@@ -38,7 +46,10 @@ class DefaultFilter(BaseFilter):
 
 
 class PythonFilter(DefaultFilter):
-    def __init__(self, extra_extensions: Tuple[str, ...] = (),) -> None:
+    def __init__(
+        self,
+        extra_extensions: Tuple[str, ...] = (),
+    ) -> None:
         self.extensions = ('.py', '.pyx', '.pyd') + extra_extensions
         super().__init__()
 

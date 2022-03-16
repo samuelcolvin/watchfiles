@@ -1,9 +1,9 @@
-import asyncio
-from typing import Set, Tuple, Union
-
-import anyio
+from typing import Optional, Protocol, Set, Tuple
 
 __all__ = 'RustNotify', 'WatchgodRustInternalError'
+
+class AbstractEvent(Protocol):
+    def is_set(self) -> bool: ...
 
 class RustNotify:
     def __init__(self, watch_path: str, debug: bool) -> None: ...
@@ -11,7 +11,7 @@ class RustNotify:
         self,
         debounce_ms: int,
         step_ms: int,
-        cancel_event: Union[anyio.Event, asyncio.Event],
-    ) -> Set[Tuple[int, str]]: ...
+        cancel_event: Optional[AbstractEvent],
+    ) -> Optional[Set[Tuple[int, str]]]: ...
 
 class WatchgodRustInternalError(RuntimeError): ...

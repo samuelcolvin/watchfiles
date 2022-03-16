@@ -101,21 +101,30 @@ impl RustNotify {
     }
 
     pub fn watch(&self, py: Python, debounce_ms: u64, step_ms: u64, cancel_event: PyObject) -> PyResult<PyObject> {
-        self.changes.lock().unwrap().clear();
+        let event_not_none = !cancel_event.is_none(py);
 
         let mut max_time: Option<SystemTime> = None;
         let step_time = Duration::from_millis(step_ms);
         let mut last_size: usize = 0;
+        let none: Option<bool> = None;
         loop {
             py.allow_threads(|| sleep(step_time));
-            py.check_signals()?;
+            match py.check_signals() {
+                Ok(_) => (),
+                Err(_) => {
+                    self.clear();
+                    return Ok(none.to_object(py));
+                }
+            };
 
             if let Some(error) = self.error.lock().unwrap().as_ref() {
+                self.clear();
                 return Err(WatchgodRustInternalError::new_err(error.clone()));
             }
 
-            if cancel_event.getattr(py, "is_set")?.call0(py)?.is_true(py)? {
-                break;
+            if event_not_none && cancel_event.getattr(py, "is_set")?.call0(py)?.is_true(py)? {
+                self.clear();
+                return Ok(none.to_object(py));
             }
 
             let size = self.changes.lock().unwrap().len();
@@ -135,7 +144,13 @@ impl RustNotify {
                 }
             }
         }
-        return Ok(self.changes.lock().unwrap().to_object(py));
+        let py_changes = self.changes.lock().unwrap().to_object(py);
+        self.clear();
+        return Ok(py_changes);
+    }
+
+    fn clear(&self) {
+        self.changes.lock().unwrap().clear();
     }
 }
 
