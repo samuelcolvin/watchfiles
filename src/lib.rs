@@ -17,7 +17,12 @@ use notify::{
     recommended_watcher, Error as NotifyError, RecommendedWatcher, RecursiveMode, Result as NotifyResult, Watcher,
 };
 
-create_exception!(_rust_notify, WatchgodRustInternalError, PyRuntimeError);
+create_exception!(
+    _rust_notify,
+    WatchgodRustInternalError,
+    PyRuntimeError,
+    "Internal or filesystem error."
+);
 
 // these need to match `watchgod/watcher.py::Change`
 const CHANGE_ADDED: u8 = 1;
@@ -146,7 +151,7 @@ impl RustNotify {
         }
         let py_changes = self.changes.lock().unwrap().to_object(py);
         self.clear();
-        return Ok(py_changes);
+        Ok(py_changes)
     }
 
     fn clear(&self) {

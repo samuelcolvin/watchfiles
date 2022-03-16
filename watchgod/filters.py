@@ -1,16 +1,13 @@
 import logging
 import re
-from enum import IntEnum
-from typing import Sequence, Tuple
+from typing import TYPE_CHECKING, Sequence, Tuple
 
-__all__ = 'Change', 'BaseFilter', 'DefaultFilter', 'PythonFilter'
+__all__ = 'BaseFilter', 'DefaultFilter', 'PythonFilter'
 logger = logging.getLogger('watchgod.watcher')
 
 
-class Change(IntEnum):
-    added = 1
-    modified = 2
-    deleted = 3
+if TYPE_CHECKING:
+    from .main import Change
 
 
 class BaseFilter:
@@ -20,7 +17,7 @@ class BaseFilter:
         self.ignore_dirs = set(ignore_dirs)
         self.ignore_entity_regexes = tuple(re.compile(r) for r in ignore_entity_patterns)
 
-    def __call__(self, change: Change, path: str) -> bool:
+    def __call__(self, change: 'Change', path: str) -> bool:
         parts = path.lstrip('/').split('/')
         if any(p in self.ignore_dirs for p in parts):
             return False
@@ -53,5 +50,5 @@ class PythonFilter(DefaultFilter):
         self.extensions = ('.py', '.pyx', '.pyd') + extra_extensions
         super().__init__()
 
-    def __call__(self, change: Change, path: str) -> bool:
+    def __call__(self, change: 'Change', path: str) -> bool:
         return path.endswith(self.extensions) and super().__call__(change, path)

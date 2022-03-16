@@ -2,7 +2,6 @@ import logging
 import os
 import signal
 from enum import IntEnum
-from functools import partial
 from multiprocessing import get_context
 from pathlib import Path
 from typing import (
@@ -16,7 +15,6 @@ from typing import (
     Optional,
     Set,
     Tuple,
-    Type,
     Union,
     cast,
 )
@@ -24,10 +22,17 @@ from typing import (
 import anyio
 
 from ._rust_notify import RustNotify
-from .filters import Change, DefaultFilter
+from .filters import DefaultFilter, PythonFilter
 
-__all__ = 'watch', 'awatch', 'run_process', 'arun_process'
+__all__ = 'watch', 'awatch', 'run_process', 'arun_process', 'Change'
 logger = logging.getLogger('watchgod.main')
+
+
+class Change(IntEnum):
+    added = 1
+    modified = 2
+    deleted = 3
+
 
 if TYPE_CHECKING:
     import asyncio
@@ -58,7 +63,7 @@ def watch(
     """
     Watch a directory and yield a set of changes whenever files change in that directory or its subdirectories.
     """
-    watcher = RustNotify(path, debug)
+    watcher = RustNotify(str(path), debug)
     while True:
         raw_changes = watcher.watch(debounce, step, None)
         if raw_changes is None:
@@ -86,22 +91,24 @@ async def awatch(
     asynchronous equivalent of watch using a threaded executor.
     """
     if stop_event is None:
-        stop_event = anyio.Event()
+        stop_event_: 'AnyEvent' = anyio.Event()
+    else:
+        stop_event_ = stop_event
     interrupted = False
 
-    async def signal_handler():
+    async def signal_handler() -> None:
         nonlocal interrupted
         with anyio.open_signal_receiver(signal.SIGINT) as signals:
             async for _ in signals:
                 interrupted = True
-                await stop_event.set()
+                await stop_event_.set()  # type: ignore[misc]
                 break
 
-    watcher = RustNotify(path, debug)
+    watcher = RustNotify(str(path), debug)
     async with anyio.create_task_group() as tg:
         tg.start_soon(signal_handler)
         while True:
-            raw_changes = await anyio.to_thread.run_sync(watcher.watch, debounce, step, stop_event)
+            raw_changes = await anyio.to_thread.run_sync(watcher.watch, debounce, step, stop_event_)
             if raw_changes is None:
                 if interrupted and raise_interrupt:
                     raise KeyboardInterrupt
@@ -150,6 +157,9 @@ def _stop_process(process: 'SpawnProcess') -> None:
         logger.warning('process already dead, exit code: %d', process.exitcode)
 
 
+python_filter = PythonFilter()
+
+
 def run_process(
     path: Union[Path, str],
     target: 'AnyCallable',
@@ -157,10 +167,10 @@ def run_process(
     args: Tuple[Any, ...] = (),
     kwargs: Optional[Dict[str, Any]] = None,
     callback: Optional[Callable[[Set['FileChange']], None]] = None,
-    # watcher_cls: Type['AllWatcher'] = PythonWatcher,
-    watcher_kwargs: Optional[Dict[str, Any]] = None,
-    debounce: int = 400,
-    min_sleep: int = 100,
+    watch_filter: Optional[Callable[['Change', str], bool]] = python_filter,
+    debounce: int = default_debounce,
+    step: int = default_step,
+    debug: bool = False,
 ) -> int:
     """
     Run a function in a subprocess using multiprocessing.Process, restart it whenever files change in path.
@@ -171,7 +181,7 @@ def run_process(
 
     try:
         for changes in watch(
-            path, watcher_cls=watcher_cls, debounce=debounce, min_sleep=min_sleep, watcher_kwargs=watcher_kwargs
+            path, watch_filter=watch_filter, debounce=debounce, step=step, debug=debug, raise_interrupt=False
         ):
             callback and callback(changes)
             _stop_process(process)
@@ -189,22 +199,23 @@ async def arun_process(
     args: Tuple[Any, ...] = (),
     kwargs: Optional[Dict[str, Any]] = None,
     callback: Optional[Callable[['FileChanges'], Awaitable[None]]] = None,
-    # watcher_cls: Type['AllWatcher'] = PythonWatcher,
-    debounce: int = 400,
-    min_sleep: int = 100,
+    watch_filter: Optional[Callable[['Change', str], bool]] = python_filter,
+    debounce: int = default_debounce,
+    step: int = default_step,
+    debug: bool = False,
 ) -> int:
     """
     Run a function in a subprocess using multiprocessing.Process, restart it whenever files change in path.
     """
-    watcher = awatch(path, watcher_cls=watcher_cls, debounce=debounce, min_sleep=min_sleep)
-    start_process = partial(_start_process, target=target, args=args, kwargs=kwargs)
-    process = await watcher.run_in_executor(start_process)
+    process = await anyio.to_thread.run_sync(_start_process, target, args, kwargs)
     reloads = 0
 
-    async for changes in watcher:
+    async for changes in awatch(
+        path, watch_filter=watch_filter, debounce=debounce, step=step, debug=debug, raise_interrupt=False
+    ):
         callback and await callback(changes)
-        await watcher.run_in_executor(_stop_process, process)
-        process = await watcher.run_in_executor(start_process)
+        await anyio.to_thread.run_sync(_stop_process, process)
+        process = await anyio.to_thread.run_sync(_start_process, target, args, kwargs)
         reloads += 1
-    await watcher.run_in_executor(_stop_process, process)
+    await anyio.to_thread.run_sync(_stop_process, process)
     return reloads

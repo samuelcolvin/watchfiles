@@ -6,8 +6,9 @@ import sys
 from importlib import import_module
 from multiprocessing import set_start_method
 from pathlib import Path
-from typing import Any, Dict, Generator, List, Optional, Sized
+from typing import Any, Generator, List, Optional, Sized
 
+from .filters import PythonFilter
 from .main import run_process
 
 logger = logging.getLogger('watchgod.cli')
@@ -128,18 +129,19 @@ def cli(*args_: str) -> None:
     set_start_method('spawn')
     sys.argv = sys_argv(arg_namespace.function)
 
-    watcher_kwargs: Dict[str, Any] = {}
+    watch_filter = None
     if arg_namespace.ignore_paths:
-        watcher_kwargs['ignore_paths'] = {str(Path(p).resolve()) for p in arg_namespace.ignore_paths}
+        raise NotImplementedError('ignore_paths is not implemented yet')
+    #     watcher_kwargs['ignore_paths'] = {str(Path(p).resolve()) for p in arg_namespace.ignore_paths}
 
     extensions = arg_namespace.extensions
-    if arg_namespace.extensions:
-        watcher_kwargs['extensions'] = tuple(extensions)
+    if extensions:
+        watch_filter = PythonFilter(tuple(extensions))
 
     run_process(
         path,
         run_function,
         args=(arg_namespace.function, tty_path),
         callback=callback,
-        watcher_kwargs=watcher_kwargs,
+        watch_filter=watch_filter or PythonFilter(),
     )
