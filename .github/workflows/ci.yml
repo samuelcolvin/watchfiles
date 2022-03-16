@@ -44,6 +44,7 @@ jobs:
         path: ${{ env.pythonLocation }}
         key: >
           py
+          ${{ runner.os }}
           ${{ env.pythonLocation }}
           ${{ hashFiles('tests/requirements.txt') }}
           ${{ hashFiles('setup.py') }}
@@ -54,8 +55,10 @@ jobs:
         path: |
           target
           ~/.rustup
+          ~/.cargo
         key: >
           rust-stable
+          ${{ runner.os }}
           ${{ hashFiles('Cargo.toml') }}
           ${{ hashFiles('Cargo.lock') }}
 
@@ -107,6 +110,7 @@ jobs:
         path: |
           target
           ~/.rustup
+          ~/.cargo
         key: >
           rust-stable
           ${{ hashFiles('Cargo.toml') }}
