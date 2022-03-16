@@ -128,7 +128,7 @@ jobs:
     - run: make mypy
 
   deploy:
-    needs:rm
+    needs:
       - test
       - lint
     if: "success() && startsWith(github.ref, 'refs/tags/')"
