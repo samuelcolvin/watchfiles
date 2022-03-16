@@ -1,4 +1,4 @@
-from typing import Optional, Protocol, Set, Tuple
+from typing import List, Optional, Protocol, Set, Tuple
 
 __all__ = 'RustNotify', 'WatchgodRustInternalError'
 
@@ -6,7 +6,7 @@ class AbstractEvent(Protocol):
     def is_set(self) -> bool: ...
 
 class RustNotify:
-    def __init__(self, watch_path: str, debug: bool) -> None: ...
+    def __init__(self, watch_paths: List[str], debug: bool) -> None: ...
     def watch(
         self,
         debounce_ms: int,

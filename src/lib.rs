@@ -9,13 +9,11 @@ use std::thread::sleep;
 use std::time::{Duration, SystemTime};
 
 use pyo3::create_exception;
-use pyo3::exceptions::PyRuntimeError;
+use pyo3::exceptions::{PyFileNotFoundError, PyRuntimeError};
 use pyo3::prelude::*;
 
 use notify::event::{Event, EventKind, ModifyKind};
-use notify::{
-    recommended_watcher, Error as NotifyError, RecommendedWatcher, RecursiveMode, Result as NotifyResult, Watcher,
-};
+use notify::{recommended_watcher, RecommendedWatcher, RecursiveMode, Result as NotifyResult, Watcher};
 
 create_exception!(
     _rust_notify,
@@ -39,7 +37,7 @@ struct RustNotify {
 #[pymethods]
 impl RustNotify {
     #[new]
-    fn py_new(watch_path: String, debug: bool) -> PyResult<Self> {
+    fn py_new(watch_paths: Vec<String>, debug: bool) -> PyResult<Self> {
         let changes: Arc<Mutex<HashSet<(u8, String)>>> = Arc::new(Mutex::new(HashSet::<(u8, String)>::new()));
         let error: Arc<Mutex<Option<String>>> = Arc::new(Mutex::new(None));
 
@@ -63,7 +61,9 @@ impl RustNotify {
                     };
                     let change = match event.kind {
                         EventKind::Create(_) => CHANGE_ADDED,
-                        EventKind::Modify(ModifyKind::Data(_)) | EventKind::Modify(ModifyKind::Metadata(_)) => {
+                        EventKind::Modify(ModifyKind::Metadata(_)) => CHANGE_MODIFIED,
+                        EventKind::Modify(ModifyKind::Data(_)) => {
+                            // this event sometimes happens when creating files and deleting them, hence these checks
                             let changes = changes_clone.lock().unwrap();
                             if changes.contains(&(CHANGE_DELETED, path.clone()))
                                 || changes.contains(&(CHANGE_ADDED, path.clone()))
@@ -89,14 +89,17 @@ impl RustNotify {
                 }
             }
             Err(e) => {
-                *error_clone.lock().unwrap() = Some(format!("error in underlying watcher: {}", e));
+                println!("error: {:?}", e);
+                // *error_clone.lock().unwrap() = Some(format!("error in underlying watcher: {}", e));
             }
         })
-        .map_err(map_notify_error)?;
+        .map_err(|e| WatchgodRustInternalError::new_err(format!("Error creating watcher: {}", e)))?;
 
-        _watcher
-            .watch(Path::new(&watch_path), RecursiveMode::Recursive)
-            .map_err(map_notify_error)?;
+        for watch_path in watch_paths.into_iter() {
+            _watcher
+                .watch(Path::new(&watch_path), RecursiveMode::Recursive)
+                .map_err(|e| PyFileNotFoundError::new_err(format!("{}", e)))?;
+        }
 
         Ok(RustNotify {
             changes,
@@ -128,6 +131,7 @@ impl RustNotify {
             }
 
             if event_not_none && cancel_event.getattr(py, "is_set")?.call0(py)?.is_true(py)? {
+                println!("cancelled");
                 self.clear();
                 return Ok(none.to_object(py));
             }
@@ -157,10 +161,6 @@ impl RustNotify {
     fn clear(&self) {
         self.changes.lock().unwrap().clear();
     }
-}
-
-fn map_notify_error(e: NotifyError) -> PyErr {
-    WatchgodRustInternalError::new_err(format!("{}", e))
 }
 
 #[pymodule]

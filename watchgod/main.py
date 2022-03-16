@@ -52,8 +52,7 @@ default_step = 50
 
 
 def watch(
-    path: Union[Path, str],
-    *,
+    *paths: Union[Path, str],
     watch_filter: Optional[Callable[['Change', str], bool]] = default_filter,
     debounce: int = default_debounce,
     step: int = default_step,
@@ -61,9 +60,10 @@ def watch(
     raise_interrupt: bool = True,
 ) -> Generator['FileChanges', None, None]:
     """
-    Watch a directory and yield a set of changes whenever files change in that directory or its subdirectories.
+    Watch one or more directories and yield a set of changes whenever files change
+    in those directories (or subdirectories).
     """
-    watcher = RustNotify(str(path), debug)
+    watcher = RustNotify([str(p) for p in paths], debug)
     while True:
         raw_changes = watcher.watch(debounce, step, None)
         if raw_changes is None:
@@ -78,8 +78,7 @@ def watch(
 
 
 async def awatch(
-    path: Union[Path, str],
-    *,
+    *paths: Union[Path, str],
     watch_filter: Optional[Callable[['Change', str], bool]] = default_filter,
     debounce: int = default_debounce,
     step: int = default_step,
@@ -101,23 +100,25 @@ async def awatch(
         with anyio.open_signal_receiver(signal.SIGINT) as signals:
             async for _ in signals:
                 interrupted = True
-                await stop_event_.set()  # type: ignore[misc]
+                stop_event_.set()
                 break
 
-    watcher = RustNotify(str(path), debug)
-    async with anyio.create_task_group() as tg:
-        tg.start_soon(signal_handler)
-        while True:
+    watcher = RustNotify([str(p) for p in paths], debug)
+    while True:
+        async with anyio.create_task_group() as tg:
+            tg.start_soon(signal_handler)
             raw_changes = await anyio.to_thread.run_sync(watcher.watch, debounce, step, stop_event_)
-            if raw_changes is None:
-                if interrupted and raise_interrupt:
-                    raise KeyboardInterrupt
-                else:
-                    return
+            tg.cancel_scope.cancel()
 
-            changes = _prep_changes(raw_changes, watch_filter)
-            if changes:
-                yield changes
+        if raw_changes is None:
+            if interrupted and raise_interrupt:
+                raise KeyboardInterrupt
+            else:
+                return
+
+        changes = _prep_changes(raw_changes, watch_filter)
+        if changes:
+            yield changes
 
 
 def _prep_changes(

@@ -3,25 +3,18 @@ import sys
 import pytest
 
 from watchgod import arun_process, run_process
-from watchgod.main import _start_process
+from watchgod.main import Change, _start_process
 
 
-class FakeWatcher:
-    def __init__(self, path):
-        self._async = 'async' in path
-        self._check = 0
-        self.files = [1, 2, 3]
+class MockNotify:
+    def __init__(self, count: int):
+        self.count = count
+        self.step = 0
 
-    def check(self):
-        self._check += 1
-        if self._check == 1:
-            return {'x'}
-        elif self._check == 2:
-            return set()
-        elif self._async:
-            raise StopAsyncIteration
-        else:
-            raise KeyboardInterrupt
+    def watch(self, debounce_ms: int, step_ms: int, cancel_event):
+        self.step += 1
+        if self.step <= self.count:
+            return {(1, '/path/to/foobar.py')}
 
 
 class FakeProcess:
@@ -41,8 +34,9 @@ def test_alive_terminates(mocker):
     mock_start_process = mocker.patch('watchgod.main._start_process')
     mock_start_process.return_value = FakeProcess()
     mock_kill = mocker.patch('watchgod.main.os.kill')
+    mocker.patch('watchgod.main.RustNotify', return_value=MockNotify(1))
 
-    assert run_process('/x/y/z', object(), watcher_cls=FakeWatcher, debounce=5, min_sleep=1) == 1
+    assert run_process('/x/y/z', object(), debounce=5, step=1) == 1
     assert mock_start_process.call_count == 2
     assert mock_kill.call_count == 2  # kill in loop + final kill
 
@@ -52,12 +46,13 @@ def test_dead_callback(mocker):
     mock_start_process.return_value = FakeProcess(is_alive=False)
     mock_kill = mocker.patch('watchgod.main.os.kill')
     c = mocker.MagicMock()
+    mocker.patch('watchgod.main.RustNotify', return_value=MockNotify(2))
 
-    assert run_process('/x/y/z', object(), watcher_cls=FakeWatcher, callback=c, debounce=5, min_sleep=1) == 1
-    assert mock_start_process.call_count == 2
+    assert run_process('/x/y/z', object(), callback=c, debounce=5, step=1) == 2
+    assert mock_start_process.call_count == 3
     assert mock_kill.call_count == 0
-    assert c.call_count == 1
-    c.assert_called_with({'x'})
+    assert c.call_count == 2
+    c.assert_called_with({(Change.added, '/path/to/foobar.py')})
 
 
 @pytest.mark.skipif(sys.platform == 'win32', reason='fails on windows')
@@ -65,8 +60,9 @@ def test_alive_doesnt_terminate(mocker):
     mock_start_process = mocker.patch('watchgod.main._start_process')
     mock_start_process.return_value = FakeProcess(exitcode=None)
     mock_kill = mocker.patch('watchgod.main.os.kill')
+    mocker.patch('watchgod.main.RustNotify', return_value=MockNotify(1))
 
-    assert run_process('/x/y/z', object(), watcher_cls=FakeWatcher, debounce=5, min_sleep=1) == 1
+    assert run_process('/x/y/z', object(), debounce=5, step=1) == 1
     assert mock_start_process.call_count == 2
     assert mock_kill.call_count == 4  # 2 kills in loop (graceful and termination) + 2 final kills
 
@@ -85,10 +81,10 @@ async def test_async_alive_terminates(mocker):
     mock_start_process.return_value = FakeProcess()
     mock_kill = mocker.patch('watchgod.main.os.kill')
     c = mocker.AsyncMock(return_value=1)
+    mocker.patch('watchgod.main.RustNotify', return_value=MockNotify(1))
 
-    reloads = await arun_process('/x/y/async', object(), watcher_cls=FakeWatcher, callback=c, debounce=5, min_sleep=1)
-    assert reloads == 1
+    assert await arun_process('/x/y/async', object(), callback=c, debounce=5, step=1) == 1
     assert mock_start_process.call_count == 2
     assert mock_kill.call_count == 2  # kill in loop + final kill
     assert c.call_count == 1
-    c.assert_called_with({'x'})
+    c.assert_called_with({(Change.added, '/path/to/foobar.py')})
