@@ -42,7 +42,7 @@ mypy:
 
 .PHONY: test
 test:
-	pytest --cov=watchgod --log-format="%(levelname)s %(message)s"
+	pytest --cov=watchgod
 
 .PHONY: testcov
 testcov: test

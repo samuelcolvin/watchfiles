@@ -61,6 +61,7 @@ jobs:
           ${{ runner.os }}
           ${{ hashFiles('Cargo.toml') }}
           ${{ hashFiles('Cargo.lock') }}
+          ${{ hashFiles('setup.py') }}
 
     - run: pip install -r tests/requirements.txt
       if: steps.cache-py.outputs.cache-hit != 'true'
@@ -68,7 +69,7 @@ jobs:
     - run: pip install -e .
     - run: pip freeze
 
-    - run: make test
+    - run: pytest --cov=watchgod -v --full-trace
     - run: coverage xml
 
     - uses: codecov/codecov-action@v1.0.13

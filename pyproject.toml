@@ -4,6 +4,7 @@ requires = ['setuptools', 'wheel', 'setuptools-rust']
 [tool.pytest.ini_options]
 testpaths = 'tests'
 filterwarnings = 'error'
+timeout = 10
 
 [tool.coverage.run]
 source = ['dirty_equals']
