@@ -1,4 +1,3 @@
-import functools
 import logging
 import os
 import signal
@@ -6,12 +5,26 @@ from functools import partial
 from multiprocessing import get_context
 from pathlib import Path
 from time import time
-from typing import TYPE_CHECKING, Any, Awaitable, Callable, Dict, Generator, Optional, Set, Tuple, Type, Union, cast, AsyncGenerator
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    AsyncGenerator,
+    Awaitable,
+    Callable,
+    Dict,
+    Generator,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    Union,
+    cast,
+)
 
 import anyio
 
-from ._rust_notify import rust_watch
-from .watcher import DefaultWatcher, PythonWatcher, Change
+from ._rust_notify import RustNotify
+from .watcher import Change, PythonWatcher
 
 __all__ = 'watch', 'awatch', 'run_process', 'arun_process'
 logger = logging.getLogger('watchgod.main')
@@ -76,10 +89,11 @@ async def awatch(
                 await stop_event.set()
                 break
 
+    watcher = RustNotify(path, debug)
     async with anyio.create_task_group() as tg:
         tg.start_soon(signal_handler)
         while True:
-            raw_changes = await anyio.to_thread.run_sync(rust_watch, str(path), debounce, step, stop_event, debug)
+            raw_changes = await anyio.to_thread.run_sync(watcher.watch, debounce, step, stop_event)
             if stop_event.is_set():
                 break
 

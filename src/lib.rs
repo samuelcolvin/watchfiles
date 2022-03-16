@@ -1,12 +1,12 @@
 extern crate notify;
 extern crate pyo3;
 
+use std::collections::HashSet;
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread::sleep;
 use std::time::{Duration, SystemTime};
-use std::collections::HashSet;
 
 use pyo3::create_exception;
 use pyo3::exceptions::PyRuntimeError;
@@ -24,107 +24,120 @@ const CHANGE_ADDED: u8 = 1;
 const CHANGE_MODIFIED: u8 = 2;
 const CHANGE_DELETED: u8 = 3;
 
-#[pyfunction]
-fn rust_watch(
-    py: Python,
-    watch_path: String,
-    debounce_ms: u64,
-    step_ms: u64,
-    cancel_event: PyObject,
-    debug: bool,
-) -> PyResult<PyObject> {
-    let changes = Arc::new(Mutex::new(HashSet::<(u8, String)>::new()));
-    let changes_clone = changes.clone();
-    let error: Arc<Mutex<Option<String>>> = Arc::new(Mutex::new(None));
-    let error_clone = error.clone();
-    let last_rename = AtomicBool::new(false);
+#[pyclass]
+struct RustNotify {
+    changes: Arc<Mutex<HashSet<(u8, String)>>>,
+    error: Arc<Mutex<Option<String>>>,
+    _watcher: RecommendedWatcher,
+}
 
-    let mut watcher: RecommendedWatcher = recommended_watcher(move |res: NotifyResult<Event>| match res {
-        Ok(event) => {
-            if debug {
-                println!("event: {:?}", event);
-            }
-            if let Some(path_buf) = event.paths.first() {
-                let path = match path_buf.to_str() {
-                    Some(s) => s.to_string(),
-                    None => {
-                        let msg = format!("Unable to decode path {:?} to string", path_buf);
-                        *error_clone.lock().unwrap() = Some(msg);
-                        return;
-                    }
-                };
-                let change = match event.kind {
-                    EventKind::Create(_) => CHANGE_ADDED,
-                    EventKind::Modify(ModifyKind::Data(_)) => {
-                        let changes = changes_clone.lock().unwrap();
-                        if changes.contains(&(CHANGE_DELETED, path.clone())) {
-                            // file was already deleted, ignore this event
-                            return
-                        } else if changes.contains(&(CHANGE_ADDED, path.clone())) {
-                            // file was added in this batch, ignore this event
-                            return
-                        } else {
-                            CHANGE_MODIFIED
-                        }
-                    },
-                    EventKind::Modify(ModifyKind::Metadata(_)) => return,
-                    EventKind::Modify(ModifyKind::Name(_)) => {
-                        // this just alternates `last_rename` between true and false
-                        if last_rename.fetch_xor(true, Ordering::SeqCst) {
-                            CHANGE_ADDED
-                        } else {
-                            CHANGE_DELETED
-                        }
-                    }
-                    EventKind::Remove(_) => CHANGE_DELETED,
-                    _ => return,
-                };
-                changes_clone.lock().unwrap().insert((change, path));
-            }
-        }
-        Err(e) => {
-            *error_clone.lock().unwrap() = Some(format!("error in underlying watcher: {}", e));
-        }
-    })
-    .map_err(map_notify_error)?;
+#[pymethods]
+impl RustNotify {
+    #[new]
+    fn py_new(watch_path: String, debug: bool) -> PyResult<Self> {
+        let changes: Arc<Mutex<HashSet<(u8, String)>>> = Arc::new(Mutex::new(HashSet::<(u8, String)>::new()));
+        let error: Arc<Mutex<Option<String>>> = Arc::new(Mutex::new(None));
 
-    watcher
-        .watch(Path::new(&watch_path), RecursiveMode::Recursive)
+        let changes_clone = changes.clone();
+        let error_clone = error.clone();
+        let last_rename = AtomicBool::new(false);
+
+        let mut _watcher: RecommendedWatcher = recommended_watcher(move |res: NotifyResult<Event>| match res {
+            Ok(event) => {
+                if debug {
+                    println!("event: {:?}", event);
+                }
+                if let Some(path_buf) = event.paths.first() {
+                    let path = match path_buf.to_str() {
+                        Some(s) => s.to_string(),
+                        None => {
+                            let msg = format!("Unable to decode path {:?} to string", path_buf);
+                            *error_clone.lock().unwrap() = Some(msg);
+                            return;
+                        }
+                    };
+                    let change = match event.kind {
+                        EventKind::Create(_) => CHANGE_ADDED,
+                        EventKind::Modify(ModifyKind::Data(_)) => {
+                            let changes = changes_clone.lock().unwrap();
+                            if changes.contains(&(CHANGE_DELETED, path.clone()))
+                                || changes.contains(&(CHANGE_ADDED, path.clone()))
+                            {
+                                // file was already deleted or file was added in this batch, ignore this event
+                                return;
+                            } else {
+                                CHANGE_MODIFIED
+                            }
+                        }
+                        EventKind::Modify(ModifyKind::Metadata(_)) => return,
+                        EventKind::Modify(ModifyKind::Name(_)) => {
+                            // this just alternates `last_rename` between true and false
+                            if last_rename.fetch_xor(true, Ordering::SeqCst) {
+                                CHANGE_ADDED
+                            } else {
+                                CHANGE_DELETED
+                            }
+                        }
+                        EventKind::Remove(_) => CHANGE_DELETED,
+                        _ => return,
+                    };
+                    changes_clone.lock().unwrap().insert((change, path));
+                }
+            }
+            Err(e) => {
+                *error_clone.lock().unwrap() = Some(format!("error in underlying watcher: {}", e));
+            }
+        })
         .map_err(map_notify_error)?;
 
-    let mut max_time: Option<SystemTime> = None;
-    let step_time = Duration::from_millis(step_ms);
-    let mut last_size: usize = 0;
-    loop {
-        py.allow_threads(|| sleep(step_time));
-        py.check_signals()?;
+        _watcher
+            .watch(Path::new(&watch_path), RecursiveMode::Recursive)
+            .map_err(map_notify_error)?;
 
-        if let Some(error) = error.lock().unwrap().as_ref() {
-            return Err(WatchgodRustInternalError::new_err(error.clone()));
-        }
+        Ok(RustNotify {
+            changes,
+            error,
+            _watcher,
+        })
+    }
 
-        if cancel_event.getattr(py, "is_set")?.call0(py)?.is_true(py)? {
-            break;
-        }
+    pub fn watch(&self, py: Python, debounce_ms: u64, step_ms: u64, cancel_event: PyObject) -> PyResult<PyObject> {
+        self.changes.lock().unwrap().clear();
 
-        let size = changes.lock().unwrap().len();
-        if size > 0 {
-            if size == last_size {
+        let mut max_time: Option<SystemTime> = None;
+        let step_time = Duration::from_millis(step_ms);
+        let mut last_size: usize = 0;
+        loop {
+            py.allow_threads(|| sleep(step_time));
+            py.check_signals()?;
+
+            if let Some(error) = self.error.lock().unwrap().as_ref() {
+                return Err(WatchgodRustInternalError::new_err(error.clone()));
+            }
+
+            if cancel_event.getattr(py, "is_set")?.call0(py)?.is_true(py)? {
                 break;
             }
-            last_size = size;
 
-            let now = SystemTime::now();
-            if let Some(max_time) = max_time {
-                if now > max_time {
+            let size = self.changes.lock().unwrap().len();
+            if size > 0 {
+                if size == last_size {
                     break;
                 }
-            } else {
-                max_time = Some(now + Duration::from_millis(debounce_ms));
+                last_size = size;
+
+                let now = SystemTime::now();
+                if let Some(max_time) = max_time {
+                    if now > max_time {
+                        break;
+                    }
+                } else {
+                    max_time = Some(now + Duration::from_millis(debounce_ms));
+                }
             }
         }
+        return Ok(self.changes.lock().unwrap().to_object(py));
     }
-    return Ok(changes.lock().unwrap().to_object(py));
 }
 
 fn map_notify_error(e: NotifyError) -> PyErr {
@@ -134,6 +147,6 @@ fn map_notify_error(e: NotifyError) -> PyErr {
 #[pymodule]
 fn _rust_notify(py: Python, m: &PyModule) -> PyResult<()> {
     m.add("WatchgodRustInternalError", py.get_type::<WatchgodRustInternalError>())?;
-    m.add_wrapped(wrap_pyfunction!(rust_watch))?;
+    m.add_class::<RustNotify>()?;
     Ok(())
 }
