@@ -38,6 +38,7 @@ jobs:
         toolchain: stable
         override: true
 
+    - run: pip install -U pip
     - run: pip install -r tests/requirements.txt
     - run: python ./setup.py develop
     - run: pip freeze

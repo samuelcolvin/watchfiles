@@ -3,7 +3,6 @@ from importlib.machinery import SourceFileLoader
 from pathlib import Path
 
 from setuptools import setup
-from setuptools_rust import Binding, RustExtension
 
 THIS_DIR = Path(__file__).resolve().parent
 long_description = THIS_DIR.joinpath('README.md').read_text()
@@ -13,7 +12,9 @@ version = SourceFileLoader('version', 'watchgod/version.py').load_module()
 
 extra = {}
 if not os.getenv('SKIP_RUST_EXTENSION'):
-    extra['rust_extensions'] = [RustExtension('watchgod._rust_notify', 'rust_notify/Cargo.toml', binding=Binding.PyO3)]
+    from setuptools_rust import Binding, RustExtension
+
+    extra['rust_extensions'] = [RustExtension('watchgod._rust_notify', binding=Binding.PyO3)]
 
 setup(
     name='watchgod',

@@ -1,10 +1,10 @@
 .DEFAULT_GOAL := all
 isort = isort watchgod tests setup.py
-black = black -S -l 120 --target-version py38 watchgod tests setup.py
+black = black watchgod tests setup.py
 
 .PHONY: install
 install:
-	pip install -U pip wheel
+	pip install -U pip
 	pip install -r tests/requirements.txt
 	pip install -U .
 
@@ -24,7 +24,7 @@ build-prod:
 format:
 	$(isort)
 	$(black)
-	cd rust_notify && cargo fmt
+	cargo fmt
 
 .PHONY: lint
 lint:
@@ -33,9 +33,9 @@ lint:
 	$(isort) --check-only --df
 	$(black) --check --diff
 	cargo fmt --version
-	cd rust_notify && cargo fmt --all -- --check
+	cargo fmt --all -- --check
 	cargo clippy --version
-	cd rust_notify && cargo clippy -- -D warnings
+	cargo clippy -- -D warnings
 
 .PHONY: mypy
 mypy:
