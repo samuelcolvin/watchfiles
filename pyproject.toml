@@ -39,5 +39,5 @@ strict = true
 warn_return_any = false
 
 [[tool.mypy.overrides]]
-module = ['mypy-trio.*']
+module = ['trio.*']
 ignore_missing_imports = true
