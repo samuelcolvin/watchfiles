@@ -1,4 +1,3 @@
-extern crate crossbeam_channel;
 extern crate notify;
 extern crate pyo3;
 
@@ -7,6 +6,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread::sleep;
 use std::time::{Duration, SystemTime};
+use std::collections::HashSet;
 
 use pyo3::create_exception;
 use pyo3::exceptions::PyRuntimeError;
@@ -31,9 +31,9 @@ fn rust_watch(
     debounce_ms: u64,
     step_ms: u64,
     cancel_event: PyObject,
+    debug: bool,
 ) -> PyResult<PyObject> {
-    let cancel_event_given = !cancel_event.is_none(py);
-    let changes = Arc::new(Mutex::new(Vec::<(u8, String)>::new()));
+    let changes = Arc::new(Mutex::new(HashSet::<(u8, String)>::new()));
     let changes_clone = changes.clone();
     let error: Arc<Mutex<Option<String>>> = Arc::new(Mutex::new(None));
     let error_clone = error.clone();
@@ -41,7 +41,9 @@ fn rust_watch(
 
     let mut watcher: RecommendedWatcher = recommended_watcher(move |res: NotifyResult<Event>| match res {
         Ok(event) => {
-            println!("event: {:?}", event);
+            if debug {
+                println!("event: {:?}", event);
+            }
             if let Some(path_buf) = event.paths.first() {
                 let path = match path_buf.to_str() {
                     Some(s) => s.to_string(),
@@ -53,7 +55,18 @@ fn rust_watch(
                 };
                 let change = match event.kind {
                     EventKind::Create(_) => CHANGE_ADDED,
-                    EventKind::Modify(ModifyKind::Data(_)) => CHANGE_MODIFIED,
+                    EventKind::Modify(ModifyKind::Data(_)) => {
+                        let changes = changes_clone.lock().unwrap();
+                        if changes.contains(&(CHANGE_DELETED, path.clone())) {
+                            // file was already deleted, ignore this event
+                            return
+                        } else if changes.contains(&(CHANGE_ADDED, path.clone())) {
+                            // file was added in this batch, ignore this event
+                            return
+                        } else {
+                            CHANGE_MODIFIED
+                        }
+                    },
                     EventKind::Modify(ModifyKind::Metadata(_)) => return,
                     EventKind::Modify(ModifyKind::Name(_)) => {
                         // this just alternates `last_rename` between true and false
@@ -66,7 +79,7 @@ fn rust_watch(
                     EventKind::Remove(_) => CHANGE_DELETED,
                     _ => return,
                 };
-                changes_clone.lock().unwrap().push((change, path));
+                changes_clone.lock().unwrap().insert((change, path));
             }
         }
         Err(e) => {
@@ -90,7 +103,7 @@ fn rust_watch(
             return Err(WatchgodRustInternalError::new_err(error.clone()));
         }
 
-        if cancel_event_given && cancel_event.getattr(py, "is_set")?.call0(py)?.is_true(py)? {
+        if cancel_event.getattr(py, "is_set")?.call0(py)?.is_true(py)? {
             break;
         }
 

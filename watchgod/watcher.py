@@ -5,7 +5,7 @@ from enum import IntEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict, Optional, Pattern, Set, Tuple, Union
 
-__all__ = 'Change', 'AllWatcher', 'DefaultDirWatcher', 'DefaultWatcher', 'PythonWatcher', 'RegExpWatcher'
+__all__ = 'Change', 'AllWatcher', 'DefaultDirWatcher', 'DefaultWatcher', 'PythonWatcher', 'RegExpWatcher', 'FileChange'
 logger = logging.getLogger('watchgod.watcher')
 
 

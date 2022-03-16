@@ -9,7 +9,8 @@ def rust_watch(
     watch_path: str,
     debounce_ms: int,
     step_ms: int,
-    cancel_event: Union[None, anyio.Event, asyncio.Event],
+    cancel_event: Union[anyio.Event, asyncio.Event],
+    debug: bool,
 ) -> List[Tuple[int, str]]: ...
 
 class WatchgodRustInternalError(RuntimeError): ...

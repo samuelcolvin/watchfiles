@@ -6,11 +6,12 @@ from functools import partial
 from multiprocessing import get_context
 from pathlib import Path
 from time import time
-from typing import TYPE_CHECKING, Any, Awaitable, Callable, Dict, Generator, Optional, Set, Tuple, Type, Union, cast
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, Dict, Generator, Optional, Set, Tuple, Type, Union, cast, AsyncGenerator
 
 import anyio
 
-from .watcher import DefaultWatcher, PythonWatcher
+from ._rust_notify import rust_watch
+from .watcher import DefaultWatcher, PythonWatcher, Change
 
 __all__ = 'watch', 'awatch', 'run_process', 'arun_process'
 logger = logging.getLogger('watchgod.main')
@@ -51,98 +52,47 @@ def watch(path: Union[Path, str], **kwargs: Any) -> Generator['FileChanges', Non
         logger.debug('KeyboardInterrupt, exiting')
 
 
-class awatch:
+async def awatch(
+    path: Union[Path, str],
+    *,
+    watch_filter: Optional[Callable[['Change', str], bool]] = None,
+    debounce: int = 1600,
+    step: int = 50,
+    stop_event: Optional['AnyEvent'] = None,
+    debug: bool = False,
+) -> AsyncGenerator['FileChanges', None]:
     """
     asynchronous equivalent of watch using a threaded executor.
     """
+    if stop_event is None:
+        stop_event = anyio.Event()
+    got_signal = False
 
-    __slots__ = (
-        '_path',
-        '_watcher_cls',
-        '_watcher_kwargs',
-        '_debounce',
-        '_min_sleep',
-        '_stop_event',
-        '_normal_sleep',
-        '_w',
-        'lock',
-        '_thread_limiter',
-    )
+    async def signal_handler():
+        nonlocal got_signal
+        with anyio.open_signal_receiver(signal.SIGINT) as signals:
+            async for _ in signals:
+                got_signal = True
+                await stop_event.set()
+                break
 
-    def __init__(
-        self,
-        path: Union[Path, str],
-        *,
-        watcher_cls: Type['AllWatcher'] = DefaultWatcher,
-        watcher_kwargs: Optional[Dict[str, Any]] = None,
-        debounce: int = 1600,
-        normal_sleep: int = 400,
-        min_sleep: int = 50,
-        stop_event: Optional['AnyEvent'] = None,
-    ) -> None:
-        self._thread_limiter: Optional[anyio.CapacityLimiter] = None
-        self._path = path
-        self._watcher_cls = watcher_cls
-        self._watcher_kwargs = watcher_kwargs or dict()
-        self._debounce = debounce
-        self._normal_sleep = normal_sleep
-        self._min_sleep = min_sleep
-        self._stop_event = stop_event
-        self._w: Optional['AllWatcher'] = None
-        self.lock = anyio.Lock()
-
-    def __aiter__(self) -> 'awatch':
-        return self
-
-    async def __anext__(self) -> 'FileChanges':
-        if self._w:
-            watcher = self._w
-        else:
-            watcher = self._w = await self.run_in_executor(
-                functools.partial(self._watcher_cls, self._path, **self._watcher_kwargs)
-            )
-        check_time = 0
-        changes: 'FileChanges' = set()
-        last_change = 0
+    async with anyio.create_task_group() as tg:
+        tg.start_soon(signal_handler)
         while True:
-            if self._stop_event and self._stop_event.is_set():
-                raise StopAsyncIteration()
-            async with self.lock:
-                if not changes:
-                    last_change = unix_ms()
+            raw_changes = await anyio.to_thread.run_sync(rust_watch, str(path), debounce, step, stop_event, debug)
+            if stop_event.is_set():
+                break
 
-                if check_time:
-                    if changes:
-                        sleep_time = self._min_sleep
-                    else:
-                        sleep_time = max(self._normal_sleep - check_time, self._min_sleep)
-                    await anyio.sleep(sleep_time / 1000)
+            changes = {(Change(change), path) for change, path in raw_changes}
+            if watch_filter:
+                changes = {c for c in changes if watch_filter(c[0], c[1])}
+            if changes:
+                yield changes
 
-                s = unix_ms()
-                new_changes = await self.run_in_executor(watcher.check)
-                changes.update(new_changes)
-                now = unix_ms()
-                check_time = now - s
-                debounced = now - last_change
-                if logger.isEnabledFor(logging.DEBUG) and changes:
-                    logger.debug(
-                        '%s time=%0.0fms debounced=%0.0fms files=%d changes=%d (%d)',
-                        self._path,
-                        check_time,
-                        debounced,
-                        len(watcher.files),
-                        len(changes),
-                        len(new_changes),
-                    )
+        # await tg.cancel_scope.cancel()
 
-                if changes and (not new_changes or debounced > self._debounce):
-                    logger.debug('%s changes released debounced=%0.0fms', self._path, debounced)
-                    return changes
-
-    async def run_in_executor(self, func: 'AnyCallable', *args: Any) -> Any:
-        if self._thread_limiter is None:
-            self._thread_limiter = anyio.CapacityLimiter(4)
-        return await anyio.to_thread.run_sync(func, *args, limiter=self._thread_limiter)
+    if got_signal:
+        raise KeyboardInterrupt
 
 
 def _start_process(target: 'AnyCallable', args: Tuple[Any, ...], kwargs: Optional[Dict[str, Any]]) -> 'SpawnProcess':
