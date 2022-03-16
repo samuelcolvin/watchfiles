@@ -1,10 +1,10 @@
 import logging
 import os
 import signal
+from enum import IntEnum
 from functools import partial
 from multiprocessing import get_context
 from pathlib import Path
-from time import time
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -23,8 +23,8 @@ from typing import (
 
 import anyio
 
+from .filters import Change, DefaultFilter
 from ._rust_notify import RustNotify
-from .watcher import Change, PythonWatcher
 
 __all__ = 'watch', 'awatch', 'run_process', 'arun_process'
 logger = logging.getLogger('watchgod.main')
@@ -35,27 +35,31 @@ if TYPE_CHECKING:
 
     import trio
 
-    from .watcher import AllWatcher, FileChange
-
+    FileChange = Tuple[Change, str]
     FileChanges = Set[FileChange]
     AnyCallable = Callable[..., Any]
     AnyEvent = Union[anyio.Event, asyncio.Event, trio.Event]
 
-# Use spawn context to make sure code run in subprocess
-# does not reuse imported modules in main process/context
-spawn_context = get_context('spawn')
+
+default_filter = DefaultFilter()
+default_debounce = 1_600
+default_step = 50
 
 
-def unix_ms() -> int:
-    return int(round(time() * 1000))
-
-
-def watch(path: Union[Path, str], **kwargs: Any) -> Generator['FileChanges', None, None]:
+def watch(
+    path: Union[Path, str],
+    *,
+    watch_filter: Optional[Callable[['Change', str], bool]] = default_filter,
+    debounce: int = default_debounce,
+    step: int = default_step,
+    stop_event: Optional['AnyEvent'] = None,
+    debug: bool = False,
+) -> Generator['FileChanges', None, None]:
     """
     Watch a directory and yield a set of changes whenever files change in that directory or its subdirectories.
     """
+    _awatch = awatch(path, watch_filter=watch_filter, debug=debug, debounce=debounce, step=step, stop_event=stop_event)
     try:
-        _awatch = awatch(path, **kwargs)
         while True:
             try:
                 yield anyio.run(_awatch.__anext__)
@@ -68,24 +72,25 @@ def watch(path: Union[Path, str], **kwargs: Any) -> Generator['FileChanges', Non
 async def awatch(
     path: Union[Path, str],
     *,
-    watch_filter: Optional[Callable[['Change', str], bool]] = None,
-    debounce: int = 1600,
-    step: int = 50,
+    watch_filter: Optional[Callable[['Change', str], bool]] = default_filter,
+    debounce: int = default_debounce,
+    step: int = default_step,
     stop_event: Optional['AnyEvent'] = None,
     debug: bool = False,
+    raise_interrupt: bool = False,
 ) -> AsyncGenerator['FileChanges', None]:
     """
     asynchronous equivalent of watch using a threaded executor.
     """
     if stop_event is None:
         stop_event = anyio.Event()
-    got_signal = False
+    interrupted = False
 
     async def signal_handler():
-        nonlocal got_signal
+        nonlocal interrupted
         with anyio.open_signal_receiver(signal.SIGINT) as signals:
             async for _ in signals:
-                got_signal = True
+                interrupted = True
                 await stop_event.set()
                 break
 
@@ -103,10 +108,13 @@ async def awatch(
             if changes:
                 yield changes
 
-        # await tg.cancel_scope.cancel()
-
-    if got_signal:
+    if interrupted and raise_interrupt:
         raise KeyboardInterrupt
+
+
+# Use spawn context to make sure code run in subprocess
+# does not reuse imported modules in main process/context
+spawn_context = get_context('spawn')
 
 
 def _start_process(target: 'AnyCallable', args: Tuple[Any, ...], kwargs: Optional[Dict[str, Any]]) -> 'SpawnProcess':
@@ -138,7 +146,7 @@ def run_process(
     args: Tuple[Any, ...] = (),
     kwargs: Optional[Dict[str, Any]] = None,
     callback: Optional[Callable[[Set['FileChange']], None]] = None,
-    watcher_cls: Type['AllWatcher'] = PythonWatcher,
+    # watcher_cls: Type['AllWatcher'] = PythonWatcher,
     watcher_kwargs: Optional[Dict[str, Any]] = None,
     debounce: int = 400,
     min_sleep: int = 100,
@@ -170,7 +178,7 @@ async def arun_process(
     args: Tuple[Any, ...] = (),
     kwargs: Optional[Dict[str, Any]] = None,
     callback: Optional[Callable[['FileChanges'], Awaitable[None]]] = None,
-    watcher_cls: Type['AllWatcher'] = PythonWatcher,
+    # watcher_cls: Type['AllWatcher'] = PythonWatcher,
     debounce: int = 400,
     min_sleep: int = 100,
 ) -> int:

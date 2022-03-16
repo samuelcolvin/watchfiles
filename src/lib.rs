@@ -45,7 +45,7 @@ impl RustNotify {
         let mut _watcher: RecommendedWatcher = recommended_watcher(move |res: NotifyResult<Event>| match res {
             Ok(event) => {
                 if debug {
-                    println!("event: {:?}", event);
+                    println!("raw-event: {:?}", event);
                 }
                 if let Some(path_buf) = event.paths.first() {
                     let path = match path_buf.to_str() {
@@ -58,7 +58,7 @@ impl RustNotify {
                     };
                     let change = match event.kind {
                         EventKind::Create(_) => CHANGE_ADDED,
-                        EventKind::Modify(ModifyKind::Data(_)) => {
+                        EventKind::Modify(ModifyKind::Data(_)) | EventKind::Modify(ModifyKind::Metadata(_)) => {
                             let changes = changes_clone.lock().unwrap();
                             if changes.contains(&(CHANGE_DELETED, path.clone()))
                                 || changes.contains(&(CHANGE_ADDED, path.clone()))
@@ -69,7 +69,6 @@ impl RustNotify {
                                 CHANGE_MODIFIED
                             }
                         }
-                        EventKind::Modify(ModifyKind::Metadata(_)) => return,
                         EventKind::Modify(ModifyKind::Name(_)) => {
                             // this just alternates `last_rename` between true and false
                             if last_rename.fetch_xor(true, Ordering::SeqCst) {
