@@ -9,8 +9,6 @@ from watchgod import Change, PythonFilter, awatch, watch
 
 from .conftest import mktree
 
-skip_on_windows = pytest.mark.skipif(sys.platform == 'win32', reason='fails on windows')
-skip_unless_linux = pytest.mark.skipif(sys.platform != 'linux', reason='test only on linux')
 tree = {
     'foo': {
         'bar.txt': 'bar',
@@ -139,6 +137,5 @@ async def test_await_stop(tmp_path):
     stop_event = anyio.Event()
     (tmp_path / 'foo.txt').write_text('foobar')
     async for changes in awatch(tmp_path, watch_filter=None, stop_event=stop_event):
-        debug(changes)
         assert changes == {(Change.added, str((tmp_path / 'foo.txt')))}
         stop_event.set()
