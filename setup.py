@@ -14,7 +14,7 @@ extra = {}
 if not os.getenv('SKIP_RUST_EXTENSION'):
     from setuptools_rust import Binding, RustExtension
 
-    extra['rust_extensions'] = [RustExtension('watchgod._rust_notify', binding=Binding.PyO3)]
+    extra['rust_extensions'] = [RustExtension('watchgod.rust_notify', binding=Binding.PyO3)]
 
 setup(
     name='watchgod',

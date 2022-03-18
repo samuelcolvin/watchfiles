@@ -21,7 +21,7 @@ from typing import (
 
 import anyio
 
-from ._rust_notify import RustNotify
+from .rust_notify import RustNotify
 from .filters import DefaultFilter, PythonFilter
 
 __all__ = 'watch', 'awatch', 'run_process', 'arun_process', 'Change'
