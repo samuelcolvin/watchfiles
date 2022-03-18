@@ -1,6 +1,7 @@
 import logging
 import os
 import signal
+import sys
 from enum import IntEnum
 from multiprocessing import get_context
 from pathlib import Path
@@ -97,6 +98,12 @@ async def awatch(
 
     async def signal_handler() -> None:
         nonlocal interrupted
+
+        if sys.platform == 'win32':
+            # add_signal_handler is not implemented on windows
+            # repeat ctrl+c should still stop the watcher
+            return
+
         with anyio.open_signal_receiver(signal.SIGINT) as signals:
             async for _ in signals:
                 interrupted = True
