@@ -53,7 +53,7 @@ def test_ignore(mocker, tmp_work_path):
         args=('tests.test_cli.foobar', '/path/to/tty'),
         callback=callback,
         watcher_kwargs={
-            'ignore_paths': {str(tmp_work_path / 'foo'), str(tmp_work_path / 'bar')},
+            'ignored_paths': {str(tmp_work_path / 'foo'), str(tmp_work_path / 'bar')},
             'extensions': ('.md',),
         },
     )

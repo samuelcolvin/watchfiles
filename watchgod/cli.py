@@ -130,7 +130,7 @@ def cli(*args_: str) -> None:
 
     watcher_kwargs: Dict[str, Any] = {}
     if arg_namespace.ignore_paths:
-        watcher_kwargs['ignore_paths'] = {str(Path(p).resolve()) for p in arg_namespace.ignore_paths}
+        watcher_kwargs['ignored_paths'] = {str(Path(p).resolve()) for p in arg_namespace.ignore_paths}
 
     extensions = arg_namespace.extensions
     if arg_namespace.extensions:
