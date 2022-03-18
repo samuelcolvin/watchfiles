@@ -1,6 +1,5 @@
 from pathlib import Path
 from time import sleep
-from typing import Callable, Literal
 
 import anyio
 
@@ -8,12 +7,10 @@ from watchgod import Change, PythonFilter, awatch, watch
 
 from .conftest import MockRustType
 
-FsSoon = Callable[[Path, Literal['write', 'delete', 'chmod']], None]
 
-
-def test_watch(tmp_path: Path, fs_soon: FsSoon):
+def test_watch(tmp_path: Path, write_soon):
     sleep(0.1)
-    fs_soon(tmp_path / 'foo.txt', 'write')
+    write_soon(tmp_path / 'foo.txt')
     changes = None
     for changes in watch(tmp_path, watch_filter=None):
         break
@@ -21,18 +18,18 @@ def test_watch(tmp_path: Path, fs_soon: FsSoon):
     assert changes == {(Change.added, str((tmp_path / 'foo.txt')))}
 
 
-async def test_awatch(tmp_path: Path, fs_soon: FsSoon):
+async def test_awatch(tmp_path: Path, write_soon):
     sleep(0.1)
-    fs_soon(tmp_path / 'foo.txt', 'write')
+    write_soon(tmp_path / 'foo.txt')
     async for changes in awatch(tmp_path, watch_filter=None):
         assert changes == {(Change.added, str((tmp_path / 'foo.txt')))}
         break
 
 
-async def test_await_stop(tmp_path: Path, fs_soon: FsSoon):
+async def test_await_stop(tmp_path: Path, write_soon):
     sleep(0.1)
+    write_soon(tmp_path / 'foo.txt')
     stop_event = anyio.Event()
-    fs_soon(tmp_path / 'foo.txt', 'write')
     async for changes in awatch(tmp_path, watch_filter=None, stop_event=stop_event):
         assert changes == {(Change.added, str((tmp_path / 'foo.txt')))}
         stop_event.set()

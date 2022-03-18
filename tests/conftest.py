@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from threading import Thread
 from time import sleep
-from typing import Callable, Dict, List, Literal, Set, Tuple, Union
+from typing import Callable, Dict, List, Set, Tuple, Union
 
 import pytest
 
@@ -59,22 +59,17 @@ def anyio_backend():
     return 'asyncio'
 
 
-def fs_op(path: Path, action: Literal['write', 'delete', 'chmod']):
+def sleep_write(path: Path):
     sleep(0.1)
-    if action == 'write':
-        path.write_text('hello')
-    elif action == 'delete':
-        path.unlink()
-    elif action == 'chmod':
-        path.chmod(0o777)
+    path.write_text('hello')
 
 
 @pytest.fixture
-def fs_soon():
+def write_soon():
     threads = []
 
-    def start(path: Path, action: Literal['write', 'delete', 'chmod']):
-        thread = Thread(target=fs_op, args=(path, action))
+    def start(path: Path):
+        thread = Thread(target=sleep_write, args=(path,))
         thread.start()
         threads.append(thread)
 
