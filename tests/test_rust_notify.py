@@ -38,5 +38,5 @@ def test_delete(test_dir: Path):
 
 def test_does_not_exist(tmp_path: Path):
     p = tmp_path / 'missing'
-    with pytest.raises(FileNotFoundError, match='No path was found.'):
+    with pytest.raises(FileNotFoundError):
         RustNotify([str(p)], False)
