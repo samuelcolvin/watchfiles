@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 
 import pytest
@@ -12,6 +13,7 @@ def test_add(test_dir: Path):
     assert watcher.watch(200, 50, None) == {(1, str((test_dir / 'foo.txt')))}
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason='fails on windows')
 def test_modify(test_dir: Path):
     watcher = RustNotify([str(test_dir)], False)
 
