@@ -1,3 +1,4 @@
+import sys
 from contextlib import contextmanager
 from pathlib import Path
 from time import sleep
@@ -79,6 +80,7 @@ def mock_open_signal_receiver(signal):
     yield signals()
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason='fails on windows')
 async def test_awatch_interrupt(mocker, mock_rust_notify: MockRustType):
     mocker.patch('watchgod.main.anyio.open_signal_receiver', side_effect=mock_open_signal_receiver)
     mock_rust_notify([{(1, 'foo.txt')}])
