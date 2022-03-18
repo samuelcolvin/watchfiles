@@ -1,7 +1,9 @@
+from contextlib import contextmanager
 from pathlib import Path
 from time import sleep
 
 import anyio
+import pytest
 
 from watchgod import Change, PythonFilter, awatch, watch
 
@@ -58,3 +60,31 @@ def test_python_extensions(mock_rust_notify: MockRustType):
 
     f = PythonFilter(extra_extensions=('.md',))
     assert next(watch('.', watch_filter=f)) == {(Change.added, 'foo.py'), (Change.added, 'spam.md')}
+
+
+def test_watch_interrupt(mock_rust_notify: MockRustType):
+    mock_rust_notify([{(1, 'foo.txt')}])
+
+    w = watch('.', raise_interrupt=True)
+    assert next(w) == {(Change.added, 'foo.txt')}
+    with pytest.raises(KeyboardInterrupt):
+        next(w)
+
+
+@contextmanager
+def mock_open_signal_receiver(signal):
+    async def signals():
+        yield signal
+
+    yield signals()
+
+
+async def test_awatch_interrupt(mocker, mock_rust_notify: MockRustType):
+    mocker.patch('watchgod.main.anyio.open_signal_receiver', side_effect=mock_open_signal_receiver)
+    mock_rust_notify([{(1, 'foo.txt')}])
+
+    w = watch('.', raise_interrupt=True)
+    assert next(w) == {(Change.added, 'foo.txt')}
+    with pytest.raises(KeyboardInterrupt):
+        async for _ in awatch('.', raise_interrupt=True):
+            pass
