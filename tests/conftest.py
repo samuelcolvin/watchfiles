@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
-from typing import Dict, Union
+from threading import Thread
+from time import sleep
+from typing import Callable, Dict, List, Literal, Set, Tuple, Union
 
 import pytest
 
@@ -37,12 +39,77 @@ def tmp_work_path(tmp_path: Path):
     os.chdir(previous_cwd)
 
 
-@pytest.fixture(
-    params=[
-        pytest.param(('asyncio', {'use_uvloop': True}), id='asyncio+uvloop'),
-        pytest.param(('asyncio', {'use_uvloop': False}), id='asyncio'),
-    ],
-    autouse=True,
-)
-def anyio_backend(request):
-    return request.param
+@pytest.fixture(scope='session')
+def test_dir():
+    d = Path(__file__).parent / 'test_files'
+
+    yield d
+
+    for f in d.iterdir():
+        f.unlink()
+
+    print('test_dir cleanup')
+    (d / 'a.txt').write_text('a')
+    (d / 'b.txt').write_text('b')
+    (d / 'c.txt').write_text('c')
+
+
+@pytest.fixture(autouse=True)
+def anyio_backend():
+    return 'asyncio'
+
+
+def fs_op(path: Path, action: Literal['write', 'delete', 'chmod']):
+    sleep(0.1)
+    if action == 'write':
+        path.write_text('hello')
+    elif action == 'delete':
+        path.unlink()
+    elif action == 'chmod':
+        path.chmod(0o777)
+
+
+@pytest.fixture
+def fs_soon():
+    threads = []
+
+    def start(path: Path, action: Literal['write', 'delete', 'chmod']):
+        thread = Thread(target=fs_op, args=(path, action))
+        thread.start()
+        threads.append(thread)
+
+    yield start
+
+    for t in threads:
+        t.join()
+
+
+ChangesType = List[Set[Tuple[int, str]]]
+
+
+class MockRustNotify:
+    def __init__(self, changes: ChangesType):
+        self.iter_changes = iter(changes)
+        self.watch_count = 0
+
+    def watch(self, debounce_ms: int, step_ms: int, cancel_event):
+        try:
+            change = next(self.iter_changes)
+        except StopIteration:
+            return None
+        else:
+            self.watch_count += 1
+            return change
+
+
+MockRustType = Callable[[ChangesType], MockRustNotify]
+
+
+@pytest.fixture
+def mock_rust_notify(mocker):
+    def mock(changes: ChangesType):
+        m = MockRustNotify(changes)
+        mocker.patch('watchgod.main.RustNotify', return_value=m)
+        return m
+
+    return mock

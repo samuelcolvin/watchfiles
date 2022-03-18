@@ -1,140 +1,63 @@
 from pathlib import Path
 from time import sleep
+from typing import Callable, Literal
 
 import anyio
-import pytest
 
 from watchgod import Change, PythonFilter, awatch, watch
 
-from .conftest import mktree
+from .conftest import MockRustType
 
-tree = {
-    'foo': {
-        'bar.txt': 'bar',
-        'spam.py': 'whatever',
-        'spam.pyc': 'splosh',
-        'recursive_dir': {
-            'a.js': 'boom',
-        },
-        '.git': {
-            'x': 'y',
-        },
-    }
-}
+FsSoon = Callable[[Path, Literal['write', 'delete', 'chmod']], None]
 
 
-def test_add(tmp_path):
-    sleep(0.01)
-    (tmp_path / 'foo.txt').write_text('foobar')
-    watcher = watch(tmp_path, watch_filter=None)
-    assert next(watcher) == {(Change.added, str((tmp_path / 'foo.txt')))}
-
-
-def test_add_loop(tmp_path):
-    sleep(0.01)
-    (tmp_path / 'foo.txt').write_text('foobar')
+def test_watch(tmp_path: Path, fs_soon: FsSoon):
+    sleep(0.1)
+    fs_soon(tmp_path / 'foo.txt', 'write')
     changes = None
-
     for changes in watch(tmp_path, watch_filter=None):
         break
 
     assert changes == {(Change.added, str((tmp_path / 'foo.txt')))}
 
 
-def test_modify(tmp_path: Path):
-    mktree(tmp_path, tree)
-    sleep(0.01)
-
-    (tmp_path / 'foo/bar.txt').chmod(0o444)
-
-    watcher = watch(tmp_path, watch_filter=None)
-    # because this file is pretty new, we get the created event too
-    assert next(watcher) == {
-        (Change.added, str(tmp_path / 'foo/bar.txt')),
-        (Change.modified, str(tmp_path / 'foo/bar.txt')),
-    }
-
-
-def test_delete(tmp_path: Path):
-    mktree(tmp_path, tree)
-    sleep(0.01)
-
-    (tmp_path / 'foo/bar.txt').unlink()
-
-    watcher = watch(tmp_path, watch_filter=None)
-    # because this file is pretty new, we get the created event too
-    assert next(watcher) == {
-        (Change.added, str(tmp_path / 'foo/bar.txt')),
-        (Change.deleted, str(tmp_path / 'foo/bar.txt')),
-    }
-
-
-def test_ignore_file(tmp_path):
-    watcher = watch(tmp_path)
-
-    sleep(0.01)
-    (tmp_path / 'spam.pyc').write_text('foobar')
-    (tmp_path / 'spam.swp').write_text('foobar')
-    (tmp_path / 'foo.txt').write_text('foobar')
-
-    assert next(watcher) == {(Change.added, str(tmp_path / 'foo.txt'))}
-
-
-def test_ignore_dir(tmp_path):
-    watcher = watch(tmp_path)
-
-    sleep(0.01)
-    (tmp_path / '.git').mkdir()
-    (tmp_path / '.git/spam').write_text('xxx')
-    (tmp_path / 'foo.txt').write_text('foobar')
-
-    assert next(watcher) == {(Change.added, str(tmp_path / 'foo.txt'))}
-
-
-def test_python(tmp_path):
-    watcher = watch(tmp_path, watch_filter=PythonFilter())
-
-    sleep(0.01)
-    (tmp_path / 'spam.py').write_text('xxx')
-    (tmp_path / 'bar.txt').write_text('xxx')
-    (tmp_path / 'spam.md').write_text('xxx')
-
-    assert next(watcher) == {(Change.added, str(tmp_path / 'spam.py'))}
-
-
-def test_python_extensions(tmp_path):
-    watcher = watch(tmp_path, watch_filter=PythonFilter(extra_extensions=('.md',)))
-
-    sleep(0.01)
-    (tmp_path / 'spam.py').write_text('xxx')
-    (tmp_path / 'bar.txt').write_text('xxx')
-    (tmp_path / 'spam.md').write_text('xxx')
-
-    assert next(watcher) == {
-        (Change.added, str(tmp_path / 'spam.py')),
-        (Change.added, str(tmp_path / 'spam.md')),
-    }
-
-
-def test_does_not_exist(tmp_path):
-    p = tmp_path / 'missing'
-    with pytest.raises(FileNotFoundError, match='No path was found.'):
-        watcher = watch(p)
-        next(watcher)
-
-
-async def test_await_add(tmp_path):
-    sleep(0.01)
-    (tmp_path / 'foo.txt').write_text('foobar')
+async def test_awatch(tmp_path: Path, fs_soon: FsSoon):
+    sleep(0.1)
+    fs_soon(tmp_path / 'foo.txt', 'write')
     async for changes in awatch(tmp_path, watch_filter=None):
         assert changes == {(Change.added, str((tmp_path / 'foo.txt')))}
         break
 
 
-async def test_await_stop(tmp_path):
-    sleep(0.01)
+async def test_await_stop(tmp_path: Path, fs_soon: FsSoon):
+    sleep(0.1)
     stop_event = anyio.Event()
-    (tmp_path / 'foo.txt').write_text('foobar')
+    fs_soon(tmp_path / 'foo.txt', 'write')
     async for changes in awatch(tmp_path, watch_filter=None, stop_event=stop_event):
         assert changes == {(Change.added, str((tmp_path / 'foo.txt')))}
         stop_event.set()
+
+
+def test_ignore_file(mock_rust_notify: MockRustType):
+    mock_rust_notify([{(1, 'spam.pyc'), (1, 'spam.swp'), (1, 'foo.txt')}])
+
+    assert next(watch('.')) == {(Change.added, 'foo.txt')}
+
+
+def test_ignore_dir(mock_rust_notify: MockRustType):
+    mock_rust_notify([{(1, '.git'), (1, '.git/spam'), (1, 'foo.txt')}])
+
+    assert next(watch('.')) == {(Change.added, 'foo.txt')}
+
+
+def test_python(mock_rust_notify: MockRustType):
+    mock_rust_notify([{(2, 'spam.txt'), (2, 'spam.md'), (2, 'foo.py')}])
+
+    assert next(watch('.', watch_filter=PythonFilter())) == {(Change.modified, 'foo.py')}
+
+
+def test_python_extensions(mock_rust_notify: MockRustType):
+    mock_rust_notify([{(1, 'spam.txt'), (1, 'spam.md'), (1, 'foo.py')}])
+
+    f = PythonFilter(extra_extensions=('.md',))
+    assert next(watch('.', watch_filter=f)) == {(Change.added, 'foo.py'), (Change.added, 'spam.md')}
