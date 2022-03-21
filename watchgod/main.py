@@ -75,6 +75,7 @@ def watch(
 
         changes = _prep_changes(raw_changes, watch_filter)
         if changes:
+            _log_changes(changes)
             yield changes
 
 
@@ -121,10 +122,12 @@ async def awatch(
             if interrupted and raise_interrupt:
                 raise KeyboardInterrupt
             else:
+                logger.warning('got SIGINT, stopping awatch without raising exception')
                 return
 
         changes = _prep_changes(raw_changes, watch_filter)
         if changes:
+            _log_changes(changes)
             yield changes
 
 
@@ -136,6 +139,16 @@ def _prep_changes(
     if watch_filter:
         changes = {c for c in changes if watch_filter(c[0], c[1])}
     return changes
+
+
+def _log_changes(changes: 'FileChanges') -> None:
+    if logger.isEnabledFor(logging.INFO):
+        count = len(changes)
+        plural = '' if count == 1 else 's'
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('%d change%s detected: %s', count, plural, changes)
+        else:
+            logger.info('%d change%s detected', count, plural)
 
 
 # Use spawn context to make sure code run in subprocess

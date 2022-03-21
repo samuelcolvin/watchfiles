@@ -1,3 +1,4 @@
+import logging
 import sys
 from contextlib import contextmanager
 from pathlib import Path
@@ -93,19 +94,26 @@ async def test_awatch_interrupt(mocker, mock_rust_notify: MockRustType):
             pass
 
 
-def test_watch_no_yield(mock_rust_notify: MockRustType):
-    mock = mock_rust_notify([{(1, 'spam.pyc')}, {(1, 'spam.py')}])
+def test_watch_no_yield(mock_rust_notify: MockRustType, caplog):
+    mock = mock_rust_notify([{(1, 'spam.pyc')}, {(1, 'spam.py'), (2, 'ham.txt')}])
 
-    assert next(watch('.')) == {(Change.added, 'spam.py')}
+    caplog.set_level(logging.INFO, 'watchgod')
+    assert next(watch('.')) == {(Change.added, 'spam.py'), (Change.modified, 'ham.txt')}
     assert mock.watch_count == 2
+    assert caplog.text == 'watchgod.main INFO: 2 changes detected\n'
 
 
-async def test_awatch_no_yield(mock_rust_notify: MockRustType):
+async def test_awatch_no_yield(mock_rust_notify: MockRustType, caplog):
     mock = mock_rust_notify([{(1, 'spam.pyc')}, {(1, 'spam.py')}])
 
+    caplog.set_level(logging.DEBUG, 'watchgod')
     changes = None
     async for changes in awatch('.'):
         pass
 
     assert changes == {(Change.added, 'spam.py')}
     assert mock.watch_count == 2
+    assert caplog.text == (
+        "watchgod.main DEBUG: 1 change detected: {(<Change.added: 1>, 'spam.py')}\n"
+        "watchgod.main WARNING: got SIGINT, stopping awatch without raising exception\n"  # noqa: Q000
+    )

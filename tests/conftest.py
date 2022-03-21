@@ -1,3 +1,4 @@
+import logging
 import os
 from pathlib import Path
 from threading import Thread
@@ -108,3 +109,16 @@ def mock_rust_notify(mocker):
         return m
 
     return mock
+
+
+@pytest.fixture(autouse=True)
+def ensure_logging_framework_not_altered():
+    """
+    https://github.com/pytest-dev/pytest/issues/5743
+    """
+    wg_logger = logging.getLogger('watchgod')
+    before_handlers = list(wg_logger.handlers)
+
+    yield
+
+    wg_logger.handlers = before_handlers
