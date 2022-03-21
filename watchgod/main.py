@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import signal
@@ -33,6 +34,14 @@ class Change(IntEnum):
     added = 1
     modified = 2
     deleted = 3
+
+    def raw_str(self) -> str:
+        if self == Change.added:
+            return 'added'
+        elif self == Change.modified:
+            return 'modified'
+        else:
+            return 'deleted'
 
 
 if TYPE_CHECKING:
@@ -156,13 +165,23 @@ def _log_changes(changes: 'FileChanges') -> None:
 spawn_context = get_context('spawn')
 
 
-def _start_process(target: 'AnyCallable', args: Tuple[Any, ...], kwargs: Optional[Dict[str, Any]]) -> 'SpawnProcess':
+def _start_process(
+    target: 'AnyCallable',
+    args: Tuple[Any, ...],
+    kwargs: Optional[Dict[str, Any]],
+    changes: 'Optional[FileChanges]' = None,
+) -> 'SpawnProcess':
+    if changes is None:
+        os.environ.pop('WATCHGOD_CHANGES', None)
+    else:
+        os.environ['WATCHGOD_CHANGES'] = json.dumps([[c.raw_str(), p] for c, p in changes])
     process = spawn_context.Process(target=target, args=args, kwargs=kwargs or {})
     process.start()
     return process
 
 
 def _stop_process(process: 'SpawnProcess') -> None:
+    os.environ.pop('WATCHGOD_CHANGES', None)
     if process.is_alive():
         logger.debug('stopping process...')
         pid = cast(int, process.pid)
@@ -196,7 +215,7 @@ def run_process(
     Run a function in a subprocess using multiprocessing.Process, restart it whenever files change in path.
     """
 
-    process = _start_process(target=target, args=args, kwargs=kwargs)
+    process = _start_process(target, args, kwargs)
     reloads = 0
 
     try:
@@ -205,7 +224,7 @@ def run_process(
         ):
             callback and callback(changes)
             _stop_process(process)
-            process = _start_process(target=target, args=args, kwargs=kwargs)
+            process = _start_process(target, args, kwargs, changes)
             reloads += 1
     finally:
         _stop_process(process)
@@ -234,7 +253,7 @@ async def arun_process(
     ):
         callback and await callback(changes)
         await anyio.to_thread.run_sync(_stop_process, process)
-        process = await anyio.to_thread.run_sync(_start_process, target, args, kwargs)
+        process = await anyio.to_thread.run_sync(_start_process, target, args, kwargs, changes)
         reloads += 1
     await anyio.to_thread.run_sync(_stop_process, process)
     return reloads

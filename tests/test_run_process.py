@@ -1,3 +1,4 @@
+import os
 import sys
 
 import pytest
@@ -62,6 +63,17 @@ def test_start_process(mocker):
     _start_process(v, (1, 2, 3), {})
     assert mock_process.call_count == 1
     mock_process.assert_called_with(target=v, args=(1, 2, 3), kwargs={})
+    assert os.getenv('WATCHGOD_CHANGES') is None
+
+
+def test_start_process_env(mocker):
+    mock_process = mocker.patch('watchgod.main.spawn_context.Process')
+    v = object()
+    changes = [(Change.added, 'a.py'), (Change.modified, 'b.py'), (Change.deleted, 'c.py')]  # use a list to keep order
+    _start_process(v, (1, 2, 3), {}, changes)
+    assert mock_process.call_count == 1
+    mock_process.assert_called_with(target=v, args=(1, 2, 3), kwargs={})
+    assert os.getenv('WATCHGOD_CHANGES') == '[["added", "a.py"], ["modified", "b.py"], ["deleted", "c.py"]]'
 
 
 @pytest.mark.skipif(sys.version_info < (3, 8), reason='AsyncMock unavailable')
