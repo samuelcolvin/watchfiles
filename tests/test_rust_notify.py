@@ -67,8 +67,12 @@ def test_watch_multiple(tmp_path: Path):
     bar.mkdir()
     watcher = RustNotify([str(foo), str(bar)], False)
 
-    (tmp_path / 'missed.txt').write_text('foobar')
+    (tmp_path / 'not_included.txt').write_text('foobar')
     (foo / 'foo.txt').write_text('foobar')
     (bar / 'foo.txt').write_text('foobar')
 
-    assert watcher.watch(200, 50, None) == {(1, str(foo / 'foo.txt')), (1, str(bar / 'foo.txt'))}
+    changes = watcher.watch(200, 50, None)
+    # can compare directly since on macos creating the foo and bar directories is included in changes
+    assert (1, str(foo / 'foo.txt')) in changes
+    assert (1, str(bar / 'foo.txt')) in changes
+    assert not any('not_included.txt' in p for c, p in changes)
