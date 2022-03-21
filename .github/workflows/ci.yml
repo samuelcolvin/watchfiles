@@ -159,3 +159,95 @@ jobs:
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.pypi_token }}
+
+  build:
+    name: build py3.${{ matrix.python-version }} on ${{ matrix.platform || matrix.os }}
+#    needs: [test, lint]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu, macos, windows]
+        python-version: ['7', '8', '9', '10']
+        include:
+          - os: ubuntu
+            platform: linux
+          - os: windows
+            ls: dir
+
+    runs-on: ${{ format('{0}-latest', matrix.os) }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: set up python
+        uses: actions/setup-python@v1
+        with:
+          python-version: '3.9'
+
+      - name: set up rust
+        if: matrix.os != 'ubuntu'
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: install python dependencies
+        run: pip install -U setuptools wheel twine cibuildwheel
+
+      - name: set version
+        run: VERSION_PATH='watchgod/version.py' python <(curl -Ls https://git.io/JT3rm)
+
+      - name: build sdist
+        if: matrix.os == 'ubuntu' && matrix.python-version == '9'
+        run: python setup.py sdist
+        env:
+          SKIP_RUST_EXTENSION: 1
+
+      - name: build ${{ matrix.platform || matrix.os }} binaries
+        run: cibuildwheel --output-dir dist
+        env:
+          CIBW_BUILD: 'cp3${{ matrix.python-version }}-*'
+          CIBW_SKIP: '*-win32 *-musllinux_i686'
+          CIBW_PLATFORM: ${{ matrix.platform || matrix.os }}
+          CIBW_TEST_REQUIRES: 'pytest pytest-mock dirty-equals'
+          CIBW_TEST_COMMAND: 'pytest {project}/tests -s'
+          CIBW_ENVIRONMENT: 'PATH="$HOME/.cargo/bin:$PATH"'
+          CIBW_ENVIRONMENT_WINDOWS: 'PATH="$UserProfile\.cargo\bin;$PATH"'
+          CIBW_MANYLINUX_X86_64_IMAGE: 'manylinux2014'
+          CIBW_MANYLINUX_I686_IMAGE: 'manylinux2014'
+          CIBW_BEFORE_BUILD: >
+            pip install -U setuptools-rust &&
+            rustup default nightly &&
+            rustup show
+          CIBW_BEFORE_BUILD_LINUX: >
+            pip install -U setuptools-rust &&
+            curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain=nightly --profile=minimal -y &&
+            rustup show
+
+      - name: build windows 32bit binaries
+        if: matrix.os == 'windows'
+        run: cibuildwheel --output-dir dist
+        env:
+          CIBW_BUILD: 'cp3${{ matrix.python-version }}-win32'
+          CIBW_PLATFORM: windows
+          CIBW_TEST_REQUIRES: 'pytest'
+          CIBW_TEST_COMMAND: 'pytest {project}/tests -s'
+          CIBW_ENVIRONMENT: 'PATH="$UserProfile\.cargo\bin;$PATH"'
+          CIBW_BEFORE_BUILD: >
+            pip install -U setuptools-rust &&
+            rustup toolchain install nightly-i686-pc-windows-msvc &&
+            rustup default nightly-i686-pc-windows-msvc &&
+            rustup override set nightly-i686-pc-windows-msvc &&
+            rustup show
+
+      - name: list dist files
+        run: ${{ matrix.ls || 'ls -lh' }} dist/
+
+      - run: twine check dist/*
+
+      - name: upload to pypi
+        if: startsWith(github.ref, 'refs/tags/')
+        run: twine upload dist/*
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.pypi_token }}

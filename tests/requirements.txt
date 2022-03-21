@@ -1,7 +1,6 @@
 coverage==6.3.2
-dirty_equals==0.1
-pygments==2.11.2
-pytest==7.0.1
+dirty-equals==0.1
+pytest==7.1.1
 pytest-cov==3.0.0
 pytest-mock==3.7.0
 pytest-sugar==0.9.4

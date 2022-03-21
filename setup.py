@@ -53,7 +53,7 @@ setup(
     """,
     license='MIT',
     packages=['watchgod'],
-    package_data={'watchgod': ['py.typed']},
+    package_data={'watchgod': ['py.typed', '*.pyi']},
     install_requires=['anyio>=3.0.0,<4'],
     python_requires='>=3.7',
     zip_safe=True,
