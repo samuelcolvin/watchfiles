@@ -6,7 +6,7 @@ black = black watchgod tests setup.py
 install:
 	pip install -U pip
 	pip install -r tests/requirements.txt
-	pip install -U .
+	pip install -e .
 
 .PHONY: install-all
 install-all: install

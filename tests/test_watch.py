@@ -39,9 +39,10 @@ async def test_await_stop(tmp_path: Path, write_soon):
 
 
 def test_ignore_file(mock_rust_notify: MockRustType):
-    mock_rust_notify([{(1, 'spam.pyc'), (1, 'spam.swp'), (1, 'foo.txt')}])
+    mock = mock_rust_notify([{(1, 'spam.pyc'), (1, 'spam.swp'), (1, 'foo.txt')}])
 
     assert next(watch('.')) == {(Change.added, 'foo.txt')}
+    assert mock.watch_count == 1
 
 
 def test_ignore_dir(mock_rust_notify: MockRustType):
@@ -90,3 +91,21 @@ async def test_awatch_interrupt(mocker, mock_rust_notify: MockRustType):
     with pytest.raises(KeyboardInterrupt):
         async for _ in awatch('.', raise_interrupt=True):
             pass
+
+
+def test_watch_no_yield(mock_rust_notify: MockRustType):
+    mock = mock_rust_notify([{(1, 'spam.pyc')}, {(1, 'spam.py')}])
+
+    assert next(watch('.')) == {(Change.added, 'spam.py')}
+    assert mock.watch_count == 2
+
+
+async def test_awatch_no_yield(mock_rust_notify: MockRustType):
+    mock = mock_rust_notify([{(1, 'spam.pyc')}, {(1, 'spam.py')}])
+
+    changes = None
+    async for changes in awatch('.'):
+        pass
+
+    assert changes == {(Change.added, 'spam.py')}
+    assert mock.watch_count == 2
