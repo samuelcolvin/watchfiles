@@ -129,37 +129,6 @@ jobs:
     - run: make lint
     - run: make mypy
 
-  deploy:
-    needs:
-      - test
-      - lint
-    if: "success() && startsWith(github.ref, 'refs/tags/')"
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: set up python
-        uses: actions/setup-python@v3
-        with:
-          python-version: '3.9'
-
-      - name: install
-        run: pip install -U pip setuptools twine wheel
-
-      - name: set version
-        run: VERSION_PATH='watchgod/version.py' python <(curl -Ls https://git.io/JT3rm)
-
-      - run: python setup.py sdist bdist_wheel
-
-      - run: twine check dist/*
-
-      - name: upload to pypi
-        run: twine upload dist/*
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.pypi_token }}
-
   build:
     name: build py3.${{ matrix.python-version }} on ${{ matrix.platform || matrix.os }}
 #    needs: [test, lint]
@@ -191,10 +160,10 @@ jobs:
           toolchain: stable
           override: true
 
-      - name: install python dependencies
-        run: pip install -U setuptools wheel twine cibuildwheel
+      - run: pip install -U setuptools wheel twine cibuildwheel
 
       - name: set version
+        if: "success() && startsWith(github.ref, 'refs/tags/')"
         run: VERSION_PATH='watchgod/version.py' python <(curl -Ls https://git.io/JT3rm)
 
       - name: build sdist
@@ -240,13 +209,41 @@ jobs:
             rustup override set nightly-i686-pc-windows-msvc &&
             rustup show
 
-      - name: list dist files
-        run: ${{ matrix.ls || 'ls -lh' }} dist/
+      - run: ${{ matrix.ls || 'ls -lh' }} dist/
+
+      - run: twine check dist/*
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: pypi_files
+          path: dist
+
+  deploy:
+    needs: build
+    if: "success() && startsWith(github.ref, 'refs/tags/')"
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: set up python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.9'
+
+      - run: pip install -U twine
+
+      - name: get dist artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: pypi_files
+          path: dist
+
+      - run: ls -lh dist/
 
       - run: twine check dist/*
 
       - name: upload to pypi
-        if: startsWith(github.ref, 'refs/tags/')
         run: twine upload dist/*
         env:
           TWINE_USERNAME: __token__
