@@ -182,9 +182,8 @@ python_filter = PythonFilter()
 
 
 def run_process(
-    path: Union[Path, str],
+    *paths: Union[Path, str],
     target: 'AnyCallable',
-    *,
     args: Tuple[Any, ...] = (),
     kwargs: Optional[Dict[str, Any]] = None,
     callback: Optional[Callable[[Set['FileChange']], None]] = None,
@@ -202,7 +201,7 @@ def run_process(
 
     try:
         for changes in watch(
-            path, watch_filter=watch_filter, debounce=debounce, step=step, debug=debug, raise_interrupt=False
+            *paths, watch_filter=watch_filter, debounce=debounce, step=step, debug=debug, raise_interrupt=False
         ):
             callback and callback(changes)
             _stop_process(process)
@@ -214,9 +213,8 @@ def run_process(
 
 
 async def arun_process(
-    path: Union[Path, str],
+    *paths: Union[Path, str],
     target: 'AnyCallable',
-    *,
     args: Tuple[Any, ...] = (),
     kwargs: Optional[Dict[str, Any]] = None,
     callback: Optional[Callable[['FileChanges'], Awaitable[None]]] = None,
@@ -232,7 +230,7 @@ async def arun_process(
     reloads = 0
 
     async for changes in awatch(
-        path, watch_filter=watch_filter, debounce=debounce, step=step, debug=debug, raise_interrupt=False
+        *paths, watch_filter=watch_filter, debounce=debounce, step=step, debug=debug, raise_interrupt=False
     ):
         callback and await callback(changes)
         await anyio.to_thread.run_sync(_stop_process, process)

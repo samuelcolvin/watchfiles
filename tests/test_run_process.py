@@ -26,7 +26,7 @@ def test_alive_terminates(mocker, mock_rust_notify: MockRustType):
     mock_kill = mocker.patch('watchgod.main.os.kill')
     mock_rust_notify([{(1, '/path/to/foobar.py')}])
 
-    assert run_process('/x/y/z', object(), debounce=5, step=1) == 1
+    assert run_process('/x/y/z', target=object(), debounce=5, step=1) == 1
     assert mock_start_process.call_count == 2
     assert mock_kill.call_count == 2  # kill in loop + final kill
 
@@ -38,7 +38,7 @@ def test_dead_callback(mocker, mock_rust_notify: MockRustType):
 
     c = mocker.MagicMock()
 
-    assert run_process('/x/y/z', object(), callback=c, debounce=5, step=1) == 2
+    assert run_process('/x/y/z', target=object(), callback=c, debounce=5, step=1) == 2
     assert mock_start_process.call_count == 3
     assert mock_kill.call_count == 0
     assert c.call_count == 2
@@ -51,7 +51,7 @@ def test_alive_doesnt_terminate(mocker, mock_rust_notify: MockRustType):
     mock_kill = mocker.patch('watchgod.main.os.kill')
     mock_rust_notify([{(1, '/path/to/foobar.py')}])
 
-    assert run_process('/x/y/z', object(), debounce=5, step=1) == 1
+    assert run_process('/x/y/z', target=object(), debounce=5, step=1) == 1
     assert mock_start_process.call_count == 2
     assert mock_kill.call_count == 4  # 2 kills in loop (graceful and termination) + 2 final kills
 
@@ -71,7 +71,7 @@ async def test_async_alive_terminates(mocker, mock_rust_notify: MockRustType):
     c = mocker.AsyncMock(return_value=1)
     mock_rust_notify([{(1, '/path/to/foobar.py')}])
 
-    assert await arun_process('/x/y/async', object(), callback=c, debounce=5, step=1) == 1
+    assert await arun_process('/x/y/async', target=object(), callback=c, debounce=5, step=1) == 1
     assert mock_start_process.call_count == 2
     assert mock_kill.call_count == 2  # kill in loop + final kill
     assert c.call_count == 1

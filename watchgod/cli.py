@@ -4,8 +4,8 @@ import logging
 import os
 import sys
 from importlib import import_module
-from multiprocessing import set_start_method
 from pathlib import Path
+from textwrap import dedent
 from typing import Any, Generator, List, Optional, Sized
 
 from .filters import PythonFilter
@@ -29,6 +29,14 @@ def import_string(dotted_path: str) -> Any:
         return getattr(module, class_name)
     except AttributeError as e:
         raise ImportError('Module "{}" does not define a "{}" attribute'.format(module_path, class_name)) from e
+
+
+def resolve_path(path_str: str) -> Path:
+    path = Path(path_str)
+    if not path.exists():
+        raise FileNotFoundError(path)
+    else:
+        return path.resolve()
 
 
 @contextlib.contextmanager
@@ -70,12 +78,22 @@ def sys_argv(function: str) -> List[str]:
 
 
 def cli(*args_: str) -> None:
+    """
+    Watch one or more directories and execute a python function on changes.
+
+    Note: only changes to python files will prompt the function to be restarted, use `--extensions` to watch
+    more file types.
+    """
     args = args_ or sys.argv[1:]
     parser = argparse.ArgumentParser(
-        prog='watchgod', description='Watch a directory and execute a python function on changes.'
+        prog='watchgod',
+        description=dedent((cli.__doc__ or '').strip('\n')),
+        formatter_class=argparse.RawTextHelpFormatter,
     )
     parser.add_argument('function', help='Path to python function to execute.')
-    parser.add_argument('path', nargs='?', default='.', help='Filesystem path to watch, defaults to current directory.')
+    parser.add_argument(
+        'paths', nargs='*', default='.', help='Filesystem paths to watch, defaults to current directory.'
+    )
     parser.add_argument('--verbosity', nargs='?', type=int, default=1, help='0, 1 (default) or 2')
     parser.add_argument(
         '--ignore-paths',
@@ -84,7 +102,7 @@ def cli(*args_: str) -> None:
         default=[],
         help='Specify paths to files or directories to ignore their updates',
     )
-    parser.add_argument('--extensions', nargs='*', type=str, default=(), help='File extensions to additionally watch')
+    parser.add_argument('--extensions', nargs='*', type=str, default=(), help='Extra file extensions to watch')
     parser.add_argument(
         '--args',
         '-a',
@@ -105,17 +123,16 @@ def cli(*args_: str) -> None:
     try:
         import_string(arg_namespace.function)
     except ImportError as e:
-        print('ImportError: {}'.format(e), file=sys.stderr)
+        print(f'ImportError: {e}', file=sys.stderr)
         sys.exit(1)
         return
 
-    path = Path(arg_namespace.path)
-    if not path.exists():
-        print('path "{}" does not exist'.format(path), file=sys.stderr)
+    try:
+        paths = [resolve_path(p) for p in arg_namespace.paths]
+    except FileNotFoundError as e:
+        print(f'path "{e}" does not exist', file=sys.stderr)
         sys.exit(1)
         return
-
-    path = path.resolve()
 
     try:
         tty_path: Optional[str] = os.ttyname(sys.stdin.fileno())
@@ -125,8 +142,8 @@ def cli(*args_: str) -> None:
     except AttributeError:
         # on windows. No idea of a better solution
         tty_path = None
-    logger.info('watching "%s" and reloading "%s" on changes...', path, arg_namespace.function)
-    set_start_method('spawn')
+    paths_str = ', '.join(f'"{p}"' for p in paths)
+    logger.info('watching %s and reloading "%s" on changes...', paths_str, arg_namespace.function)
     sys.argv = sys_argv(arg_namespace.function)
 
     watch_filter = None
@@ -139,8 +156,8 @@ def cli(*args_: str) -> None:
         watch_filter = PythonFilter(tuple(extensions))
 
     run_process(
-        path,
-        run_function,
+        *paths,
+        target=run_function,
         args=(arg_namespace.function, tty_path),
         callback=callback,
         watch_filter=watch_filter or PythonFilter(),
