@@ -178,7 +178,7 @@ jobs:
           CIBW_BUILD: 'cp3${{ matrix.python-version }}-*'
           CIBW_SKIP: '*-win32 *-musllinux_i686'
           CIBW_PLATFORM: ${{ matrix.platform || matrix.os }}
-          CIBW_TEST_REQUIRES: 'pytest pytest-mock dirty-equals'
+          CIBW_TEST_REQUIRES: 'pytest pytest-mock pytest-timeout dirty-equals'
           CIBW_TEST_COMMAND: 'pytest {project}/tests -s'
           CIBW_ENVIRONMENT: 'PATH="$HOME/.cargo/bin:$PATH"'
           CIBW_ENVIRONMENT_WINDOWS: 'PATH="$UserProfile\.cargo\bin;$PATH"'
