@@ -1,11 +1,21 @@
 # watchgod
 
-[![CI](https://github.com/samuelcolvin/watchgod/workflows/ci/badge.svg?event=push)](https://github.com/samuelcolvin/watchgod/actions?query=event%3Apush+branch%3Amaster+workflow%3Aci)
-[![Coverage](https://codecov.io/gh/samuelcolvin/watchgod/branch/master/graph/badge.svg)](https://codecov.io/gh/samuelcolvin/watchgod)
+[![CI](https://github.com/samuelcolvin/watchgod/workflows/ci/badge.svg?event=push)](https://github.com/samuelcolvin/watchgod/actions?query=event%3Apush+branch%3Amain+workflow%3Aci)
+[![Coverage](https://codecov.io/gh/samuelcolvin/watchgod/branch/main/graph/badge.svg)](https://codecov.io/gh/samuelcolvin/watchgod)
 [![pypi](https://img.shields.io/pypi/v/watchgod.svg)](https://pypi.python.org/pypi/watchgod)
-[![license](https://img.shields.io/github/license/samuelcolvin/watchgod.svg)](https://github.com/samuelcolvin/watchgod/blob/master/LICENSE)
+[![license](https://img.shields.io/github/license/samuelcolvin/watchgod.svg)](https://github.com/samuelcolvin/watchgod/blob/main/LICENSE)
 
 Simple, modern and high performance file watching and code reload in python.
+
+## NOTE! New Unstable Version
+
+The docs here refer to watchgod version `v0.10a1` which is a significant rewrite from `v0.8`,
+the docs for `v0.8` are available [here](https://github.com/samuelcolvin/watchgod/tree/v0.8.1).
+
+Please try `v0.10a1` (installed via `pip install watchgod==v0.10a1`) and give feedback,
+[here](https://github.com/samuelcolvin/watchgod/issues/25).
+
+---
 
 Underlying file system notifications are now handled by the [Notify](https://github.com/notify-rs/notify) rust library.
 
@@ -18,7 +28,7 @@ concurrency using threading, challenges around debouncing changes and bugs which
 **watchgod** requires Python 3.7 - 3.10.
 
 ```bash
-pip install watchgod
+pip install watchgod==v0.10a1
 ```
 
 Binaries are available for:
@@ -144,7 +154,7 @@ for changes in watch('my/project', watch_filter=only_added):
 ```
 
 For more details, checkout
-[`filters.py`](https://github.com/samuelcolvin/watchgod/blob/master/watchgod/filters.py),
+[`filters.py`](https://github.com/samuelcolvin/watchgod/blob/main/watchgod/filters.py),
 it's pretty simple.
 
 ## CLI
