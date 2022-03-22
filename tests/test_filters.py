@@ -17,7 +17,7 @@ def test_ignore_file(mock_rust_notify: 'MockRustType'):
 
 
 def test_ignore_dir(mock_rust_notify: 'MockRustType'):
-    mock_rust_notify([{(1, '.git'), (1, '.git/spam'), (1, 'foo.txt')}])
+    mock_rust_notify([{(1, '.git'), (1, str(Path('.git') / 'spam')), (1, 'foo.txt')}])
 
     assert next(watch('.')) == {(Change.added, 'foo.txt')}
 

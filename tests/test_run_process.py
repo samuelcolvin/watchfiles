@@ -65,7 +65,7 @@ def test_start_process(mocker):
     _start_process(v, (1, 2, 3), {})
     assert mock_process.call_count == 1
     mock_process.assert_called_with(target=v, args=(1, 2, 3), kwargs={})
-    assert os.getenv('WATCHGOD_CHANGES') is None
+    assert os.getenv('WATCHGOD_CHANGES') == '[]'
 
 
 def test_start_process_env(mocker):

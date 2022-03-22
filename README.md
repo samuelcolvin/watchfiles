@@ -23,7 +23,7 @@ pip install watchgod
 
 Binaries are available for:
 * **Linux**: `manylinux-x86_64`, `musllinux-x86_64` & `manylinux-i686`
-* **MacOS**: `x86_64` & `arm64`
+* **MacOS**: `x86_64` & `arm64` (except python 3.7)
 * **Windows**: `amd64` & `win32`
 
 Otherwise, you can install from source which requires Rust stable to be installed.
@@ -54,12 +54,15 @@ def foobar(a, b, c):
 run_process('./path/to/dir', target=foobar, args=(1, 2, 3))
 ```
 
-`run_process` uses `PythonFilter` so only changes to python files will prompt a reload, 
+`run_process` uses `PythonFilter` by default so only changes to python files will prompt a reload, 
 see **custom event filtering** below.
 
 If you need notifications about change events as well as to restart a process you can
 use the `callback` argument to pass a function which will be called on every file change
 with one argument: the set of file changes.
+
+File changes are also available via the `WATCHGOD_CHANGES` environment variable which contains JSON encoded
+details of changes, see the CLI example below.
 
 ### Asynchronous Methods
 
@@ -148,13 +151,19 @@ it's pretty simple.
 
 *watchgod* also comes with a CLI for running and reloading python code.
 
-Let's say you have `foobar.py`:
+Let's say you have `foobar.py` (this is a very simple web server using 
+[aiohttp](https://aiohttp.readthedocs.io/en/stable/)) which gets details about recent file changes from the 
+`WATCHGOD_CHANGES` environment variable and returns them as JSON.
 
 ```python
+import os, json
 from aiohttp import web
 
 async def handle(request):
-    return web.Response(text='testing')
+    # get the most recent file changes and return them
+    changes = os.getenv('WATCHGOD_CHANGES', '[]')
+    changes = json.loads(changes)
+    return web.json_response(dict(changes=changes))
 
 app = web.Application()
 app.router.add_get('/', handle)
@@ -167,17 +176,13 @@ You could run this and reload it when any file in the current directory changes 
 
     watchgod foobar.main
 
-In case you need to ignore certain files or directories, you can use the argument
- `--ignore-paths`.
-
-Run `watchgod --help` for more options. *watchgod* is also available as a python executable module
-via `python -m watchgod ...`.
+Run `watchgod --help` for more options.
 
 The CLI can also be used via `python -m watchgod ...`.
 
 ## How Watchgod Works
 
-*watchgod* after version `v0.10` is based on the rust [notify library](https://github.com/notify-rs/notify).
+*watchgod* after version `v0.10` is based on the [Notify](https://github.com/notify-rs/notify) rust library.
 
 All the hard work of integrating with the OS's file system events notifications and falling back to polling is palmed
 off on the rust library.

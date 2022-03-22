@@ -159,7 +159,7 @@ def _start_process(
     changes: 'Optional[FileChanges]' = None,
 ) -> 'SpawnProcess':
     if changes is None:
-        os.environ.pop('WATCHGOD_CHANGES', None)
+        os.environ['WATCHGOD_CHANGES'] = '[]'
     else:
         os.environ['WATCHGOD_CHANGES'] = json.dumps([[c.raw_str(), p] for c, p in changes])
     process = spawn_context.Process(target=target, args=args, kwargs=kwargs or {})
