@@ -163,6 +163,9 @@ jobs:
       - run: rustup target add aarch64-apple-darwin
         if: matrix.os == 'macos'
 
+      - run: rustup target add stable-i686-pc-windows-msvc
+        if: matrix.os == 'windows'
+
       - run: pip install -U setuptools wheel twine cibuildwheel
 
       - name: set version with tag
@@ -180,7 +183,8 @@ jobs:
         env:
           CIBW_BUILD_VERBOSITY: 1
           CIBW_BUILD: 'cp3${{ matrix.python-version }}-*'
-          CIBW_SKIP: '*-win32 *-musllinux_i686'
+#          CIBW_SKIP: '*-win32 *-musllinux_i686'
+          CIBW_SKIP: '*-musllinux_i686'
           CIBW_ARCHS_MACOS: 'x86_64 arm64'
           CIBW_TEST_SKIP: '*-macosx_arm64'  # see https://cibuildwheel.readthedocs.io/en/stable/faq/#universal2
           CIBW_PLATFORM: ${{ matrix.platform || matrix.os }}
@@ -195,21 +199,21 @@ jobs:
             curl https://sh.rustup.rs -sSf | sh -s -- --profile=minimal -y &&
             rustup show
 
-      - name: build windows 32bit binaries
-        if: matrix.os == 'windows'
-        run: cibuildwheel --output-dir dist
-        env:
-          CIBW_BUILD_VERBOSITY: 1
-          CIBW_BUILD: 'cp3${{ matrix.python-version }}-win32'
-          CIBW_PLATFORM: windows
-          CIBW_TEST_REQUIRES: pytest pytest-mock pytest-timeout dirty-equals
-          CIBW_TEST_COMMAND: 'pytest {project}/tests -s'
-          CIBW_ENVIRONMENT: 'PATH="$UserProfile\.cargo\bin;$PATH"'
-          CIBW_BEFORE_BUILD: >
-            rustup toolchain install stable-i686-pc-windows-msvc &&
-            rustup default stable-i686-pc-windows-msvc &&
-            rustup override set stable-i686-pc-windows-msvc &&
-            rustup show
+#      - name: build windows 32bit binaries
+#        if: matrix.os == 'windows'
+#        run: cibuildwheel --output-dir dist
+#        env:
+#          CIBW_BUILD_VERBOSITY: 1
+#          CIBW_BUILD: 'cp3${{ matrix.python-version }}-win32'
+#          CIBW_PLATFORM: windows
+#          CIBW_TEST_REQUIRES: pytest pytest-mock pytest-timeout dirty-equals
+#          CIBW_TEST_COMMAND: 'pytest {project}/tests -s'
+#          CIBW_ENVIRONMENT: 'PATH="$UserProfile\.cargo\bin;$PATH"'
+#          CIBW_BEFORE_BUILD: >
+#            rustup toolchain install stable-i686-pc-windows-msvc &&
+#            rustup default stable-i686-pc-windows-msvc &&
+#            rustup override set stable-i686-pc-windows-msvc &&
+#            rustup show
 
       - run: ${{ matrix.ls || 'ls -lh' }} dist/
 
