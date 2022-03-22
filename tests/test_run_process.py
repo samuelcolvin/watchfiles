@@ -76,15 +76,30 @@ def test_start_process_env(mocker):
     assert os.getenv('WATCHGOD_CHANGES') == '[["added", "a.py"], ["modified", "b.py"], ["deleted", "c.py"]]'
 
 
-@pytest.mark.skipif(sys.version_info < (3, 8), reason='AsyncMock unavailable')
 async def test_async_alive_terminates(mocker, mock_rust_notify: MockRustType):
     mock_start_process = mocker.patch('watchgod.main._start_process', return_value=FakeProcess())
     mock_kill = mocker.patch('watchgod.main.os.kill')
-    c = mocker.AsyncMock(return_value=1)
     mock_rust_notify([{(1, '/path/to/foobar.py')}])
+
+    callback_calls = []
+
+    async def c(changes):
+        callback_calls.append(changes)
 
     assert await arun_process('/x/y/async', target=object(), callback=c, debounce=5, step=1) == 1
     assert mock_start_process.call_count == 2
     assert mock_kill.call_count == 2  # kill in loop + final kill
-    assert c.call_count == 1
-    c.assert_called_with({(Change.added, '/path/to/foobar.py')})
+    assert callback_calls == [{(Change.added, '/path/to/foobar.py')}]
+
+
+async def test_async_sync_callback(mocker, mock_rust_notify: MockRustType):
+    mock_start_process = mocker.patch('watchgod.main._start_process', return_value=FakeProcess())
+    mock_kill = mocker.patch('watchgod.main.os.kill')
+    mock_rust_notify([{(1, '/path/to/foo.py')}, {(2, '/path/to/bar.py')}])
+
+    callback_calls = []
+
+    assert await arun_process('/x/y/async', target=object(), callback=callback_calls.append, debounce=5, step=1) == 2
+    assert mock_start_process.call_count == 3
+    assert mock_kill.call_count == 3
+    assert callback_calls == [{(Change.added, '/path/to/foo.py')}, {(Change.modified, '/path/to/bar.py')}]

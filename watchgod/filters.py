@@ -2,7 +2,7 @@ import logging
 import re
 from typing import TYPE_CHECKING, Sequence, Tuple
 
-__all__ = 'BaseFilter', 'DefaultFilter', 'PythonFilter'
+__all__ = 'BaseFilter', 'DefaultFilter', 'PythonFilter', 'default_ignore_dirs', 'default_ignore_entity_patterns'
 logger = logging.getLogger('watchgod.watcher')
 
 

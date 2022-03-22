@@ -1,3 +1,4 @@
+import inspect
 import json
 import logging
 import os
@@ -236,7 +237,7 @@ async def arun_process(
     target: 'AnyCallable',
     args: Tuple[Any, ...] = (),
     kwargs: Optional[Dict[str, Any]] = None,
-    callback: Optional[Callable[['FileChanges'], Awaitable[None]]] = None,
+    callback: Optional[Callable[['FileChanges'], Any]] = None,
     watch_filter: Optional[Callable[['Change', str], bool]] = python_filter,
     debounce: int = default_debounce,
     step: int = default_step,
@@ -245,13 +246,19 @@ async def arun_process(
     """
     Run a function in a subprocess using multiprocessing.Process, restart it whenever files change in path.
     """
+    import inspect
+
     process = await anyio.to_thread.run_sync(_start_process, target, args, kwargs)
     reloads = 0
 
     async for changes in awatch(
         *paths, watch_filter=watch_filter, debounce=debounce, step=step, debug=debug, raise_interrupt=False
     ):
-        callback and await callback(changes)
+        if callback is not None:
+            r = callback(changes)
+            if inspect.isawaitable(r):
+                await r
+
         await anyio.to_thread.run_sync(_stop_process, process)
         process = await anyio.to_thread.run_sync(_start_process, target, args, kwargs, changes)
         reloads += 1
