@@ -160,6 +160,14 @@ jobs:
           toolchain: stable
           override: true
 
+      - run: curl -Lso set_version.py https://git.io/JT3rm
+        if: "startsWith(github.ref, 'refs/tags/')"
+
+      - run: python set_version.py
+        if: "startsWith(github.ref, 'refs/tags/')"
+        env:
+          VERSION_PATH: watchgod/version.py
+
       - run: rustup target add aarch64-apple-darwin
         if: matrix.os == 'macos'
 
@@ -167,10 +175,6 @@ jobs:
         if: matrix.os == 'windows'
 
       - run: pip install -U setuptools wheel twine cibuildwheel
-
-      - name: set version with tag
-        if: "startsWith(github.ref, 'refs/tags/')"
-        run: VERSION_PATH='watchgod/version.py' python <(curl -Ls https://git.io/JT3rm)
 
       - name: build sdist
         if: matrix.os == 'ubuntu' && matrix.python-version == '9'
