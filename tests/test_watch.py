@@ -3,13 +3,15 @@ import sys
 from contextlib import contextmanager
 from pathlib import Path
 from time import sleep
+from typing import TYPE_CHECKING
 
 import anyio
 import pytest
 
 from watchgod import Change, awatch, watch
 
-from .conftest import MockRustType
+if TYPE_CHECKING:
+    from conftest import MockRustType
 
 
 def test_watch(tmp_path: Path, write_soon):
@@ -39,7 +41,7 @@ async def test_await_stop(tmp_path: Path, write_soon):
         stop_event.set()
 
 
-def test_watch_interrupt(mock_rust_notify: MockRustType):
+def test_watch_interrupt(mock_rust_notify: 'MockRustType'):
     mock_rust_notify([{(1, 'foo.txt')}])
 
     w = watch('.', raise_interrupt=True)
@@ -57,7 +59,7 @@ def mock_open_signal_receiver(signal):
 
 
 @pytest.mark.skipif(sys.platform == 'win32', reason='fails on windows')
-async def test_awatch_interrupt(mocker, mock_rust_notify: MockRustType):
+async def test_awatch_interrupt(mocker, mock_rust_notify: 'MockRustType'):
     mocker.patch('watchgod.main.anyio.open_signal_receiver', side_effect=mock_open_signal_receiver)
     mock_rust_notify([{(1, 'foo.txt')}])
 
@@ -68,7 +70,7 @@ async def test_awatch_interrupt(mocker, mock_rust_notify: MockRustType):
             pass
 
 
-def test_watch_no_yield(mock_rust_notify: MockRustType, caplog):
+def test_watch_no_yield(mock_rust_notify: 'MockRustType', caplog):
     mock = mock_rust_notify([{(1, 'spam.pyc')}, {(1, 'spam.py'), (2, 'ham.txt')}])
 
     caplog.set_level(logging.INFO, 'watchgod')
@@ -77,7 +79,7 @@ def test_watch_no_yield(mock_rust_notify: MockRustType, caplog):
     assert caplog.text == 'watchgod.main INFO: 2 changes detected\n'
 
 
-async def test_awatch_no_yield(mock_rust_notify: MockRustType, caplog):
+async def test_awatch_no_yield(mock_rust_notify: 'MockRustType', caplog):
     mock = mock_rust_notify([{(1, 'spam.pyc')}, {(1, 'spam.py')}])
 
     caplog.set_level(logging.DEBUG, 'watchgod')

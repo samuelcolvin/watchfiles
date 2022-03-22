@@ -1,12 +1,14 @@
 import os
 import sys
+from typing import TYPE_CHECKING
 
 import pytest
 
 from watchgod import arun_process, run_process
 from watchgod.main import Change, _start_process
 
-from .conftest import MockRustType
+if TYPE_CHECKING:
+    from conftest import MockRustType
 
 
 class FakeProcess:
@@ -22,7 +24,7 @@ class FakeProcess:
         pass
 
 
-def test_alive_terminates(mocker, mock_rust_notify: MockRustType):
+def test_alive_terminates(mocker, mock_rust_notify: 'MockRustType'):
     mock_start_process = mocker.patch('watchgod.main._start_process', return_value=FakeProcess())
     mock_kill = mocker.patch('watchgod.main.os.kill')
     mock_rust_notify([{(1, '/path/to/foobar.py')}])
@@ -32,7 +34,7 @@ def test_alive_terminates(mocker, mock_rust_notify: MockRustType):
     assert mock_kill.call_count == 2  # kill in loop + final kill
 
 
-def test_dead_callback(mocker, mock_rust_notify: MockRustType):
+def test_dead_callback(mocker, mock_rust_notify: 'MockRustType'):
     mock_start_process = mocker.patch('watchgod.main._start_process', return_value=FakeProcess(is_alive=False))
     mock_kill = mocker.patch('watchgod.main.os.kill')
     mock_rust_notify([{(1, '/path/to/foobar.py')}, {(1, '/path/to/foobar.py')}])
@@ -47,7 +49,7 @@ def test_dead_callback(mocker, mock_rust_notify: MockRustType):
 
 
 @pytest.mark.skipif(sys.platform == 'win32', reason='fails on windows')
-def test_alive_doesnt_terminate(mocker, mock_rust_notify: MockRustType):
+def test_alive_doesnt_terminate(mocker, mock_rust_notify: 'MockRustType'):
     mock_start_process = mocker.patch('watchgod.main._start_process', return_value=FakeProcess(exitcode=None))
     mock_kill = mocker.patch('watchgod.main.os.kill')
     mock_rust_notify([{(1, '/path/to/foobar.py')}])
@@ -76,7 +78,7 @@ def test_start_process_env(mocker):
     assert os.getenv('WATCHGOD_CHANGES') == '[["added", "a.py"], ["modified", "b.py"], ["deleted", "c.py"]]'
 
 
-async def test_async_alive_terminates(mocker, mock_rust_notify: MockRustType):
+async def test_async_alive_terminates(mocker, mock_rust_notify: 'MockRustType'):
     mock_start_process = mocker.patch('watchgod.main._start_process', return_value=FakeProcess())
     mock_kill = mocker.patch('watchgod.main.os.kill')
     mock_rust_notify([{(1, '/path/to/foobar.py')}])
@@ -92,7 +94,7 @@ async def test_async_alive_terminates(mocker, mock_rust_notify: MockRustType):
     assert callback_calls == [{(Change.added, '/path/to/foobar.py')}]
 
 
-async def test_async_sync_callback(mocker, mock_rust_notify: MockRustType):
+async def test_async_sync_callback(mocker, mock_rust_notify: 'MockRustType'):
     mock_start_process = mocker.patch('watchgod.main._start_process', return_value=FakeProcess())
     mock_kill = mocker.patch('watchgod.main.os.kill')
     mock_rust_notify([{(1, '/path/to/foo.py')}, {(2, '/path/to/bar.py')}])

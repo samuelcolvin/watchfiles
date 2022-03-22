@@ -4,8 +4,12 @@ from pathlib import Path
 
 from setuptools import setup
 
+description = 'Simple, modern file watching and code reload in python.'
 THIS_DIR = Path(__file__).resolve().parent
-long_description = THIS_DIR.joinpath('README.md').read_text()
+try:
+    long_description = (THIS_DIR / 'README.md').read_text()
+except FileNotFoundError:
+    long_description = description
 
 # avoid loading the package before requirements are installed:
 version = SourceFileLoader('version', 'watchgod/version.py').load_module()
@@ -15,14 +19,11 @@ if not os.getenv('SKIP_RUST_EXTENSION'):
     from setuptools_rust import Binding, RustExtension
 
     extra['rust_extensions'] = [RustExtension('watchgod._rust_notify', binding=Binding.PyO3)]
-    print('including rust extension in setup')
-else:
-    print('skipping rust extension in setup')
 
 setup(
     name='watchgod',
     version=str(version.VERSION),
-    description='Simple, modern file watching and code reload in python.',
+    description=description,
     long_description=long_description,
     long_description_content_type='text/markdown',
     classifiers=[

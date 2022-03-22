@@ -10,25 +10,15 @@ from watchgod.cli import callback, cli, run_function, set_tty, sys_argv
 pytestmark = pytest.mark.skipif(sys.platform == 'win32', reason='many tests fail on windows')
 
 
-def foobar():
-    # used by tests below
-    Path('sentinel').write_text('ok')
-
-
-def with_parser():
-    # used by tests below
-    Path('sentinel').write_text(' '.join(map(str, sys.argv[1:])))
-
-
 def test_simple(mocker, tmp_path):
     mocker.patch('watchgod.cli.sys.stdin.fileno')
     mocker.patch('os.ttyname', return_value='/path/to/tty')
     mock_run_process = mocker.patch('watchgod.cli.run_process')
-    cli('tests.test_cli.foobar', str(tmp_path))
+    cli('os.getcwd', str(tmp_path))
     mock_run_process.assert_called_once_with(
         tmp_path,
         target=run_function,
-        args=('tests.test_cli.foobar', '/path/to/tty'),
+        args=('os.getcwd', '/path/to/tty'),
         callback=callback,
         watch_filter=IsInstance(PythonFilter),
     )
@@ -39,7 +29,7 @@ def test_ignore_extensions(mocker, tmp_work_path):
     mocker.patch('os.ttyname', return_value='/path/to/tty')
     mock_run_process = mocker.patch('watchgod.cli.run_process')
     cli(
-        'tests.test_cli.foobar',
+        'os.getcwd',
         str(tmp_work_path),
         # '--ignore-paths',
         # 'foo',
@@ -50,7 +40,7 @@ def test_ignore_extensions(mocker, tmp_work_path):
     mock_run_process.assert_called_once_with(
         Path(str(tmp_work_path)),
         target=run_function,
-        args=('tests.test_cli.foobar', '/path/to/tty'),
+        args=('os.getcwd', '/path/to/tty'),
         callback=callback,
         watch_filter=IsInstance(PythonFilter)
         & FunctionCheck(
@@ -85,7 +75,7 @@ def test_invalid_import2(mocker, tmp_work_path, capsys):
 
 def test_invalid_path(mocker, capsys):
     sys_exit = mocker.patch('watchgod.cli.sys.exit')
-    cli('tests.test_cli.foobar', '/does/not/exist')
+    cli('os.getcwd', '/does/not/exist')
     sys_exit.assert_called_once_with(1)
     out, err = capsys.readouterr()
     assert out == ''
@@ -95,11 +85,11 @@ def test_invalid_path(mocker, capsys):
 def test_tty_os_error(mocker, tmp_work_path):
     mocker.patch('watchgod.cli.sys.stdin.fileno', side_effect=OSError)
     mock_run_process = mocker.patch('watchgod.cli.run_process')
-    cli('tests.test_cli.foobar')
+    cli('os.getcwd')
     mock_run_process.assert_called_once_with(
         tmp_work_path,
         target=run_function,
-        args=('tests.test_cli.foobar', '/dev/tty'),
+        args=('os.getcwd', '/dev/tty'),
         callback=callback,
         watch_filter=IsInstance(PythonFilter),
     )
@@ -108,26 +98,26 @@ def test_tty_os_error(mocker, tmp_work_path):
 def test_tty_attribute_error(mocker, tmp_work_path):
     mocker.patch('watchgod.cli.sys.stdin.fileno', side_effect=AttributeError)
     mock_run_process = mocker.patch('watchgod.cli.run_process')
-    cli('tests.test_cli.foobar', str(tmp_work_path))
+    cli('os.getcwd', str(tmp_work_path))
     mock_run_process.assert_called_once_with(
         tmp_work_path,
         target=run_function,
-        args=('tests.test_cli.foobar', None),
+        args=('os.getcwd', None),
         callback=callback,
         watch_filter=IsInstance(PythonFilter),
     )
 
 
-def test_run_function(tmp_work_path):
+def test_run_function(tmp_work_path: Path, create_test_function):
     assert not (tmp_work_path / 'sentinel').exists()
-    run_function('tests.test_cli.foobar', None)
+    run_function(create_test_function, None)
     assert (tmp_work_path / 'sentinel').exists()
 
 
-def test_run_function_tty(tmp_work_path):
+def test_run_function_tty(tmp_work_path: Path, create_test_function):
     # could this cause problems by changing sys.stdin?
     assert not (tmp_work_path / 'sentinel').exists()
-    run_function('tests.test_cli.foobar', '/dev/tty')
+    run_function(create_test_function, '/dev/tty')
     assert (tmp_work_path / 'sentinel').exists()
 
 
@@ -162,20 +152,20 @@ def test_sys_argv(initial, expected, mocker):
 
 
 @pytest.mark.parametrize('initial, expected', args_list)
-def test_func_with_parser(tmp_work_path, mocker, initial, expected):
+def test_func_with_parser(tmp_work_path, create_test_function, mocker, initial, expected):
     # setup
     mocker.patch('sys.argv', ['foo.py', *initial])
     mocker.patch('watchgod.cli.sys.stdin.fileno', side_effect=AttributeError)
     mock_run_process = mocker.patch('watchgod.cli.run_process')
     # test
     assert not (tmp_work_path / 'sentinel').exists()
-    cli('tests.test_cli.with_parser', str(tmp_work_path))  # run til mock_run_process
-    run_function('tests.test_cli.with_parser', None)  # run target function once
+    cli('os.getcwd', str(tmp_work_path))  # run til mock_run_process
+    run_function(create_test_function, None)  # run target function once
     file = tmp_work_path / 'sentinel'
     mock_run_process.assert_called_once_with(
         tmp_work_path,
         target=run_function,
-        args=('tests.test_cli.with_parser', None),
+        args=('os.getcwd', None),
         callback=callback,
         watch_filter=IsInstance(PythonFilter),
     )

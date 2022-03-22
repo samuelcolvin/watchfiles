@@ -143,7 +143,7 @@ jobs:
           - os: windows
             ls: dir
 
-    runs-on: ${{ format('{0}-latest', matrix.os) }}
+    runs-on: ${{ matrix.os }}-latest
     steps:
       - uses: actions/checkout@v2
 
@@ -162,8 +162,8 @@ jobs:
 
       - run: pip install -U setuptools wheel twine cibuildwheel
 
-      - name: set version
-        if: "success() && startsWith(github.ref, 'refs/tags/')"
+      - name: set version with tag
+        if: "startsWith(github.ref, 'refs/tags/')"
         run: VERSION_PATH='watchgod/version.py' python <(curl -Ls https://git.io/JT3rm)
 
       - name: build sdist
@@ -175,35 +175,35 @@ jobs:
       - name: build ${{ matrix.platform || matrix.os }} binaries
         run: cibuildwheel --output-dir dist
         env:
+          CIBW_BUILD_VERBOSITY: 1
           CIBW_BUILD: 'cp3${{ matrix.python-version }}-*'
           CIBW_SKIP: '*-win32 *-musllinux_i686'
           CIBW_PLATFORM: ${{ matrix.platform || matrix.os }}
-          CIBW_TEST_REQUIRES: 'pytest pytest-mock pytest-timeout dirty-equals'
+          CIBW_TEST_REQUIRES: pytest pytest-mock pytest-timeout dirty-equals
           CIBW_TEST_COMMAND: 'pytest {project}/tests -s'
           CIBW_ENVIRONMENT: 'PATH="$HOME/.cargo/bin:$PATH"'
           CIBW_ENVIRONMENT_WINDOWS: 'PATH="$UserProfile\.cargo\bin;$PATH"'
-          CIBW_MANYLINUX_X86_64_IMAGE: 'manylinux2014'
-          CIBW_MANYLINUX_I686_IMAGE: 'manylinux2014'
-          CIBW_BEFORE_BUILD: >
-            rustup default nightly &&
-            rustup show
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
+          CIBW_MANYLINUX_I686_IMAGE: manylinux2014
+          CIBW_BEFORE_BUILD: rustup show
           CIBW_BEFORE_BUILD_LINUX: >
-            curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain=nightly --profile=minimal -y &&
+            curl https://sh.rustup.rs -sSf | sh -s -- --profile=minimal -y &&
             rustup show
 
       - name: build windows 32bit binaries
         if: matrix.os == 'windows'
         run: cibuildwheel --output-dir dist
         env:
+          CIBW_BUILD_VERBOSITY: 1
           CIBW_BUILD: 'cp3${{ matrix.python-version }}-win32'
           CIBW_PLATFORM: windows
-          CIBW_TEST_REQUIRES: 'pytest'
+          CIBW_TEST_REQUIRES: pytest pytest-mock pytest-timeout dirty-equals
           CIBW_TEST_COMMAND: 'pytest {project}/tests -s'
           CIBW_ENVIRONMENT: 'PATH="$UserProfile\.cargo\bin;$PATH"'
           CIBW_BEFORE_BUILD: >
-            rustup toolchain install nightly-i686-pc-windows-msvc &&
-            rustup default nightly-i686-pc-windows-msvc &&
-            rustup override set nightly-i686-pc-windows-msvc &&
+            rustup toolchain install stable-i686-pc-windows-msvc &&
+            rustup default stable-i686-pc-windows-msvc &&
+            rustup override set stable-i686-pc-windows-msvc &&
             rustup show
 
       - run: ${{ matrix.ls || 'ls -lh' }} dist/
@@ -217,7 +217,7 @@ jobs:
 
   deploy:
     needs: build
-    if: "success() && startsWith(github.ref, 'refs/tags/')"
+    if: "startsWith(github.ref, 'refs/tags/')"
     runs-on: ubuntu-latest
 
     steps:

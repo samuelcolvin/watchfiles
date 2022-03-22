@@ -1,30 +1,12 @@
 import logging
 import os
+import sys
 from pathlib import Path
 from threading import Thread
 from time import sleep
-from typing import Callable, Dict, List, Set, Tuple, Union
+from typing import Callable, List, Set, Tuple
 
 import pytest
-
-PathDict = Dict[str, Union['PathDict', str, bytes]]
-
-
-def mktree(root_dir: Path, path_dict: PathDict):
-    """
-    Create a tree of files from a dictionary of name > content lookups.
-    """
-    for name, content in path_dict.items():
-        path = root_dir / name
-
-        if isinstance(content, dict):
-            path.mkdir(parents=True, exist_ok=True)
-            mktree(path, content)
-        elif isinstance(content, str):
-            path.write_text(content)
-        else:
-            assert isinstance(content, bytes), 'content must be a dict, str or bytes'
-            path.write_bytes(content)
 
 
 @pytest.fixture
@@ -49,7 +31,6 @@ def test_dir():
     for f in d.iterdir():
         f.unlink()
 
-    print('test_dir cleanup')
     (d / 'a.txt').write_text('a')
     (d / 'b.txt').write_text('b')
     (d / 'c.txt').write_text('c')
@@ -122,3 +103,24 @@ def ensure_logging_framework_not_altered():
     yield
 
     wg_logger.handlers = before_handlers
+
+
+py_code = """
+import sys
+from pathlib import Path
+
+def foobar():
+    Path('sentinel').write_text(' '.join(map(str, sys.argv[1:])))
+"""
+
+
+@pytest.fixture
+def create_test_function(tmp_work_path: Path):
+    original_path = sys.path[:]
+
+    (tmp_work_path / 'test_function.py').write_text(py_code)
+    sys.path.append(str(tmp_work_path))
+
+    yield 'test_function.foobar'
+
+    sys.path = original_path

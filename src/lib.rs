@@ -130,7 +130,6 @@ impl RustNotify {
             }
 
             if event_not_none && cancel_event.getattr(py, "is_set")?.call0(py)?.is_true(py)? {
-                println!("cancelled");
                 self.clear();
                 return Ok(none.to_object(py));
             }
