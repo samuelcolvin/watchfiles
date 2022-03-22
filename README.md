@@ -172,7 +172,7 @@ def main():
     web.run_app(app, port=8000)
 ```
 
-You could run this and reload it when any file in the current directory changes with::
+You could run this and reload it when any file in the current directory changes with:
 
     watchgod foobar.main
 
@@ -186,6 +186,14 @@ The CLI can also be used via `python -m watchgod ...`.
 
 All the hard work of integrating with the OS's file system events notifications and falling back to polling is palmed
 off on the rust library.
+
+"Debouncing" changes - e.g. grouping changes into batches rather than firing a yield/reload for each file changed
+is managed in rust.
+
+The rust code takes care of creating a new thread to watch for file changes so in the case of the synchronous methods
+(`watch` and `run_process`) no threading logic is required in python. When using the asynchronous methods (`awatch` and
+`arun_process`) [`anyio.to_thread.run_sync](https://anyio.readthedocs.io/en/stable/api.html#anyio.to_thread.run_sync)
+is used to wait for changes in rust within a thread.
 
 Prior to `v0.10` the library used filesystem polling to watch for changes, 
 see the [README for v0.8.1](https://github.com/samuelcolvin/watchgod/tree/v0.8.1) for more details.

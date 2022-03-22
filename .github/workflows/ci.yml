@@ -131,7 +131,7 @@ jobs:
 
   build:
     name: build py3.${{ matrix.python-version }} on ${{ matrix.platform || matrix.os }}
-    needs: [test, lint]
+#    needs: [test, lint]
     strategy:
       fail-fast: false
       matrix:
@@ -159,6 +159,9 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
+
+      - run: rustup target add aarch64-apple-darwin
+        if: matrix.os == 'macos'
 
       - run: pip install -U setuptools wheel twine cibuildwheel
 
