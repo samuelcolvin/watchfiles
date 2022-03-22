@@ -185,11 +185,9 @@ jobs:
           CIBW_MANYLINUX_X86_64_IMAGE: 'manylinux2014'
           CIBW_MANYLINUX_I686_IMAGE: 'manylinux2014'
           CIBW_BEFORE_BUILD: >
-            pip install -U setuptools-rust &&
             rustup default nightly &&
             rustup show
           CIBW_BEFORE_BUILD_LINUX: >
-            pip install -U setuptools-rust &&
             curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain=nightly --profile=minimal -y &&
             rustup show
 
@@ -203,7 +201,6 @@ jobs:
           CIBW_TEST_COMMAND: 'pytest {project}/tests -s'
           CIBW_ENVIRONMENT: 'PATH="$UserProfile\.cargo\bin;$PATH"'
           CIBW_BEFORE_BUILD: >
-            pip install -U setuptools-rust &&
             rustup toolchain install nightly-i686-pc-windows-msvc &&
             rustup default nightly-i686-pc-windows-msvc &&
             rustup override set nightly-i686-pc-windows-msvc &&

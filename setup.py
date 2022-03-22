@@ -15,6 +15,9 @@ if not os.getenv('SKIP_RUST_EXTENSION'):
     from setuptools_rust import Binding, RustExtension
 
     extra['rust_extensions'] = [RustExtension('watchgod._rust_notify', binding=Binding.PyO3)]
+    print('including rust extension in setup')
+else:
+    print('skipping rust extension in setup')
 
 setup(
     name='watchgod',
@@ -56,6 +59,6 @@ setup(
     package_data={'watchgod': ['py.typed', '*.pyi']},
     install_requires=['anyio>=3.0.0,<4'],
     python_requires='>=3.7',
-    zip_safe=True,
+    zip_safe=False,
     **extra,
 )
