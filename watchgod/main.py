@@ -1,19 +1,35 @@
-import functools
+import json
 import logging
 import os
 import signal
-from functools import partial
+import sys
+from enum import IntEnum
 from multiprocessing import get_context
 from pathlib import Path
-from time import time
-from typing import TYPE_CHECKING, Any, Awaitable, Callable, Dict, Generator, Optional, Set, Tuple, Type, Union, cast
+from typing import TYPE_CHECKING, Any, AsyncGenerator, Callable, Dict, Generator, Optional, Set, Tuple, Union, cast
 
 import anyio
 
-from .watcher import DefaultWatcher, PythonWatcher
+from ._rust_notify import RustNotify
+from .filters import DefaultFilter, PythonFilter
 
-__all__ = 'watch', 'awatch', 'run_process', 'arun_process'
+__all__ = 'watch', 'awatch', 'run_process', 'arun_process', 'Change'
 logger = logging.getLogger('watchgod.main')
+
+
+class Change(IntEnum):
+    added = 1
+    modified = 2
+    deleted = 3
+
+    def raw_str(self) -> str:
+        if self == Change.added:
+            return 'added'
+        elif self == Change.modified:
+            return 'modified'
+        else:
+            return 'deleted'
+
 
 if TYPE_CHECKING:
     import asyncio
@@ -21,139 +37,138 @@ if TYPE_CHECKING:
 
     import trio
 
-    from .watcher import AllWatcher, FileChange
-
+    FileChange = Tuple[Change, str]
     FileChanges = Set[FileChange]
     AnyCallable = Callable[..., Any]
     AnyEvent = Union[anyio.Event, asyncio.Event, trio.Event]
+
+
+default_filter = DefaultFilter()
+default_debounce = 1_600
+default_step = 50
+
+
+def watch(
+    *paths: Union[Path, str],
+    watch_filter: Optional[Callable[['Change', str], bool]] = default_filter,
+    debounce: int = default_debounce,
+    step: int = default_step,
+    debug: bool = False,
+    raise_interrupt: bool = True,
+) -> Generator['FileChanges', None, None]:
+    """
+    Watch one or more directories and yield a set of changes whenever files change
+    in those directories (or subdirectories).
+    """
+    watcher = RustNotify([str(p) for p in paths], debug)
+    while True:
+        raw_changes = watcher.watch(debounce, step, None)
+        if raw_changes is None:
+            if raise_interrupt:
+                raise KeyboardInterrupt
+            else:
+                return
+
+        changes = _prep_changes(raw_changes, watch_filter)
+        if changes:
+            _log_changes(changes)
+            yield changes
+
+
+async def awatch(
+    *paths: Union[Path, str],
+    watch_filter: Optional[Callable[['Change', str], bool]] = default_filter,
+    debounce: int = default_debounce,
+    step: int = default_step,
+    stop_event: Optional['AnyEvent'] = None,
+    debug: bool = False,
+    raise_interrupt: bool = True,
+) -> AsyncGenerator['FileChanges', None]:
+    """
+    asynchronous equivalent of watch using a threaded executor.
+    """
+    if stop_event is None:
+        stop_event_: 'AnyEvent' = anyio.Event()
+    else:
+        stop_event_ = stop_event
+    interrupted = False
+
+    async def signal_handler() -> None:
+        nonlocal interrupted
+
+        if sys.platform == 'win32':
+            # add_signal_handler is not implemented on windows
+            # repeat ctrl+c should still stop the watcher
+            return
+
+        with anyio.open_signal_receiver(signal.SIGINT) as signals:
+            async for _ in signals:
+                interrupted = True
+                stop_event_.set()
+                break
+
+    watcher = RustNotify([str(p) for p in paths], debug)
+    while True:
+        async with anyio.create_task_group() as tg:
+            tg.start_soon(signal_handler)
+            raw_changes = await anyio.to_thread.run_sync(watcher.watch, debounce, step, stop_event_)
+            tg.cancel_scope.cancel()
+
+        if raw_changes is None:
+            if interrupted and raise_interrupt:
+                raise KeyboardInterrupt
+            else:
+                logger.warning('got SIGINT, stopping awatch without raising exception')
+                return
+
+        changes = _prep_changes(raw_changes, watch_filter)
+        if changes:
+            _log_changes(changes)
+            yield changes
+
+
+def _prep_changes(
+    raw_changes: Set[Tuple[int, str]], watch_filter: Optional[Callable[['Change', str], bool]]
+) -> 'FileChanges':
+    # if we wanted to be really snazzy, we could move this into rust
+    changes = {(Change(change), path) for change, path in raw_changes}
+    if watch_filter:
+        changes = {c for c in changes if watch_filter(c[0], c[1])}
+    return changes
+
+
+def _log_changes(changes: 'FileChanges') -> None:
+    if logger.isEnabledFor(logging.INFO):
+        count = len(changes)
+        plural = '' if count == 1 else 's'
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('%d change%s detected: %s', count, plural, changes)
+        else:
+            logger.info('%d change%s detected', count, plural)
+
 
 # Use spawn context to make sure code run in subprocess
 # does not reuse imported modules in main process/context
 spawn_context = get_context('spawn')
 
 
-def unix_ms() -> int:
-    return int(round(time() * 1000))
-
-
-def watch(path: Union[Path, str], **kwargs: Any) -> Generator['FileChanges', None, None]:
-    """
-    Watch a directory and yield a set of changes whenever files change in that directory or its subdirectories.
-    """
-    try:
-        _awatch = awatch(path, **kwargs)
-        while True:
-            try:
-                yield anyio.run(_awatch.__anext__)
-            except StopAsyncIteration:
-                break
-    except KeyboardInterrupt:
-        logger.debug('KeyboardInterrupt, exiting')
-
-
-class awatch:
-    """
-    asynchronous equivalent of watch using a threaded executor.
-
-    3.5 doesn't support yield in coroutines so we need all this fluff. Yawwwwn.
-    """
-
-    __slots__ = (
-        '_path',
-        '_watcher_cls',
-        '_watcher_kwargs',
-        '_debounce',
-        '_min_sleep',
-        '_stop_event',
-        '_normal_sleep',
-        '_w',
-        'lock',
-        '_thread_limiter',
-    )
-
-    def __init__(
-        self,
-        path: Union[Path, str],
-        *,
-        watcher_cls: Type['AllWatcher'] = DefaultWatcher,
-        watcher_kwargs: Optional[Dict[str, Any]] = None,
-        debounce: int = 1600,
-        normal_sleep: int = 400,
-        min_sleep: int = 50,
-        stop_event: Optional['AnyEvent'] = None,
-    ) -> None:
-        self._thread_limiter: Optional[anyio.CapacityLimiter] = None
-        self._path = path
-        self._watcher_cls = watcher_cls
-        self._watcher_kwargs = watcher_kwargs or dict()
-        self._debounce = debounce
-        self._normal_sleep = normal_sleep
-        self._min_sleep = min_sleep
-        self._stop_event = stop_event
-        self._w: Optional['AllWatcher'] = None
-        self.lock = anyio.Lock()
-
-    def __aiter__(self) -> 'awatch':
-        return self
-
-    async def __anext__(self) -> 'FileChanges':
-        if self._w:
-            watcher = self._w
-        else:
-            watcher = self._w = await self.run_in_executor(
-                functools.partial(self._watcher_cls, self._path, **self._watcher_kwargs)
-            )
-        check_time = 0
-        changes: 'FileChanges' = set()
-        last_change = 0
-        while True:
-            if self._stop_event and self._stop_event.is_set():
-                raise StopAsyncIteration()
-            async with self.lock:
-                if not changes:
-                    last_change = unix_ms()
-
-                if check_time:
-                    if changes:
-                        sleep_time = self._min_sleep
-                    else:
-                        sleep_time = max(self._normal_sleep - check_time, self._min_sleep)
-                    await anyio.sleep(sleep_time / 1000)
-
-                s = unix_ms()
-                new_changes = await self.run_in_executor(watcher.check)
-                changes.update(new_changes)
-                now = unix_ms()
-                check_time = now - s
-                debounced = now - last_change
-                if logger.isEnabledFor(logging.DEBUG) and changes:
-                    logger.debug(
-                        '%s time=%0.0fms debounced=%0.0fms files=%d changes=%d (%d)',
-                        self._path,
-                        check_time,
-                        debounced,
-                        len(watcher.files),
-                        len(changes),
-                        len(new_changes),
-                    )
-
-                if changes and (not new_changes or debounced > self._debounce):
-                    logger.debug('%s changes released debounced=%0.0fms', self._path, debounced)
-                    return changes
-
-    async def run_in_executor(self, func: 'AnyCallable', *args: Any) -> Any:
-        if self._thread_limiter is None:
-            self._thread_limiter = anyio.CapacityLimiter(4)
-        return await anyio.to_thread.run_sync(func, *args, limiter=self._thread_limiter)
-
-
-def _start_process(target: 'AnyCallable', args: Tuple[Any, ...], kwargs: Optional[Dict[str, Any]]) -> 'SpawnProcess':
+def _start_process(
+    target: 'AnyCallable',
+    args: Tuple[Any, ...],
+    kwargs: Optional[Dict[str, Any]],
+    changes: 'Optional[FileChanges]' = None,
+) -> 'SpawnProcess':
+    if changes is None:
+        os.environ['WATCHGOD_CHANGES'] = '[]'
+    else:
+        os.environ['WATCHGOD_CHANGES'] = json.dumps([[c.raw_str(), p] for c, p in changes])
     process = spawn_context.Process(target=target, args=args, kwargs=kwargs or {})
     process.start()
     return process
 
 
 def _stop_process(process: 'SpawnProcess') -> None:
+    os.environ.pop('WATCHGOD_CHANGES', None)
     if process.is_alive():
         logger.debug('stopping process...')
         pid = cast(int, process.pid)
@@ -169,32 +184,34 @@ def _stop_process(process: 'SpawnProcess') -> None:
         logger.warning('process already dead, exit code: %d', process.exitcode)
 
 
+python_filter = PythonFilter()
+
+
 def run_process(
-    path: Union[Path, str],
+    *paths: Union[Path, str],
     target: 'AnyCallable',
-    *,
     args: Tuple[Any, ...] = (),
     kwargs: Optional[Dict[str, Any]] = None,
     callback: Optional[Callable[[Set['FileChange']], None]] = None,
-    watcher_cls: Type['AllWatcher'] = PythonWatcher,
-    watcher_kwargs: Optional[Dict[str, Any]] = None,
-    debounce: int = 400,
-    min_sleep: int = 100,
+    watch_filter: Optional[Callable[['Change', str], bool]] = python_filter,
+    debounce: int = default_debounce,
+    step: int = default_step,
+    debug: bool = False,
 ) -> int:
     """
     Run a function in a subprocess using multiprocessing.Process, restart it whenever files change in path.
     """
 
-    process = _start_process(target=target, args=args, kwargs=kwargs)
+    process = _start_process(target, args, kwargs)
     reloads = 0
 
     try:
         for changes in watch(
-            path, watcher_cls=watcher_cls, debounce=debounce, min_sleep=min_sleep, watcher_kwargs=watcher_kwargs
+            *paths, watch_filter=watch_filter, debounce=debounce, step=step, debug=debug, raise_interrupt=False
         ):
             callback and callback(changes)
             _stop_process(process)
-            process = _start_process(target=target, args=args, kwargs=kwargs)
+            process = _start_process(target, args, kwargs, changes)
             reloads += 1
     finally:
         _stop_process(process)
@@ -202,28 +219,34 @@ def run_process(
 
 
 async def arun_process(
-    path: Union[Path, str],
+    *paths: Union[Path, str],
     target: 'AnyCallable',
-    *,
     args: Tuple[Any, ...] = (),
     kwargs: Optional[Dict[str, Any]] = None,
-    callback: Optional[Callable[['FileChanges'], Awaitable[None]]] = None,
-    watcher_cls: Type['AllWatcher'] = PythonWatcher,
-    debounce: int = 400,
-    min_sleep: int = 100,
+    callback: Optional[Callable[['FileChanges'], Any]] = None,
+    watch_filter: Optional[Callable[['Change', str], bool]] = python_filter,
+    debounce: int = default_debounce,
+    step: int = default_step,
+    debug: bool = False,
 ) -> int:
     """
     Run a function in a subprocess using multiprocessing.Process, restart it whenever files change in path.
     """
-    watcher = awatch(path, watcher_cls=watcher_cls, debounce=debounce, min_sleep=min_sleep)
-    start_process = partial(_start_process, target=target, args=args, kwargs=kwargs)
-    process = await watcher.run_in_executor(start_process)
+    import inspect
+
+    process = await anyio.to_thread.run_sync(_start_process, target, args, kwargs)
     reloads = 0
 
-    async for changes in watcher:
-        callback and await callback(changes)
-        await watcher.run_in_executor(_stop_process, process)
-        process = await watcher.run_in_executor(start_process)
+    async for changes in awatch(
+        *paths, watch_filter=watch_filter, debounce=debounce, step=step, debug=debug, raise_interrupt=False
+    ):
+        if callback is not None:
+            r = callback(changes)
+            if inspect.isawaitable(r):
+                await r
+
+        await anyio.to_thread.run_sync(_stop_process, process)
+        process = await anyio.to_thread.run_sync(_start_process, target, args, kwargs, changes)
         reloads += 1
-    await watcher.run_in_executor(_stop_process, process)
+    await anyio.to_thread.run_sync(_stop_process, process)
     return reloads

@@ -1,6 +1,6 @@
-from .main import arun_process, awatch, run_process, watch
+from .filters import BaseFilter, DefaultFilter, PythonFilter
+from .main import Change, arun_process, awatch, run_process, watch
 from .version import VERSION
-from .watcher import AllWatcher, Change, DefaultDirWatcher, DefaultWatcher, PythonWatcher, RegExpWatcher
 
 __version__ = VERSION
 __all__ = (
@@ -9,10 +9,8 @@ __all__ = (
     'run_process',
     'arun_process',
     'Change',
-    'AllWatcher',
-    'DefaultDirWatcher',
-    'DefaultWatcher',
-    'PythonWatcher',
-    'RegExpWatcher',
+    'BaseFilter',
+    'DefaultFilter',
+    'PythonFilter',
     'VERSION',
 )

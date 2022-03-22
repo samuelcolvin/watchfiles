@@ -1,18 +1,29 @@
+import os
 from importlib.machinery import SourceFileLoader
 from pathlib import Path
 
 from setuptools import setup
 
+description = 'Simple, modern file watching and code reload in python.'
 THIS_DIR = Path(__file__).resolve().parent
-long_description = THIS_DIR.joinpath('README.md').read_text()
+try:
+    long_description = (THIS_DIR / 'README.md').read_text()
+except FileNotFoundError:
+    long_description = description
 
 # avoid loading the package before requirements are installed:
 version = SourceFileLoader('version', 'watchgod/version.py').load_module()
 
+extra = {}
+if not os.getenv('SKIP_RUST_EXTENSION'):
+    from setuptools_rust import Binding, RustExtension
+
+    extra['rust_extensions'] = [RustExtension('watchgod._rust_notify', binding=Binding.PyO3)]
+
 setup(
     name='watchgod',
     version=str(version.VERSION),
-    description='Simple, modern file watching and code reload in python.',
+    description=description,
     long_description=long_description,
     long_description_content_type='text/markdown',
     classifiers=[
@@ -46,8 +57,9 @@ setup(
     """,
     license='MIT',
     packages=['watchgod'],
-    package_data={'watchgod': ['py.typed']},
+    package_data={'watchgod': ['py.typed', '*.pyi']},
     install_requires=['anyio>=3.0.0,<4'],
     python_requires='>=3.7',
-    zip_safe=True,
+    zip_safe=False,
+    **extra,
 )

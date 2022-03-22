@@ -1,0 +1,13 @@
+[package]
+name = "rust_notify"
+version = "1.0.0"
+edition = "2021"
+
+[dependencies]
+crossbeam-channel = "0.4.0"
+notify = "5.0.0-pre.14"
+pyo3 = {version = "0.16.1", features = ["extension-module"]}
+
+[lib]
+name = "_rust_notify"
+crate-type = ["cdylib"]
