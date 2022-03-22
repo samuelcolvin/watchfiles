@@ -5,7 +5,9 @@
 [![pypi](https://img.shields.io/pypi/v/watchgod.svg)](https://pypi.python.org/pypi/watchgod)
 [![license](https://img.shields.io/github/license/samuelcolvin/watchgod.svg)](https://github.com/samuelcolvin/watchgod/blob/master/LICENSE)
 
-Simple, modern file watching and code reload in python.
+Simple, modern and high performance file watching and code reload in python.
+
+Underlying file system notifications are now handled by the [Notify](https://github.com/notify-rs/notify) rust library.
 
 *(watchgod is inspired by [watchdog](https://pythonhosted.org/watchdog/), hence the name, but tries to fix
 some of the frustrations I found with watchdog, namely: separate approaches for each OS, an inelegant approach to
@@ -13,9 +15,18 @@ concurrency using threading, challenges around debouncing changes and bugs which
 
 ## Installation
 
+**watchgod** requires Python 3.7 - 3.10.
+
 ```bash
 pip install watchgod
 ```
+
+Binaries are available for:
+* **Linux**: `manylinux-x86_64`, `musllinux-x86_64` & `manylinux-i686`
+* **MacOS**: `x86_64` & `arm64`
+* **Windows**: `amd64` & `win32`
+
+Otherwise, you can install from source which requires Rust stable to be installed.
 
 ## Usage
 
@@ -162,6 +173,8 @@ In case you need to ignore certain files or directories, you can use the argumen
 
 Run `watchgod --help` for more options. *watchgod* is also available as a python executable module
 via `python -m watchgod ...`.
+
+The CLI can also be used via `python -m watchgod ...`.
 
 ## How Watchgod Works
 

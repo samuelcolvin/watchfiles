@@ -131,7 +131,7 @@ jobs:
 
   build:
     name: build py3.${{ matrix.python-version }} on ${{ matrix.platform || matrix.os }}
-#    needs: [test, lint]
+    needs: [test, lint]
     strategy:
       fail-fast: false
       matrix:
@@ -178,6 +178,8 @@ jobs:
           CIBW_BUILD_VERBOSITY: 1
           CIBW_BUILD: 'cp3${{ matrix.python-version }}-*'
           CIBW_SKIP: '*-win32 *-musllinux_i686'
+          CIBW_ARCHS_MACOS: 'x86_64 arm64'
+          CIBW_TEST_SKIP: '*-macosx_arm64'  # see https://cibuildwheel.readthedocs.io/en/stable/faq/#universal2
           CIBW_PLATFORM: ${{ matrix.platform || matrix.os }}
           CIBW_TEST_REQUIRES: pytest pytest-mock pytest-timeout dirty-equals
           CIBW_TEST_COMMAND: 'pytest {project}/tests -s'
