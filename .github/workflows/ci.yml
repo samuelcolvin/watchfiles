@@ -163,7 +163,7 @@ jobs:
       - run: rustup target add aarch64-apple-darwin
         if: matrix.os == 'macos'
 
-      - run: rustup target add stable-i686-pc-windows-msvc
+      - run: rustup toolchain install stable-i686-pc-windows-msvc
         if: matrix.os == 'windows'
 
       - run: pip install -U setuptools wheel twine cibuildwheel
