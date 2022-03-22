@@ -31,9 +31,9 @@ def test_ignore_extensions(mocker, tmp_work_path):
     cli(
         'os.getcwd',
         str(tmp_work_path),
-        # '--ignore-paths',
-        # 'foo',
-        # 'bar',
+        '--ignore-paths',
+        '/foo/bar',
+        '/apple/banana',
         '--extensions',
         '.md',
     )
@@ -42,15 +42,10 @@ def test_ignore_extensions(mocker, tmp_work_path):
         target=run_function,
         args=('os.getcwd', '/path/to/tty'),
         callback=callback,
-        watch_filter=IsInstance(PythonFilter)
-        & FunctionCheck(
-            lambda f: f.extensions
-            == (
-                '.py',
-                '.pyx',
-                '.pyd',
-                '.md',
-            )
+        watch_filter=(
+            IsInstance(PythonFilter)
+            & FunctionCheck(lambda f: f.extensions == ('.py', '.pyx', '.pyd', '.md'))
+            & FunctionCheck(lambda f: f._ignore_paths == ('/foo/bar', '/apple/banana'))
         ),
     )
 

@@ -111,18 +111,17 @@ should be registered.
 * **`BaseFilter`**, used by `DefaultFilter` and `PythonFilter`, useful for defining your own filters which leverage
   the same logic
 
-Here's an example of a custom filter which leverages `BaseFilter` to only notice changes to common web files:
+Here's an example of a custom filter which extends `DefaultFilter` to only notice changes to common web files:
 
 ```python
-from watchgod import BaseFilter, watch
-from watchgod.filters import default_ignore_dirs
+from watchgod import Change, DefaultFilter, watch
 
-class WebFilter(BaseFilter):
-    def __init__(self):
-      super().__init__(
-        ignore_dirs=default_ignore_dirs, 
-        ignore_entity_patterns=('\.html$', '\.css$', '\.js$'),
-      )
+
+class WebFilter(DefaultFilter):
+    allowed_extensions = '.html', '.css', '.js'
+
+    def __call__(self, change: Change, path: str) -> bool:
+        return super().__call__(change, path) and path.endswith(self.allowed_extensions)
 
 for changes in watch('my/web/project', watch_filter=WebFilter()):
     print (changes)

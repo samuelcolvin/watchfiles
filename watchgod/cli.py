@@ -6,7 +6,7 @@ import sys
 from importlib import import_module
 from pathlib import Path
 from textwrap import dedent
-from typing import Any, Generator, List, Optional, Sized
+from typing import Any, Dict, Generator, List, Optional, Sized
 
 from .filters import PythonFilter
 from .main import run_process
@@ -146,19 +146,17 @@ def cli(*args_: str) -> None:
     logger.info('watching %s and reloading "%s" on changes...', paths_str, arg_namespace.function)
     sys.argv = sys_argv(arg_namespace.function)
 
-    watch_filter = None
+    watch_filter_kwargs: Dict[str, Any] = {}
     if arg_namespace.ignore_paths:
-        raise NotImplementedError('ignore_paths is not implemented yet')
-    #     watcher_kwargs['ignore_paths'] = {str(Path(p).resolve()) for p in arg_namespace.ignore_paths}
+        watch_filter_kwargs['ignore_paths'] = [Path(p).resolve() for p in arg_namespace.ignore_paths]
 
-    extensions = arg_namespace.extensions
-    if extensions:
-        watch_filter = PythonFilter(tuple(extensions))
+    if arg_namespace.extensions:
+        watch_filter_kwargs['extra_extensions'] = arg_namespace.extensions
 
     run_process(
         *paths,
         target=run_function,
         args=(arg_namespace.function, tty_path),
         callback=callback,
-        watch_filter=watch_filter or PythonFilter(),
+        watch_filter=PythonFilter(**watch_filter_kwargs),
     )
