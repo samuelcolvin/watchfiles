@@ -1,6 +1,6 @@
 from typing import List, Optional, Protocol, Set, Tuple
 
-__all__ = 'RustNotify', 'WatchgodRustInternalError'
+__all__ = 'RustNotify', 'WatchfilesRustInternalError'
 
 class AbstractEvent(Protocol):
     def is_set(self) -> bool: ...
@@ -14,4 +14,4 @@ class RustNotify:
         cancel_event: Optional[AbstractEvent],
     ) -> Optional[Set[Tuple[int, str]]]: ...
 
-class WatchgodRustInternalError(RuntimeError): ...
+class WatchfilesRustInternalError(RuntimeError): ...

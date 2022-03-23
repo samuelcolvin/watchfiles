@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Optional, Sequence, Union
 
 __all__ = 'BaseFilter', 'DefaultFilter', 'PythonFilter'
-logger = logging.getLogger('watchgod.watcher')
+logger = logging.getLogger('watchfiles.watcher')
 
 
 if TYPE_CHECKING:

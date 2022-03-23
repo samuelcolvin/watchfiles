@@ -12,16 +12,16 @@ except FileNotFoundError:
     long_description = description
 
 # avoid loading the package before requirements are installed:
-version = SourceFileLoader('version', 'watchgod/version.py').load_module()
+version = SourceFileLoader('version', 'watchfiles/version.py').load_module()
 
 extra = {}
 if not os.getenv('SKIP_RUST_EXTENSION'):
     from setuptools_rust import Binding, RustExtension
 
-    extra['rust_extensions'] = [RustExtension('watchgod._rust_notify', binding=Binding.PyO3)]
+    extra['rust_extensions'] = [RustExtension('watchfiles._rust_notify', binding=Binding.PyO3)]
 
 setup(
-    name='watchgod',
+    name='watchfiles',
     version=str(version.VERSION),
     description=description,
     long_description=long_description,
@@ -50,14 +50,14 @@ setup(
     ],
     author='Samuel Colvin',
     author_email='s@muelcolvin.com',
-    url='https://github.com/samuelcolvin/watchgod',
+    url='https://github.com/samuelcolvin/watchfiles',
     entry_points="""
         [console_scripts]
-        watchgod=watchgod.cli:cli
+        watchfiles=watchfiles.cli:cli
     """,
     license='MIT',
-    packages=['watchgod'],
-    package_data={'watchgod': ['py.typed', '*.pyi']},
+    packages=['watchfiles'],
+    package_data={'watchfiles': ['py.typed', '*.pyi']},
     install_requires=['anyio>=3.0.0,<4'],
     python_requires='>=3.7',
     zip_safe=False,

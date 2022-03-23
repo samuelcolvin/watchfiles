@@ -4,16 +4,16 @@ from pathlib import Path
 import pytest
 from dirty_equals import FunctionCheck, IsInstance
 
-from watchgod import PythonFilter
-from watchgod.cli import callback, cli, run_function, set_tty, sys_argv
+from watchfiles import PythonFilter
+from watchfiles.cli import callback, cli, run_function, set_tty, sys_argv
 
 pytestmark = pytest.mark.skipif(sys.platform == 'win32', reason='many tests fail on windows')
 
 
 def test_simple(mocker, tmp_path):
-    mocker.patch('watchgod.cli.sys.stdin.fileno')
+    mocker.patch('watchfiles.cli.sys.stdin.fileno')
     mocker.patch('os.ttyname', return_value='/path/to/tty')
-    mock_run_process = mocker.patch('watchgod.cli.run_process')
+    mock_run_process = mocker.patch('watchfiles.cli.run_process')
     cli('os.getcwd', str(tmp_path))
     mock_run_process.assert_called_once_with(
         tmp_path,
@@ -25,9 +25,9 @@ def test_simple(mocker, tmp_path):
 
 
 def test_ignore_extensions(mocker, tmp_work_path):
-    mocker.patch('watchgod.cli.sys.stdin.fileno')
+    mocker.patch('watchfiles.cli.sys.stdin.fileno')
     mocker.patch('os.ttyname', return_value='/path/to/tty')
-    mock_run_process = mocker.patch('watchgod.cli.run_process')
+    mock_run_process = mocker.patch('watchfiles.cli.run_process')
     cli(
         'os.getcwd',
         str(tmp_work_path),
@@ -51,7 +51,7 @@ def test_ignore_extensions(mocker, tmp_work_path):
 
 
 def test_invalid_import1(mocker, tmp_work_path, capsys):
-    sys_exit = mocker.patch('watchgod.cli.sys.exit')
+    sys_exit = mocker.patch('watchfiles.cli.sys.exit')
     cli('foobar')
     sys_exit.assert_called_once_with(1)
     out, err = capsys.readouterr()
@@ -60,7 +60,7 @@ def test_invalid_import1(mocker, tmp_work_path, capsys):
 
 
 def test_invalid_import2(mocker, tmp_work_path, capsys):
-    sys_exit = mocker.patch('watchgod.cli.sys.exit')
+    sys_exit = mocker.patch('watchfiles.cli.sys.exit')
     cli('pprint.foobar')
     sys_exit.assert_called_once_with(1)
     out, err = capsys.readouterr()
@@ -69,7 +69,7 @@ def test_invalid_import2(mocker, tmp_work_path, capsys):
 
 
 def test_invalid_path(mocker, capsys):
-    sys_exit = mocker.patch('watchgod.cli.sys.exit')
+    sys_exit = mocker.patch('watchfiles.cli.sys.exit')
     cli('os.getcwd', '/does/not/exist')
     sys_exit.assert_called_once_with(1)
     out, err = capsys.readouterr()
@@ -78,8 +78,8 @@ def test_invalid_path(mocker, capsys):
 
 
 def test_tty_os_error(mocker, tmp_work_path):
-    mocker.patch('watchgod.cli.sys.stdin.fileno', side_effect=OSError)
-    mock_run_process = mocker.patch('watchgod.cli.run_process')
+    mocker.patch('watchfiles.cli.sys.stdin.fileno', side_effect=OSError)
+    mock_run_process = mocker.patch('watchfiles.cli.run_process')
     cli('os.getcwd')
     mock_run_process.assert_called_once_with(
         tmp_work_path,
@@ -91,8 +91,8 @@ def test_tty_os_error(mocker, tmp_work_path):
 
 
 def test_tty_attribute_error(mocker, tmp_work_path):
-    mocker.patch('watchgod.cli.sys.stdin.fileno', side_effect=AttributeError)
-    mock_run_process = mocker.patch('watchgod.cli.run_process')
+    mocker.patch('watchfiles.cli.sys.stdin.fileno', side_effect=AttributeError)
+    mock_run_process = mocker.patch('watchfiles.cli.run_process')
     cli('os.getcwd', str(tmp_work_path))
     mock_run_process.assert_called_once_with(
         tmp_work_path,
@@ -118,7 +118,7 @@ def test_run_function_tty(tmp_work_path: Path, create_test_function):
 
 def test_callback(mocker):
     # boring we have to test this directly, but we do
-    mock_logger = mocker.patch('watchgod.cli.logger.info')
+    mock_logger = mocker.patch('watchfiles.cli.logger.info')
     callback({1, 2, 3})
     mock_logger.assert_called_once_with('%d files changed, reloading', 3)
 
@@ -150,8 +150,8 @@ def test_sys_argv(initial, expected, mocker):
 def test_func_with_parser(tmp_work_path, create_test_function, mocker, initial, expected):
     # setup
     mocker.patch('sys.argv', ['foo.py', *initial])
-    mocker.patch('watchgod.cli.sys.stdin.fileno', side_effect=AttributeError)
-    mock_run_process = mocker.patch('watchgod.cli.run_process')
+    mocker.patch('watchfiles.cli.sys.stdin.fileno', side_effect=AttributeError)
+    mock_run_process = mocker.patch('watchfiles.cli.run_process')
     # test
     assert not (tmp_work_path / 'sentinel').exists()
     cli('os.getcwd', str(tmp_work_path))  # run til mock_run_process

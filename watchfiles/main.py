@@ -14,7 +14,7 @@ from ._rust_notify import RustNotify
 from .filters import DefaultFilter, PythonFilter
 
 __all__ = 'watch', 'awatch', 'run_process', 'arun_process', 'Change'
-logger = logging.getLogger('watchgod.main')
+logger = logging.getLogger('watchfiles.main')
 
 
 class Change(IntEnum):
@@ -159,16 +159,18 @@ def _start_process(
     changes: 'Optional[FileChanges]' = None,
 ) -> 'SpawnProcess':
     if changes is None:
-        os.environ['WATCHGOD_CHANGES'] = '[]'
+        changes_env_var = '[]'
     else:
-        os.environ['WATCHGOD_CHANGES'] = json.dumps([[c.raw_str(), p] for c, p in changes])
+        changes_env_var = json.dumps([[c.raw_str(), p] for c, p in changes])
+
+    os.environ['WATCHFILES_CHANGES'] = changes_env_var
     process = spawn_context.Process(target=target, args=args, kwargs=kwargs or {})
     process.start()
     return process
 
 
 def _stop_process(process: 'SpawnProcess') -> None:
-    os.environ.pop('WATCHGOD_CHANGES', None)
+    os.environ.pop('WATCHFILES_CHANGES', None)
     if process.is_alive():
         logger.debug('stopping process...')
         pid = cast(int, process.pid)

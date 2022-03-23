@@ -17,12 +17,12 @@ use notify::{recommended_watcher, RecommendedWatcher, RecursiveMode, Result as N
 
 create_exception!(
     _rust_notify,
-    WatchgodRustInternalError,
+    WatchfilesRustInternalError,
     PyRuntimeError,
     "Internal or filesystem error."
 );
 
-// these need to match `watchgod/watcher.py::Change`
+// these need to match `watchfiles/main.py::Change`
 const CHANGE_ADDED: u8 = 1;
 const CHANGE_MODIFIED: u8 = 2;
 const CHANGE_DELETED: u8 = 3;
@@ -92,7 +92,7 @@ impl RustNotify {
                 // *error_clone.lock().unwrap() = Some(format!("error in underlying watcher: {}", e));
             }
         })
-        .map_err(|e| WatchgodRustInternalError::new_err(format!("Error creating watcher: {}", e)))?;
+        .map_err(|e| WatchfilesRustInternalError::new_err(format!("Error creating watcher: {}", e)))?;
 
         for watch_path in watch_paths.into_iter() {
             _watcher
@@ -126,7 +126,7 @@ impl RustNotify {
 
             if let Some(error) = self.error.lock().unwrap().as_ref() {
                 self.clear();
-                return Err(WatchgodRustInternalError::new_err(error.clone()));
+                return Err(WatchfilesRustInternalError::new_err(error.clone()));
             }
 
             if event_not_none && cancel_event.getattr(py, "is_set")?.call0(py)?.is_true(py)? {
@@ -163,7 +163,10 @@ impl RustNotify {
 
 #[pymodule]
 fn _rust_notify(py: Python, m: &PyModule) -> PyResult<()> {
-    m.add("WatchgodRustInternalError", py.get_type::<WatchgodRustInternalError>())?;
+    m.add(
+        "WatchfilesRustInternalError",
+        py.get_type::<WatchfilesRustInternalError>(),
+    )?;
     m.add_class::<RustNotify>()?;
     Ok(())
 }

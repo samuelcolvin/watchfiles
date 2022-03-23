@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := all
-isort = isort watchgod tests setup.py
-black = black watchgod tests setup.py
+isort = isort watchfiles tests setup.py
+black = black watchfiles tests setup.py
 
 .PHONY: install
 install:
@@ -28,7 +28,7 @@ format:
 
 .PHONY: lint
 lint:
-	flake8 --max-complexity 10 --max-line-length 120 --ignore E203,W503 watchgod tests setup.py
+	flake8 --max-complexity 10 --max-line-length 120 --ignore E203,W503 watchfiles tests setup.py
 	$(isort) --check-only --df
 	$(black) --check --diff
 	cargo fmt --version
@@ -38,11 +38,11 @@ lint:
 
 .PHONY: mypy
 mypy:
-	mypy watchgod
+	mypy watchfiles
 
 .PHONY: test
 test:
-	pytest --cov=watchgod
+	pytest --cov=watchfiles
 
 .PHONY: testcov
 testcov: test
