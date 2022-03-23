@@ -17,3 +17,4 @@ docs/_build/
 /watchfiles/*.so
 /target/
 /site/
+.rustfmt.toml

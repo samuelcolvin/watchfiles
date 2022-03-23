@@ -26,6 +26,7 @@ lint:
 	$(isort) --check-only --df
 	$(black) --check --diff
 	cargo fmt --version
+	@echo 'max_width = 120' > .rustfmt.toml
 	cargo fmt --all -- --check
 	cargo clippy --version
 	cargo clippy -- -D warnings
@@ -45,7 +46,7 @@ testcov: test
 
 .PHONY: docs
 docs:
-	mkdocs build --strict
+	mkdocs build
 
 .PHONY: all
 all: lint mypy testcov docs

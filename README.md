@@ -11,10 +11,10 @@ Simple, modern and high performance file watching and code reload in python.
 
 ## NOTICE
 
+This package was significantly altered and renamed from `watchgod` to `watchfiles`, this files refers to the
+`watchfiles` package.
 
-The docs here refer to **watchfiles**, watchfiles was significantly rewritten and renamed for this version.
-
-Documentation for the old package (named `watchgod`) is available [here](https://github.com/samuelcolvin/watchfiles/tree/watchgod).
+Documentation for the old version (`watchgod`) is available [here](https://github.com/samuelcolvin/watchfiles/tree/watchgod).
 See [issue #102](https://github.com/samuelcolvin/watchfiles/issues/102) for details on the migration and its rationale.
 
 ---

@@ -90,7 +90,7 @@ def test_cli_help(mocker, capsys):
     out, err = capsys.readouterr()
     assert err == ''
 
-    cli_help_path = (ROOT_DIR / 'docs' / 'cli_help.txt')
+    cli_help_path = ROOT_DIR / 'docs' / 'cli_help.txt'
     if out != cli_help_path.read_text():
         cli_help_path.write_text(out)
         raise AssertionError(f'cli help output differs from {cli_help_path}, file updated')
