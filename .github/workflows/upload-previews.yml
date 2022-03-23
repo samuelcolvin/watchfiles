@@ -2,7 +2,7 @@ name: Upload Previews
 
 on:
   workflow_run:
-    workflows: [CI]
+    workflows: [ci]
     types: [completed]
 
 permissions:
