@@ -33,6 +33,11 @@ class BaseFilter:
     Full paths to ignore, e.g. `/home/users/.cache` or `C:\\Users\\user\\.cache`.
     """
 
+    def __init__(self) -> None:
+        self._ignore_dirs = set(self.ignore_dirs)
+        self._ignore_entity_regexes = tuple(re.compile(r) for r in self.ignore_entity_patterns)
+        self._ignore_paths = tuple(map(str, self.ignore_paths))
+
     def __call__(self, change: 'Change', path: str) -> bool:
         """
         Instances of `BaseFilter` and its subclasses can be used as callables.
@@ -105,9 +110,7 @@ class DefaultFilter(BaseFilter):
         if ignore_paths is not None:
             self.ignore_paths = ignore_paths
 
-        self._ignore_dirs = set(self.ignore_dirs)
-        self._ignore_entity_regexes = tuple(re.compile(r) for r in self.ignore_entity_patterns)
-        self._ignore_paths = tuple(map(str, self.ignore_paths))
+        super().__init__()
 
 
 class PythonFilter(DefaultFilter):

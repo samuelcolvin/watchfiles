@@ -1,4 +1,5 @@
 import re
+import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -80,6 +81,7 @@ def test_default_filter(path, expected):
     assert f(Change.added, str(path)) == expected
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason='paths are different on windows')
 def test_customising_filters():
     f = DefaultFilter(ignore_dirs=['apple', 'banana'], ignore_entity_patterns=[r'\.cat$'], ignore_paths=[Path('/a/b')])
     assert f.ignore_dirs == ['apple', 'banana']
