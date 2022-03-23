@@ -37,7 +37,7 @@ mypy:
 
 .PHONY: test
 test:
-	pytest --cov=watchfiles
+	coverage run -m pytest
 
 .PHONY: testcov
 testcov: test

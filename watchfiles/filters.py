@@ -14,7 +14,8 @@ if TYPE_CHECKING:
 
 class BaseFilter:
     """
-    Useful base for creating filters. `BaseFilter` is an abstract base class which should be inherited and configured.
+    Useful base class for creating filters. `BaseFilter` should be inherited and configured, rather than used
+    directly.
 
     The class supports ignoring files in 3 ways:
     """
@@ -26,7 +27,8 @@ class BaseFilter:
     """
     Patterns of files or directories to ignore, these are compiled into regexes.
 
-    "entity" here refers to the specific file or directory - basically the result of `path.split(os.sep)[-1]`.
+    "entity" here refers to the specific file or directory - basically the result of `path.split(os.sep)[-1]`,
+    an obvious example would be `r'\\.py[cod]$'`.
     """
     ignore_paths: Sequence[Union[str, Path]] = ()
     """
@@ -40,7 +42,7 @@ class BaseFilter:
 
     def __call__(self, change: 'Change', path: str) -> bool:
         """
-        Instances of `BaseFilter` and its subclasses can be used as callables.
+        Instances of `BaseFilter` subclasses can be used as callables.
         Args:
             change: The type of change that occurred, see [`Change`][watchfiles.Change].
             path: the raw path of the file or directory that changed.

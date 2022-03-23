@@ -34,6 +34,7 @@ edit_uri: ''
 nav:
   - Introduction: index.md
   - CLI: cli.md
+  - 'Migration from watchgod': migrating.md
   - 'API Documentation':
     - api/watch.md
     - api/run_process.md
