@@ -87,7 +87,7 @@ def test_docs_examples(module_name, source_code, import_execute, mocker, mock_ru
         raise
 
 
-@pytest.mark.skipif(sys.version_info[:2] == (3, 10), reason='output varies between versions')
+@pytest.mark.skipif(sys.version_info[:2] != (3, 10), reason='output varies between versions')
 def test_cli_help(mocker, capsys):
     mocker.patch('watchfiles.cli.argparse.ArgumentParser.exit', side_effect=RuntimeError('custom exit'))
     TerminalSize = namedtuple('TerminalSize', ['columns', 'lines'])
