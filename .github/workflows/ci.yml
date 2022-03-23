@@ -129,6 +129,28 @@ jobs:
     - run: make lint
     - run: make mypy
 
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: set up python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.10'
+
+    - name: install
+      run: pip install -r docs/requirements.txt
+
+    - name: build site
+      run: mkdocs build
+
+    - name: store docs site
+      uses: actions/upload-artifact@v2
+      with:
+        name: docs
+        path: site
+
   build:
     name: build py3.${{ matrix.python-version }} on ${{ matrix.platform || matrix.os }}
     needs: [test, lint]
@@ -213,7 +235,7 @@ jobs:
           path: dist
 
   deploy:
-    needs: build
+    needs: [build, docs]
     if: "startsWith(github.ref, 'refs/tags/')"
     runs-on: ubuntu-latest
 
@@ -233,6 +255,12 @@ jobs:
           name: pypi_files
           path: dist
 
+      - name: get docs
+        uses: actions/download-artifact@v2
+        with:
+          name: docs
+          path: site
+
       - run: ls -lh dist/
 
       - run: twine check dist/*
@@ -242,3 +270,9 @@ jobs:
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.pypi_token }}
+
+      - name: publish docs
+        uses: JamesIves/github-pages-deploy-action@v4.2.5
+        with:
+          branch: gh-pages
+          folder: site

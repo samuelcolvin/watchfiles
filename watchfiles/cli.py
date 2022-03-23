@@ -81,8 +81,8 @@ def cli(*args_: str) -> None:
     """
     Watch one or more directories and execute a python function on changes.
 
-    Note: only changes to python files will prompt the function to be restarted, use `--extensions` to watch
-    more file types.
+    Note: only changes to python files will prompt the function to be restarted,
+    use `--extensions` to watch more file types.
     """
     args = args_ or sys.argv[1:]
     parser = argparse.ArgumentParser(
@@ -100,14 +100,14 @@ def cli(*args_: str) -> None:
         nargs='*',
         type=str,
         default=[],
-        help='Specify paths to files or directories to ignore their updates',
+        help='Specify paths to directories to ignore their updates',
     )
     parser.add_argument('--extensions', nargs='*', type=str, default=(), help='Extra file extensions to watch')
     parser.add_argument(
         '--args',
         '-a',
         nargs=argparse.REMAINDER,
-        help='Arguments for argparser inside executed function. Ex.: module.func path --args --inner arg -v',
+        help='Arguments for argv inside executed function',
     )
     arg_namespace = parser.parse_args(args)
 

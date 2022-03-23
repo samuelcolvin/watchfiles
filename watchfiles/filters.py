@@ -14,18 +14,60 @@ if TYPE_CHECKING:
 
 
 class BaseFilter(ABC):
+    """
+    Useful base for creating filters. `BaseFilter` is an abstract base class which should be inherited and configured.
+
+    The class supports ignoring files in 3 ways:
+    """
+
     __slots__ = '_ignore_dirs', '_ignore_entity_regexes', '_ignore_paths'
     ignore_dirs: Sequence[str] = ()
-    # "entity" here refers to a file or directory - basically the result of `
+    """Full names of directories to ignore, an obvious example would be `.git`."""
     ignore_entity_patterns: Sequence[str] = ()
-    ignore_paths: Sequence[Union[str, Path]] = ()
+    """
+    Patterns of files or directories to ignore, these are compiled into regexes.
 
-    def __init__(self) -> None:
+    "entity" here refers to the specific file or directory - basically the result of `path.split(os.sep)[-1]`.
+    """
+    ignore_paths: Sequence[Union[str, Path]] = ()
+    """
+    Full paths to ignore, e.g. `/home/users/.cache` or `C:\\Users\\user\\.cache`.
+    """
+
+    def __init__(
+        self,
+        *,
+        ignore_dirs: Optional[Sequence[str]] = None,
+        ignore_entity_patterns: Optional[Sequence[str]] = None,
+        ignore_paths: Optional[Sequence[Union[str, Path]]] = None,
+    ) -> None:
+        """
+        Args:
+            ignore_dirs: if not `None`, overrides the `ignore_dirs` value set on the class.
+            ignore_entity_patterns: if not `None`, overrides the `ignore_entity_patterns` value set on the class.
+            ignore_paths: if not `None`, overrides the `ignore_paths` value set on the class.
+        """
+        if ignore_dirs is not None:
+            self.ignore_dirs = ignore_dirs
+        if ignore_entity_patterns is not None:
+            self.ignore_entity_patterns = ignore_entity_patterns
+        if ignore_paths is not None:
+            self.ignore_paths = ignore_paths
+
         self._ignore_dirs = set(self.ignore_dirs)
         self._ignore_entity_regexes = tuple(re.compile(r) for r in self.ignore_entity_patterns)
         self._ignore_paths = tuple(map(str, self.ignore_paths))
 
     def __call__(self, change: 'Change', path: str) -> bool:
+        """
+        Instances of `BaseFilter` and its subclasses can be used as callables.
+        Args:
+            change: The type of change that occurred, see [`Change`][watchfiles.Change].
+            path: the raw path of the file or directory that changed.
+
+        Returns:
+            True if the file should be included in changes, False if it should be ignored.
+        """
         parts = path.lstrip(os.sep).split(os.sep)
         if any(p in self._ignore_dirs for p in parts):
             return False
@@ -40,6 +82,10 @@ class BaseFilter(ABC):
 
 
 class DefaultFilter(BaseFilter):
+    """
+    The default filter, which ignores files and directories that you might commonly want to ignore.
+    """
+
     ignore_dirs: Sequence[str] = (
         '__pycache__',
         '.git',
@@ -51,6 +97,8 @@ class DefaultFilter(BaseFilter):
         '.idea',
         'node_modules',
     )
+    """Directory names to ignore."""
+
     ignore_entity_patterns: Sequence[str] = (
         r'\.py[cod]$',
         r'\.___jb_...___$',
@@ -60,27 +108,16 @@ class DefaultFilter(BaseFilter):
         r'^\.DS_Store$',
         r'^flycheck_',
     )
-
-    def __init__(
-        self,
-        *,
-        ignore_dirs: Optional[Sequence[str]] = None,
-        ignore_entity_patterns: Optional[Sequence[str]] = None,
-        ignore_paths: Optional[Sequence[Union[str, Path]]] = None,
-    ) -> None:
-        """
-        Take ignores_paths as an argument to support the `--ignore-paths` option in the CLI.
-        """
-        if ignore_dirs is not None:
-            self.ignore_dirs = ignore_dirs
-        if ignore_entity_patterns is not None:
-            self.ignore_entity_patterns = ignore_entity_patterns
-        if ignore_paths is not None:
-            self.ignore_paths = ignore_paths
-        super().__init__()
+    """File/Directory name patterns to ignore."""
 
 
 class PythonFilter(DefaultFilter):
+    """
+    A filter for Python files, since this class inherits from [`DefaultFilter`][watchfiles.DefaultFilter]
+    it will ignore files and directories that you might commonly want to ignore as well as filtering out
+    all changes except in Python files (files with extensions `('.py', '.pyx', '.pyd')`).
+    """
+
     def __init__(
         self,
         *,
@@ -88,7 +125,12 @@ class PythonFilter(DefaultFilter):
         extra_extensions: Sequence[str] = (),
     ) -> None:
         """
-        Take `ignores_paths` and `extra_extensions` to support those options in the CLI.
+        Args:
+            ignore_paths: The paths to ignore, see [`BaseFilter`][watchfiles.BaseFilter].
+            extra_extensions: extra extensions to ignore.
+
+        `ignore_paths` and `extra_extensions` can be passed as arguments partly to support [CLI](../cli.md) usage where
+        `--ignore-paths` and `--extensions` can be passed as arguments.
         """
         self.extensions = ('.py', '.pyx', '.pyd') + tuple(extra_extensions)
         super().__init__(ignore_paths=ignore_paths)

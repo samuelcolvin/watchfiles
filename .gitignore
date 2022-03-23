@@ -16,3 +16,5 @@ docs/_build/
 /foobar.py
 /watchfiles/*.so
 /target/
+/site/
+.rustfmt.toml

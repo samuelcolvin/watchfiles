@@ -1,0 +1,85 @@
+site_name: watchfiles
+site_description: Simple, modern and high performance file watching and code reload in python.
+site_url: https://watchfiles.helpmanual.io
+
+theme:
+  name: material
+  palette:
+  - scheme: default
+    primary: blue grey
+    accent: indigo
+    toggle:
+      icon: material/lightbulb
+      name: Switch to dark mode
+  - scheme: slate
+    primary: blue grey
+    accent: indigo
+    toggle:
+      icon: material/lightbulb-outline
+      name: Switch to light mode
+  features:
+  - search.suggest
+  - search.highlight
+  - content.tabs.link
+  - content.code.annotate
+  icon:
+    repo: fontawesome/brands/github-alt
+#  logo: img/logo-white.svg
+#  favicon: img/favicon.png
+  language: en
+
+repo_name: samuelcolvin/watchfiles
+repo_url: https://github.com/samuelcolvin/watchfiles
+edit_uri: ''
+nav:
+  - Introduction: index.md
+  - CLI: cli.md
+  - 'API Documentation':
+    - api/watch.md
+    - api/run_process.md
+    - api/filters.md
+    - api/rust_backend.md
+
+markdown_extensions:
+  - toc:
+      permalink: true
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - attr_list
+  - md_in_html
+  - mdx_include
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+
+extra:
+  social:
+  - icon: fontawesome/brands/github-alt
+    link: https://github.com/samuelcolvin/watchfiles
+  - icon: fontawesome/brands/twitter
+    link: https://twitter.com/samuel_colvin
+
+plugins:
+  - search
+  - mkdocstrings:
+      watch: [watchfiles]
+      handlers:
+        python:
+          rendering:
+            show_root_heading: true
+            show_root_full_path: false
+            show_source: false
+            heading_level: 2
+            merge_init_into_class: true
+            show_signature_annotations: true
+            separate_signature: true
+  - mkdocs-simple-hooks:
+      hooks:
+        on_pre_build: 'docs.plugins:on_pre_build'
+        on_files: 'docs.plugins:on_files'
+        on_page_markdown: 'docs.plugins:on_page_markdown'

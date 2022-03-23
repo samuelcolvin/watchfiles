@@ -6,19 +6,13 @@ black = black watchfiles tests setup.py
 install:
 	pip install -U pip
 	pip install -r tests/requirements.txt
-	pip install -e .
-
-.PHONY: install-all
-install-all: install
 	pip install -r tests/requirements-linting.txt
+	pip install -r docs/requirements.txt
+	pip install -e .
 
 .PHONY: build-dev
 build-dev:
 	python setup.py develop
-
-.PHONY: build-prod
-build-prod:
-	python setup.py install
 
 .PHONY: isort
 format:
@@ -32,6 +26,7 @@ lint:
 	$(isort) --check-only --df
 	$(black) --check --diff
 	cargo fmt --version
+	@echo 'max_width = 120' > .rustfmt.toml
 	cargo fmt --all -- --check
 	cargo clippy --version
 	cargo clippy -- -D warnings
@@ -49,8 +44,12 @@ testcov: test
 	@echo "building coverage html"
 	@coverage html
 
+.PHONY: docs
+docs:
+	mkdocs build
+
 .PHONY: all
-all: lint mypy testcov
+all: lint mypy testcov docs
 
 .PHONY: clean
 clean:
