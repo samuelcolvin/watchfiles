@@ -86,7 +86,7 @@ MockRustType = Callable[[ChangesType], MockRustNotify]
 def mock_rust_notify(mocker):
     def mock(changes: ChangesType):
         m = MockRustNotify(changes)
-        mocker.patch('watchgod.main.RustNotify', return_value=m)
+        mocker.patch('watchfiles.main.RustNotify', return_value=m)
         return m
 
     return mock
@@ -97,7 +97,7 @@ def ensure_logging_framework_not_altered():
     """
     https://github.com/pytest-dev/pytest/issues/5743
     """
-    wg_logger = logging.getLogger('watchgod')
+    wg_logger = logging.getLogger('watchfiles')
     before_handlers = list(wg_logger.handlers)
 
     yield

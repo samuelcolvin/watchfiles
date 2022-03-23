@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from watchgod._rust_notify import RustNotify
+from watchfiles._rust_notify import RustNotify
 
 
 def test_add(test_dir: Path):

@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 import anyio
 import pytest
 
-from watchgod import Change, awatch, watch
+from watchfiles import Change, awatch, watch
 
 if TYPE_CHECKING:
     from conftest import MockRustType
@@ -60,7 +60,7 @@ def mock_open_signal_receiver(signal):
 
 @pytest.mark.skipif(sys.platform == 'win32', reason='fails on windows')
 async def test_awatch_interrupt(mocker, mock_rust_notify: 'MockRustType'):
-    mocker.patch('watchgod.main.anyio.open_signal_receiver', side_effect=mock_open_signal_receiver)
+    mocker.patch('watchfiles.main.anyio.open_signal_receiver', side_effect=mock_open_signal_receiver)
     mock_rust_notify([{(1, 'foo.txt')}])
 
     w = watch('.', raise_interrupt=True)
@@ -73,16 +73,16 @@ async def test_awatch_interrupt(mocker, mock_rust_notify: 'MockRustType'):
 def test_watch_no_yield(mock_rust_notify: 'MockRustType', caplog):
     mock = mock_rust_notify([{(1, 'spam.pyc')}, {(1, 'spam.py'), (2, 'ham.txt')}])
 
-    caplog.set_level(logging.INFO, 'watchgod')
+    caplog.set_level(logging.INFO, 'watchfiles')
     assert next(watch('.')) == {(Change.added, 'spam.py'), (Change.modified, 'ham.txt')}
     assert mock.watch_count == 2
-    assert caplog.text == 'watchgod.main INFO: 2 changes detected\n'
+    assert caplog.text == 'watchfiles.main INFO: 2 changes detected\n'
 
 
 async def test_awatch_no_yield(mock_rust_notify: 'MockRustType', caplog):
     mock = mock_rust_notify([{(1, 'spam.pyc')}, {(1, 'spam.py')}])
 
-    caplog.set_level(logging.DEBUG, 'watchgod')
+    caplog.set_level(logging.DEBUG, 'watchfiles')
     changes = None
     async for changes in awatch('.'):
         pass
@@ -90,6 +90,6 @@ async def test_awatch_no_yield(mock_rust_notify: 'MockRustType', caplog):
     assert changes == {(Change.added, 'spam.py')}
     assert mock.watch_count == 2
     assert caplog.text == (
-        "watchgod.main DEBUG: 1 change detected: {(<Change.added: 1>, 'spam.py')}\n"
-        "watchgod.main WARNING: got SIGINT, stopping awatch without raising exception\n"  # noqa: Q000
+        "watchfiles.main DEBUG: 1 change detected: {(<Change.added: 1>, 'spam.py')}\n"
+        "watchfiles.main WARNING: got SIGINT, stopping awatch without raising exception\n"  # noqa: Q000
     )

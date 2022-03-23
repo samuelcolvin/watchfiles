@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from watchgod import Change, DefaultFilter, PythonFilter, watch
+from watchfiles import Change, DefaultFilter, PythonFilter, watch
 
 if TYPE_CHECKING:
     from conftest import MockRustType

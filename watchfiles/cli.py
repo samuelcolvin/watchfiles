@@ -11,7 +11,7 @@ from typing import Any, Dict, Generator, List, Optional, Sized
 from .filters import PythonFilter
 from .main import run_process
 
-logger = logging.getLogger('watchgod.cli')
+logger = logging.getLogger('watchfiles.cli')
 
 
 def import_string(dotted_path: str) -> Any:
@@ -47,7 +47,7 @@ def set_tty(tty_path: Optional[str]) -> Generator[None, None, None]:
                 sys.stdin = tty
                 yield
         except OSError:
-            # eg. "No such device or address: '/dev/tty'", see https://github.com/samuelcolvin/watchgod/issues/40
+            # eg. "No such device or address: '/dev/tty'", see https://github.com/samuelcolvin/watchfiles/issues/40
             yield
     else:
         # currently on windows tty_path is None and there's nothing we can do here
@@ -66,7 +66,7 @@ def callback(changes: Sized) -> None:
 
 def sys_argv(function: str) -> List[str]:
     """
-    Remove watchgod-related arguments from sys.argv and prepend with func's script path.
+    Remove watchfiles-related arguments from sys.argv and prepend with func's script path.
     """
     bases_ = function.split('.')[:-1]  # remove function and leave only file path
     base = os.path.join(*bases_) + '.py'
@@ -86,7 +86,7 @@ def cli(*args_: str) -> None:
     """
     args = args_ or sys.argv[1:]
     parser = argparse.ArgumentParser(
-        prog='watchgod',
+        prog='watchfiles',
         description=dedent((cli.__doc__ or '').strip('\n')),
         formatter_class=argparse.RawTextHelpFormatter,
     )
@@ -115,7 +115,7 @@ def cli(*args_: str) -> None:
     hdlr = logging.StreamHandler()
     hdlr.setLevel(log_level)
     hdlr.setFormatter(logging.Formatter(fmt='[%(asctime)s] %(message)s', datefmt='%H:%M:%S'))
-    wg_logger = logging.getLogger('watchgod')
+    wg_logger = logging.getLogger('watchfiles')
     wg_logger.addHandler(hdlr)
     wg_logger.setLevel(log_level)
 

@@ -1,5 +1,5 @@
 [package]
-name = "rust_notify"
+name = "watchfiles_rust_notify"
 version = "1.0.0"
 edition = "2021"
 
