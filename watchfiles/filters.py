@@ -26,7 +26,7 @@ class BaseFilter(ABC):
     ignore_entity_patterns: Sequence[str] = ()
     """
     Patterns of files or directories to ignore, these are compiled into regexes.
-    
+
     "entity" here refers to the specific file or directory - basically the result of `path.split(os.sep)[-1]`.
     """
     ignore_paths: Sequence[Union[str, Path]] = ()
