@@ -71,4 +71,9 @@ def test_docs_examples(module_name, source_code, import_execute, mocker, mock_ru
     mocker.patch('watchfiles.main.spawn_context.Process')
     mocker.patch('watchfiles.main.os.kill')
 
+    async def dont_sleep(t):
+        pass
+
+    mocker.patch('asyncio.sleep', new=dont_sleep)
+
     import_execute(module_name, source_code, True)

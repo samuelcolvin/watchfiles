@@ -35,7 +35,11 @@ nav:
   - Introduction: index.md
   - Usage: usage.md
   - CLI: cli.md
-  - 'API Documentation': api.md
+  - 'API Documentation':
+    - api/watch.md
+    - api/run_process.md
+    - api/filters.md
+    - api/rust_backend.md
 
 markdown_extensions:
   - toc:

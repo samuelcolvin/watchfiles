@@ -70,7 +70,7 @@ def watch(
         *paths: filesystem directories to watch
         watch_filter: callable used to filter out changes which are not important, you can either use a raw callable
             or a [`BaseFilter`][watchfiles.BaseFilter] instance,
-            defaults to an instance of [`DefaultFilter`][watchfiles.DefaultFilter].
+            defaults to an instance of [`DefaultFilter`][watchfiles.DefaultFilter]. To keep all changes, use `None`.
         debounce: maximum time in milliseconds to group changes over before yielding them.
         step: time to wait for new changes in milliseconds, if no changes are detected in this time, and
             at least one change has been detected, the changes are yielded.
@@ -121,15 +121,12 @@ async def awatch(
     Args:
         *paths: filesystem directories to watch
         stop_event:
-        watch_filter: callable used to filter out changes which are not important, you can either use a raw callable
-            or a [`BaseFilter`][watchfiles.BaseFilter] instance,
-            defaults to an instance of [`DefaultFilter`][watchfiles.DefaultFilter].
-        debounce: maximum time in milliseconds to group changes over before yielding them.
-        step: time to wait for new changes in milliseconds, if no changes are detected in this time, and
-            at least one change has been detected, the changes are yielded.
-        debug: whether to print information about all filesystem changes in rust to stdout.
+        watch_filter: matches the same argument of [`watch`][watchfiles.watch].
+        debounce: matches the same argument of [`watch`][watchfiles.watch].
+        step: matches the same argument of [`watch`][watchfiles.watch].
+        debug: matches the same argument of [`watch`][watchfiles.watch].
         stop_event: `anyio.Event` which can be used to stop iteration, see example below.
-        raise_interrupt: whether to re-raise `KeyboardInterrupt`s, or suppress the error and just stop iterating.
+        raise_interrupt: matches the same argument of [`watch`][watchfiles.watch].
 
     Yields:
         The generator yields sets of [`FileChange`][watchfiles.main.FileChange]s.
@@ -153,7 +150,7 @@ async def awatch(
         stop_event = asyncio.Event()
 
         async def stop_soon():
-            await asyncio.sleep(1)
+            await asyncio.sleep(3)
             stop_event.set()
 
         stop_soon_task = asyncio.create_task(stop_soon())
@@ -267,22 +264,68 @@ def _stop_process(process: 'SpawnProcess') -> None:
         logger.warning('process already dead, exit code: %d', process.exitcode)
 
 
-python_filter = PythonFilter()
-
-
 def run_process(
     *paths: Union[Path, str],
     target: 'AnyCallable',
     args: Tuple[Any, ...] = (),
     kwargs: Optional[Dict[str, Any]] = None,
     callback: Optional[Callable[[Set[FileChange]], None]] = None,
-    watch_filter: Optional[Callable[[Change, str], bool]] = python_filter,
+    watch_filter: Optional[Callable[[Change, str], bool]] = PythonFilter(),
     debounce: int = 1_600,
     step: int = 50,
     debug: bool = False,
 ) -> int:
     """
-    Run a function in a subprocess using multiprocessing.Process, restart it whenever files change in path.
+    Run a function in a subprocess using `multiprocessing.Process`
+    (technically `multiprocessing.get_context('spawn').Process` to avoid forking and improve code reload),
+    restart it whenever files change in path.
+
+    Internally, `run_process` uses [`watch`][watchfiles.watch] with `raise_interrupt=False` so the function
+    exits cleanly upon `Ctrl+C`.
+
+    Args:
+        *paths: matches the same argument of [`watch`][watchfiles.watch]
+        target: function to run
+        args: arguments to pass to `target`
+        kwargs: keyword arguments to pass to `target`
+        callback: function to call on each reload, the function should accept a set of changes as the sole argument
+        watch_filter: matches the same argument of [`watch`][watchfiles.watch], except an instance of
+            [`PythonFilter`][watchfiles.PythonFilter] is used by default so only python files are watched.
+        debounce: matches the same argument of [`watch`][watchfiles.watch]
+        step: matches the same argument of [`watch`][watchfiles.watch]
+        debug: matches the same argument of [`watch`][watchfiles.watch]
+
+    Returns:
+        number of times the function was reloaded.
+
+    ```py title="Example of run_process usage"
+    from watchfiles import run_process
+
+    def callback(changes):
+        print('changes detected:', changes)
+
+    def foobar(a, b):
+        print('foobar called with:', a, b)
+
+    if __name__ == '__main__':
+        run_process('./path/to/dir', target=foobar, args=(1, 2), callback=callback)
+    ```
+
+    As well as using a `callback` function, changes can be accessed from within the target function,
+    using the `WATCHFILES_CHANGES` environment variable.
+
+    ```py title="Example of run_process accessing changes"
+    from watchfiles import run_process
+
+    def foobar(a, b, c):
+        # changes will be an empty list "[]" the first time the function is called
+        changes = os.getenv('WATCHFILES_CHANGES')
+        changes = json.loads(changes)
+        print('foobar called due to changes:', changes)
+
+    if __name__ == '__main__':
+        run_process('./path/to/dir', target=foobar, args=(1, 2, 3))
+    ```
     """
 
     process = _start_process(target, args, kwargs)
@@ -307,13 +350,37 @@ async def arun_process(
     args: Tuple[Any, ...] = (),
     kwargs: Optional[Dict[str, Any]] = None,
     callback: Optional[Callable[[Set[FileChange]], Any]] = None,
-    watch_filter: Optional[Callable[[Change, str], bool]] = python_filter,
+    watch_filter: Optional[Callable[[Change, str], bool]] = PythonFilter(),
     debounce: int = 1_600,
     step: int = 50,
     debug: bool = False,
 ) -> int:
     """
-    Run a function in a subprocess using multiprocessing.Process, restart it whenever files change in path.
+    Async equivalent of [`run_process`][watchfiles.run_process], all arguments match those of `run_process` except
+    `callback` which can be a coroutine.
+
+    Starting and stopping the process and watching for changes is done in a separate thread.
+
+    As with `run_process`, internally `arun_process` uses [`awatch`][watchfiles.awatch] with `raise_interrupt=False`
+    so the function exits cleanly upon `Ctrl+C`.
+
+    ```py title="Example of arun_process usage"
+    import asyncio
+    from watchfiles import arun_process
+
+    async def callback(changes):
+        await asyncio.sleep(0.1)
+        print('changes detected:', changes)
+
+    def foobar(a, b):
+        print('foobar called with:', a, b)
+
+    async def main():
+        await arun_process('.', target=foobar, args=(1, 2), callback=callback)
+
+    if __name__ == '__main__':
+        asyncio.run(main())
+    ```
     """
     import inspect
 

@@ -11,7 +11,7 @@ from aiohttp import web
 
 async def handle(request):
     # get the most recent file changes and return them
-    changes = os.getenv('WATCHFILES_CHANGES', '[]')
+    changes = os.getenv('WATCHFILES_CHANGES')
     changes = json.loads(changes)
     return web.json_response(dict(changes=changes))
 

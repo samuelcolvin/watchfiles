@@ -48,7 +48,7 @@ impl RustNotify {
         let mut _watcher: RecommendedWatcher = recommended_watcher(move |res: NotifyResult<Event>| match res {
             Ok(event) => {
                 if debug {
-                    println!("raw-event: {:?}", event);
+                    eprintln!("raw-event: {:?}", event);
                 }
                 if let Some(path_buf) = event.paths.first() {
                     let path = match path_buf.to_str() {
@@ -88,8 +88,7 @@ impl RustNotify {
                 }
             }
             Err(e) => {
-                println!("error: {:?}", e);
-                // *error_clone.lock().unwrap() = Some(format!("error in underlying watcher: {}", e));
+                *error_clone.lock().unwrap() = Some(format!("error in underlying watcher: {}", e));
             }
         })
         .map_err(|e| WatchfilesRustInternalError::new_err(format!("Error creating watcher: {}", e)))?;
