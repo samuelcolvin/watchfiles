@@ -1,7 +1,6 @@
 import logging
 import os
 import re
-from abc import ABC
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional, Sequence, Union
 
@@ -13,7 +12,7 @@ if TYPE_CHECKING:
     from .main import Change
 
 
-class BaseFilter(ABC):
+class BaseFilter:
     """
     Useful base for creating filters. `BaseFilter` is an abstract base class which should be inherited and configured.
 
@@ -33,30 +32,6 @@ class BaseFilter(ABC):
     """
     Full paths to ignore, e.g. `/home/users/.cache` or `C:\\Users\\user\\.cache`.
     """
-
-    def __init__(
-        self,
-        *,
-        ignore_dirs: Optional[Sequence[str]] = None,
-        ignore_entity_patterns: Optional[Sequence[str]] = None,
-        ignore_paths: Optional[Sequence[Union[str, Path]]] = None,
-    ) -> None:
-        """
-        Args:
-            ignore_dirs: if not `None`, overrides the `ignore_dirs` value set on the class.
-            ignore_entity_patterns: if not `None`, overrides the `ignore_entity_patterns` value set on the class.
-            ignore_paths: if not `None`, overrides the `ignore_paths` value set on the class.
-        """
-        if ignore_dirs is not None:
-            self.ignore_dirs = ignore_dirs
-        if ignore_entity_patterns is not None:
-            self.ignore_entity_patterns = ignore_entity_patterns
-        if ignore_paths is not None:
-            self.ignore_paths = ignore_paths
-
-        self._ignore_dirs = set(self.ignore_dirs)
-        self._ignore_entity_regexes = tuple(re.compile(r) for r in self.ignore_entity_patterns)
-        self._ignore_paths = tuple(map(str, self.ignore_paths))
 
     def __call__(self, change: 'Change', path: str) -> bool:
         """
@@ -109,6 +84,30 @@ class DefaultFilter(BaseFilter):
         r'^flycheck_',
     )
     """File/Directory name patterns to ignore."""
+
+    def __init__(
+        self,
+        *,
+        ignore_dirs: Optional[Sequence[str]] = None,
+        ignore_entity_patterns: Optional[Sequence[str]] = None,
+        ignore_paths: Optional[Sequence[Union[str, Path]]] = None,
+    ) -> None:
+        """
+        Args:
+            ignore_dirs: if not `None`, overrides the `ignore_dirs` value set on the class.
+            ignore_entity_patterns: if not `None`, overrides the `ignore_entity_patterns` value set on the class.
+            ignore_paths: if not `None`, overrides the `ignore_paths` value set on the class.
+        """
+        if ignore_dirs is not None:
+            self.ignore_dirs = ignore_dirs
+        if ignore_entity_patterns is not None:
+            self.ignore_entity_patterns = ignore_entity_patterns
+        if ignore_paths is not None:
+            self.ignore_paths = ignore_paths
+
+        self._ignore_dirs = set(self.ignore_dirs)
+        self._ignore_entity_regexes = tuple(re.compile(r) for r in self.ignore_entity_patterns)
+        self._ignore_paths = tuple(map(str, self.ignore_paths))
 
 
 class PythonFilter(DefaultFilter):

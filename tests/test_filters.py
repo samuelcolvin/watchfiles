@@ -1,7 +1,9 @@
+import re
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
+from dirty_equals import IsTuple
 
 from watchfiles import Change, DefaultFilter, PythonFilter, watch
 
@@ -76,3 +78,16 @@ def test_simple_function(mock_rust_notify: 'MockRustType'):
 def test_default_filter(path, expected):
     f = DefaultFilter(ignore_paths=[Path.home() / 'ignore'])
     assert f(Change.added, str(path)) == expected
+
+
+def test_customising_filters():
+    f = DefaultFilter(ignore_dirs=['apple', 'banana'], ignore_entity_patterns=[r'\.cat$'], ignore_paths=[Path('/a/b')])
+    assert f.ignore_dirs == ['apple', 'banana']
+    assert f._ignore_dirs == {'apple', 'banana'}
+    assert f.ignore_entity_patterns == [r'\.cat$']
+    assert f._ignore_entity_regexes == (re.compile(r'\.cat$'),)
+    assert f.ignore_paths == [Path('/a/b')]
+    assert f._ignore_paths == ('/a/b',)
+
+    # unchanged
+    assert DefaultFilter.ignore_dirs == IsTuple('__pycache__', length=9)

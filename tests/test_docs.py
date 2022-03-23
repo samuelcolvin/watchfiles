@@ -1,9 +1,11 @@
 import importlib.util
 import re
+import sys
 from collections import namedtuple
 from pathlib import Path
 from textwrap import dedent
 from typing import TYPE_CHECKING
+from unittest.mock import MagicMock
 
 import pytest
 from _pytest.assertion.rewrite import AssertionRewritingHook
@@ -75,8 +77,14 @@ def test_docs_examples(module_name, source_code, import_execute, mocker, mock_ru
         pass
 
     mocker.patch('asyncio.sleep', new=dont_sleep)
+    # avoid installing aiohttp by mocking it
+    sys.modules['aiohttp'] = type('aiohttp', (), {'web': MagicMock()})
 
-    import_execute(module_name, source_code, True)
+    try:
+        import_execute(module_name, source_code, True)
+    except Exception:
+        sys.modules.pop('aiohttp', None)
+        raise
 
 
 def test_cli_help(mocker, capsys):
@@ -91,6 +99,8 @@ def test_cli_help(mocker, capsys):
     assert err == ''
 
     cli_help_path = ROOT_DIR / 'docs' / 'cli_help.txt'
-    if out != cli_help_path.read_text():
+    try:
+        assert out == cli_help_path.read_text(), f'cli help output differs from {cli_help_path}, file updated'
+    except AssertionError:
         cli_help_path.write_text(out)
-        raise AssertionError(f'cli help output differs from {cli_help_path}, file updated')
+        raise
