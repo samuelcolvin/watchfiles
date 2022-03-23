@@ -8,7 +8,7 @@ filterwarnings = 'error'
 timeout = 10
 
 [tool.coverage.run]
-source = ['dirty_equals']
+source = ['watchfiles']
 branch = true
 
 [tool.coverage.report]

@@ -4,7 +4,7 @@ from pathlib import Path
 
 from setuptools import setup
 
-description = 'Simple, modern file watching and code reload in python.'
+description = 'Simple, modern and high performance file watching and code reload in python.'
 THIS_DIR = Path(__file__).resolve().parent
 try:
     long_description = (THIS_DIR / 'README.md').read_text()

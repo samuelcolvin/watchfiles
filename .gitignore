@@ -16,3 +16,4 @@ docs/_build/
 /foobar.py
 /watchfiles/*.so
 /target/
+/site/

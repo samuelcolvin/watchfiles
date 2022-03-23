@@ -89,7 +89,4 @@ async def test_awatch_no_yield(mock_rust_notify: 'MockRustType', caplog):
 
     assert changes == {(Change.added, 'spam.py')}
     assert mock.watch_count == 2
-    assert caplog.text == (
-        "watchfiles.main DEBUG: 1 change detected: {(<Change.added: 1>, 'spam.py')}\n"
-        "watchfiles.main WARNING: got SIGINT, stopping awatch without raising exception\n"  # noqa: Q000
-    )
+    assert caplog.text == "watchfiles.main DEBUG: 1 change detected: {(<Change.added: 1>, 'spam.py')}\n"
