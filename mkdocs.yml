@@ -33,7 +33,6 @@ repo_url: https://github.com/samuelcolvin/watchfiles
 edit_uri: ''
 nav:
   - Introduction: index.md
-  - Usage: usage.md
   - CLI: cli.md
   - 'API Documentation':
     - api/watch.md
@@ -53,14 +52,12 @@ markdown_extensions:
   - pymdownx.snippets
   - attr_list
   - md_in_html
+  - mdx_include
   - pymdownx.emoji:
       emoji_index: !!python/name:materialx.emoji.twemoji
       emoji_generator: !!python/name:materialx.emoji.to_svg
 
 extra:
-  analytics:
-    provider: google
-    property: G-FLP20728CW
   social:
   - icon: fontawesome/brands/github-alt
     link: https://github.com/samuelcolvin/watchfiles

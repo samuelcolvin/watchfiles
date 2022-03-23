@@ -2,7 +2,8 @@
 
 Let's say you have `foobar.py` (this is a very simple web server using 
 [aiohttp](https://aiohttp.readthedocs.io/en/stable/)) which gets details about recent file changes from the 
-`WATCHFILES_CHANGES` environment variable and returns them as JSON.
+`WATCHFILES_CHANGES` see [`run_process` docs](./api/run_process.md#watchfiles.run_process) 
+environment variable and returns them as JSON.
 
 ```py
 title="Code to be run via the CLI"
@@ -28,6 +29,19 @@ You could run this and reload it when any file in the current directory changes 
 watchfiles foobar.main
 ```
 
-Run `watchfiles --help` for more options.
+By default the CLI will watch the current directory and all subdirectories, but the directory/directories watched
+can be changed, this:
+
+```bash title="CLI Usage with custom directories"
+watchfiles foobar.main ./foo ./bar
+```
 
 The CLI can also be used via `python -m watchfiles ...`.
+
+## Help
+
+Run `watchfiles --help` for more options.
+
+```{title="watchfiles --help"}
+{! docs/cli_help.txt !}
+```

@@ -1,11 +1,14 @@
 import importlib.util
 import re
+from collections import namedtuple
 from pathlib import Path
 from textwrap import dedent
 from typing import TYPE_CHECKING
 
 import pytest
 from _pytest.assertion.rewrite import AssertionRewritingHook
+
+from watchfiles.cli import cli
 
 if TYPE_CHECKING:
     from conftest import MockRustType
@@ -62,10 +65,7 @@ def generate_code_chunks(*directories: str):
                 yield from extract_code_chunks(path, code, 0)
 
 
-def pytest_generate_tests(metafunc):
-    metafunc.parametrize('module_name,source_code', generate_code_chunks('watchfiles', 'docs'))
-
-
+@pytest.mark.parametrize('module_name,source_code', generate_code_chunks('watchfiles', 'docs'))
 def test_docs_examples(module_name, source_code, import_execute, mocker, mock_rust_notify: 'MockRustType'):
     mock_rust_notify([{(1, 'foo.txt'), (2, 'bar.py')}])
     mocker.patch('watchfiles.main.spawn_context.Process')
@@ -77,3 +77,20 @@ def test_docs_examples(module_name, source_code, import_execute, mocker, mock_ru
     mocker.patch('asyncio.sleep', new=dont_sleep)
 
     import_execute(module_name, source_code, True)
+
+
+def test_cli_help(mocker, capsys):
+    mocker.patch('watchfiles.cli.argparse.ArgumentParser.exit', side_effect=RuntimeError('custom exit'))
+    TerminalSize = namedtuple('TerminalSize', ['columns', 'lines'])
+    mocker.patch('shutil.get_terminal_size', return_value=TerminalSize(80, 24))
+
+    with pytest.raises(RuntimeError, match='custom exit'):
+        cli('--help')
+
+    out, err = capsys.readouterr()
+    assert err == ''
+
+    cli_help_path = (ROOT_DIR / 'docs' / 'cli_help.txt')
+    if out != cli_help_path.read_text():
+        cli_help_path.write_text(out)
+        raise AssertionError(f'cli help output differs from {cli_help_path}, file updated')

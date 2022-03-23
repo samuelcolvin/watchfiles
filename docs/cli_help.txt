@@ -1,0 +1,23 @@
+usage: watchfiles [-h] [--verbosity [VERBOSITY]]
+                  [--ignore-paths [IGNORE_PATHS ...]]
+                  [--extensions [EXTENSIONS ...]] [--args ...]
+                  function [paths ...]
+
+Watch one or more directories and execute a python function on changes.
+
+Note: only changes to python files will prompt the function to be restarted,
+use `--extensions` to watch more file types.
+
+positional arguments:
+  function              Path to python function to execute.
+  paths                 Filesystem paths to watch, defaults to current directory.
+
+options:
+  -h, --help            show this help message and exit
+  --verbosity [VERBOSITY]
+                        0, 1 (default) or 2
+  --ignore-paths [IGNORE_PATHS ...]
+                        Specify paths to directories to ignore their updates
+  --extensions [EXTENSIONS ...]
+                        Extra file extensions to watch
+  --args ..., -a ...    Arguments for argv inside executed function

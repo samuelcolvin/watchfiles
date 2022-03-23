@@ -38,8 +38,6 @@ Otherwise, you can install from source which requires Rust stable to be installe
 
 ## Usage
 
-### Synchronous Methods
-
 To watch for changes in a directory:
 
 ```python
@@ -59,7 +57,8 @@ from watchfiles import run_process
 def foobar(a, b, c):
     ...
 
-run_process('./path/to/dir', target=foobar, args=(1, 2, 3))
+if __name__ == '__main__':
+    run_process('./path/to/dir', target=foobar, args=(1, 2, 3))
 ```
 
 `run_process` uses `PythonFilter` by default so only changes to python files will prompt a reload, 
@@ -100,7 +99,8 @@ def foobar(a, b, c):
 async def main():
     await arun_process('./path/to/dir', target=foobar, args=(1, 2, 3))
 
-asyncio.run(main())
+if __name__ == '__main__':
+    asyncio.run(main())
 ```
 
 The signature of `arun_process` is almost identical to `run_process` except that
@@ -187,21 +187,3 @@ You could run this and reload it when any file in the current directory changes 
 Run `watchfiles --help` for more options.
 
 The CLI can also be used via `python -m watchfiles ...`.
-
-## How Watchfiles Works
-
-*watchfiles* is based on the [Notify](https://github.com/notify-rs/notify) rust library.
-
-All the hard work of integrating with the OS's file system events notifications and falling back to polling is palmed
-off on the rust library.
-
-"Debouncing" changes - e.g. grouping changes into batches rather than firing a yield/reload for each file changed
-is managed in rust.
-
-The rust code takes care of creating a new thread to watch for file changes so in the case of the synchronous methods
-(`watch` and `run_process`) no threading logic is required in python. When using the asynchronous methods (`awatch` and
-`arun_process`) [`anyio.to_thread.run_sync](https://anyio.readthedocs.io/en/stable/api.html#anyio.to_thread.run_sync)
-is used to wait for changes in rust within a thread.
-
-Prior to the renaming from `watchgod` to `watchfiles` the library used filesystem polling to watch for changes, 
-see the [README for watchgod](https://github.com/samuelcolvin/watchfiles/tree/watchgod) for more details.

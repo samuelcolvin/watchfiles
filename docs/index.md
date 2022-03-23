@@ -23,17 +23,57 @@ Underlying file system notifications are handled by the [Notify](https://github.
 
 ## Usage
 
-Here's a simple example of what *watchfiles* can do:
+Here are some examples of what **watchfiles** can do:
 
 ```py
-title="Basic Usage"
+title="watch Usage"
 from watchfiles import watch
 
 for changes in watch('./path/to/dir'):
     print(changes)
 ```
+See [`watch` docs](./api/watch.md#watchfiles.watch) for more details.
 
-TODO more examples and links to docs.
+```py
+title="awatch Usage"
+import asyncio
+from watchfiles import awatch
+
+async def main():
+    async for changes in awatch('/path/to/dir'):
+        print(changes)
+
+asyncio.run(main())
+```
+See [`awatch` docs](./api/watch.md#watchfiles.awatch) for more details.
+
+```py
+title="run_process Usage"
+from watchfiles import run_process
+
+def foobar(a, b, c):
+    ...
+
+if __name__ == '__main__':
+    run_process('./path/to/dir', target=foobar, args=(1, 2, 3))
+```
+See [`run_process` docs](./api/run_process.md#watchfiles.run_process) for more details.
+
+```py
+title="arun_process Usage"
+import asyncio
+from watchfiles import arun_process
+
+def foobar(a, b, c):
+    ...
+
+async def main():
+    await arun_process('./path/to/dir', target=foobar, args=(1, 2, 3))
+
+if __name__ == '__main__':
+    asyncio.run(main())
+```
+See [`arun_process` docs](./api/run_process.md#watchfiles.arun_process) for more details.
 
 ## Installation
 
@@ -44,8 +84,24 @@ pip install watchfiles
 ```
 
 Binaries are available for:
+
 * **Linux**: `manylinux-x86_64`, `musllinux-x86_64` & `manylinux-i686`
 * **MacOS**: `x86_64` & `arm64` (except python 3.7)
 * **Windows**: `amd64` & `win32`
 
 Otherwise, you can install from source which requires Rust stable to be installed.
+
+## How Watchfiles Works
+
+*watchfiles* is based on the [Notify](https://github.com/notify-rs/notify) rust library.
+
+All the hard work of integrating with the OS's file system events notifications and falling back to polling is palmed
+off on the rust library.
+
+"Debouncing" changes - e.g. grouping changes into batches rather than firing a yield/reload for each file changed
+is managed in rust.
+
+The rust code takes care of creating a new thread to watch for file changes so in the case of the synchronous methods
+(`watch` and `run_process`) no threading logic is required in python. When using the asynchronous methods (`awatch` and
+`arun_process`) [`anyio.to_thread.run_sync`](https://anyio.readthedocs.io/en/stable/api.html#anyio.to_thread.run_sync)
+is used to wait for changes in rust within a thread.

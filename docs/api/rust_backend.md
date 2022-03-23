@@ -1,5 +1,8 @@
-See [`_rust_notify.py`](https://github.com/samuelcolvin/watchfiles/blob/main/watchfiles/_rust_notify.py)
-for docs until [this](https://github.com/mkdocstrings/mkdocstrings/issues/404) is fixed.
+The `_rust_notify.pyi` file defines the interface to rust:
+
+```{.py title="_rust_notify.pyi" test="false"}
+{! watchfiles/_rust_notify.pyi !}
+```
 
 The rust backend can be accessed directly as follows:
 
