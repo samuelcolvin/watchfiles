@@ -7,24 +7,23 @@ from watchfiles._rust_notify import RustNotify
 
 
 def test_add(test_dir: Path):
-    watcher = RustNotify([str(test_dir)], False)
+    watcher = RustNotify([str(test_dir)], True)
     (test_dir / 'foo.txt').write_text('foobar')
 
     assert watcher.watch(200, 50, None) == {(1, str(test_dir / 'foo.txt'))}
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason='fails on windows')
 def test_modify_write(test_dir: Path):
-    watcher = RustNotify([str(test_dir)], False)
+    watcher = RustNotify([str(test_dir)], True)
 
-    (test_dir / 'a.txt').chmod(0o444)
+    (test_dir / 'a.txt').write_text('this is new')
 
     assert watcher.watch(200, 50, None) == {(2, str(test_dir / 'a.txt'))}
 
 
 @pytest.mark.skipif(sys.platform == 'win32', reason='fails on windows')
 def test_modify_chmod(test_dir: Path):
-    watcher = RustNotify([str(test_dir)], False)
+    watcher = RustNotify([str(test_dir)], True)
 
     (test_dir / 'a.txt').chmod(0o444)
 
