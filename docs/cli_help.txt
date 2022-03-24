@@ -1,4 +1,5 @@
-usage: watchfiles [-h] [--verbosity [VERBOSITY]]
+usage: watchfiles [-h] [--verbosity [{warning,info,debug}]]
+                  [--filter [{python,default,all}]]
                   [--ignore-paths [IGNORE_PATHS ...]]
                   [--extensions [EXTENSIONS ...]] [--args ...] [--version]
                   function [paths ...]
@@ -16,11 +17,13 @@ positional arguments:
 
 options:
   -h, --help            show this help message and exit
-  --verbosity [VERBOSITY]
-                        0, 1 (default) or 2
+  --verbosity [{warning,info,debug}]
+                        Log level, defaults to "info"
+  --filter [{python,default,all}]
+                        which files to watch, defaults to "python" files
   --ignore-paths [IGNORE_PATHS ...]
                         Specify directories to ignore
   --extensions [EXTENSIONS ...]
-                        Extra file extensions to watch
+                        Extra file extensions to watch, applies only if "--filter" is "python"
   --args ..., -a ...    Arguments for argv inside executed function
   --version, -V         show program's version number and exit
