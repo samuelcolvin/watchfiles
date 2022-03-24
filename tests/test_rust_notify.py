@@ -16,11 +16,12 @@ def test_add(test_dir: Path):
 def test_modify_write(test_dir: Path):
     watcher = RustNotify([str(test_dir)], True)
 
-    (test_dir / 'a.txt').chmod(0o444)
+    (test_dir / 'a.txt').write_text('this is new')
 
     assert watcher.watch(200, 50, None) == {(2, str(test_dir / 'a.txt'))}
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason='fails on windows')
 def test_modify_chmod(test_dir: Path):
     watcher = RustNotify([str(test_dir)], True)
 
