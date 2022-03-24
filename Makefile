@@ -4,11 +4,12 @@ black = black watchfiles tests setup.py
 
 .PHONY: install
 install:
-	pip install -U pip
+	pip install -U pip pre-commit
 	pip install -r tests/requirements.txt
 	pip install -r tests/requirements-linting.txt
 	pip install -r docs/requirements.txt
 	pip install -e .
+	pre-commit install
 
 .PHONY: build-dev
 build-dev:
@@ -20,16 +21,22 @@ format:
 	$(black)
 	cargo fmt
 
-.PHONY: lint
-lint:
+.PHONY: lint-python
+lint-python:
 	flake8 --max-complexity 10 --max-line-length 120 --ignore E203,W503 watchfiles tests setup.py
 	$(isort) --check-only --df
 	$(black) --check --diff
+
+.PHONY: lint-rust
+lint-rust:
 	cargo fmt --version
 	@echo 'max_width = 120' > .rustfmt.toml
 	cargo fmt --all -- --check
 	cargo clippy --version
 	cargo clippy -- -D warnings
+
+.PHONY: lint
+lint: lint-python lint-rust
 
 .PHONY: mypy
 mypy:
