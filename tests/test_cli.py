@@ -21,6 +21,7 @@ def test_simple(mocker, tmp_path):
         args=('os.getcwd', '/path/to/tty'),
         callback=callback,
         watch_filter=IsInstance(PythonFilter),
+        debug=False,
     )
 
 
@@ -47,6 +48,7 @@ def test_ignore_extensions(mocker, tmp_work_path):
             & FunctionCheck(lambda f: f.extensions == ('.py', '.pyx', '.pyd', '.md'))
             & FunctionCheck(lambda f: f._ignore_paths == ('/foo/bar', '/apple/banana'))
         ),
+        debug=False,
     )
 
 
@@ -87,6 +89,7 @@ def test_tty_os_error(mocker, tmp_work_path):
         args=('os.getcwd', '/dev/tty'),
         callback=callback,
         watch_filter=IsInstance(PythonFilter),
+        debug=False,
     )
 
 
@@ -100,6 +103,7 @@ def test_tty_attribute_error(mocker, tmp_work_path):
         args=('os.getcwd', None),
         callback=callback,
         watch_filter=IsInstance(PythonFilter),
+        debug=False,
     )
 
 
@@ -163,6 +167,7 @@ def test_func_with_parser(tmp_work_path, create_test_function, mocker, initial, 
         args=('os.getcwd', None),
         callback=callback,
         watch_filter=IsInstance(PythonFilter),
+        debug=False,
     )
     assert file.exists()
     assert file.read_text(encoding='utf-8') == ' '.join(expected)

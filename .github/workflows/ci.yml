@@ -235,7 +235,7 @@ jobs:
           name: pypi_files
           path: dist
 
-  deploy:
+  release:
     needs: [build, docs]
     if: "startsWith(github.ref, 'refs/tags/')"
     runs-on: ubuntu-latest

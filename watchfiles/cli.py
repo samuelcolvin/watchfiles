@@ -10,6 +10,7 @@ from typing import Any, Dict, Generator, List, Optional, Sized
 
 from .filters import PythonFilter
 from .main import run_process
+from .version import VERSION
 
 logger = logging.getLogger('watchfiles.cli')
 
@@ -79,10 +80,12 @@ def sys_argv(function: str) -> List[str]:
 
 def cli(*args_: str) -> None:
     """
-    Watch one or more directories and execute a python function on changes.
+    Watch one or more directories and execute a python function on file changes.
 
     Note: only changes to python files will prompt the function to be restarted,
     use `--extensions` to watch more file types.
+
+    See https://watchfiles.helpmanual.io/cli/ for more information.
     """
     args = args_ or sys.argv[1:]
     parser = argparse.ArgumentParser(
@@ -90,9 +93,9 @@ def cli(*args_: str) -> None:
         description=dedent((cli.__doc__ or '').strip('\n')),
         formatter_class=argparse.RawTextHelpFormatter,
     )
-    parser.add_argument('function', help='Path to python function to execute.')
+    parser.add_argument('function', help='Path to python function to execute')
     parser.add_argument(
-        'paths', nargs='*', default='.', help='Filesystem paths to watch, defaults to current directory.'
+        'paths', nargs='*', default='.', help='Filesystem paths to watch, defaults to current directory'
     )
     parser.add_argument('--verbosity', nargs='?', type=int, default=1, help='0, 1 (default) or 2')
     parser.add_argument(
@@ -100,7 +103,7 @@ def cli(*args_: str) -> None:
         nargs='*',
         type=str,
         default=[],
-        help='Specify paths to directories to ignore their updates',
+        help='Specify directories to ignore',
     )
     parser.add_argument('--extensions', nargs='*', type=str, default=(), help='Extra file extensions to watch')
     parser.add_argument(
@@ -109,6 +112,7 @@ def cli(*args_: str) -> None:
         nargs=argparse.REMAINDER,
         help='Arguments for argv inside executed function',
     )
+    parser.add_argument('--version', '-V', action='version', version=f'%(prog)s v{VERSION}')
     arg_namespace = parser.parse_args(args)
 
     log_level = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}[arg_namespace.verbosity]
@@ -159,4 +163,5 @@ def cli(*args_: str) -> None:
         args=(arg_namespace.function, tty_path),
         callback=callback,
         watch_filter=PythonFilter(**watch_filter_kwargs),
+        debug=arg_namespace.verbosity == 2,
     )
