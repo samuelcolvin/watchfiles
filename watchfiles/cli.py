@@ -8,8 +8,9 @@ from pathlib import Path
 from textwrap import dedent
 from typing import Any, Dict, Generator, List, Optional, Sized
 
-from .filters import PythonFilter
+from .filters import DefaultFilter, PythonFilter
 from .main import run_process
+from .version import VERSION
 
 logger = logging.getLogger('watchfiles.cli')
 
@@ -77,12 +78,14 @@ def sys_argv(function: str) -> List[str]:
     return [base]  # strip all args if no additional args were provided
 
 
-def cli(*args_: str) -> None:
+def cli(*args_: str) -> None:  # noqa: C901 (ignore complexity)
     """
-    Watch one or more directories and execute a python function on changes.
+    Watch one or more directories and execute a python function on file changes.
 
     Note: only changes to python files will prompt the function to be restarted,
     use `--extensions` to watch more file types.
+
+    See https://watchfiles.helpmanual.io/cli/ for more information.
     """
     args = args_ or sys.argv[1:]
     parser = argparse.ArgumentParser(
@@ -90,28 +93,50 @@ def cli(*args_: str) -> None:
         description=dedent((cli.__doc__ or '').strip('\n')),
         formatter_class=argparse.RawTextHelpFormatter,
     )
-    parser.add_argument('function', help='Path to python function to execute.')
+    parser.add_argument('function', help='Path to python function to execute')
     parser.add_argument(
-        'paths', nargs='*', default='.', help='Filesystem paths to watch, defaults to current directory.'
+        'paths', nargs='*', default='.', help='Filesystem paths to watch, defaults to current directory'
     )
-    parser.add_argument('--verbosity', nargs='?', type=int, default=1, help='0, 1 (default) or 2')
+    parser.add_argument(
+        '--verbosity',
+        nargs='?',
+        type=str,
+        default='info',
+        choices=['warning', 'info', 'debug'],
+        help='Log level, defaults to "info"',
+    )
+    parser.add_argument(
+        '--filter',
+        nargs='?',
+        type=str,
+        default='python',
+        choices=['python', 'default', 'all'],
+        help='which files to watch, defaults to "python" files',
+    )
     parser.add_argument(
         '--ignore-paths',
         nargs='*',
         type=str,
         default=[],
-        help='Specify paths to directories to ignore their updates',
+        help='Specify directories to ignore',
     )
-    parser.add_argument('--extensions', nargs='*', type=str, default=(), help='Extra file extensions to watch')
+    parser.add_argument(
+        '--extensions',
+        nargs='*',
+        type=str,
+        default=(),
+        help='Extra file extensions to watch, applies only if "--filter" is "python"',
+    )
     parser.add_argument(
         '--args',
         '-a',
         nargs=argparse.REMAINDER,
         help='Arguments for argv inside executed function',
     )
+    parser.add_argument('--version', '-V', action='version', version=f'%(prog)s v{VERSION}')
     arg_namespace = parser.parse_args(args)
 
-    log_level = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}[arg_namespace.verbosity]
+    log_level = getattr(logging, arg_namespace.verbosity.upper())
     hdlr = logging.StreamHandler()
     hdlr.setLevel(log_level)
     hdlr.setFormatter(logging.Formatter(fmt='[%(asctime)s] %(message)s', datefmt='%H:%M:%S'))
@@ -148,15 +173,29 @@ def cli(*args_: str) -> None:
 
     watch_filter_kwargs: Dict[str, Any] = {}
     if arg_namespace.ignore_paths:
-        watch_filter_kwargs['ignore_paths'] = [Path(p).resolve() for p in arg_namespace.ignore_paths]
+        if arg_namespace.filter != 'all':
+            watch_filter_kwargs['ignore_paths'] = [Path(p).resolve() for p in arg_namespace.ignore_paths]
+        else:
+            logger.warning('"--ignore-paths" argument ignored as "all" filter was selected')
 
     if arg_namespace.extensions:
-        watch_filter_kwargs['extra_extensions'] = arg_namespace.extensions
+        if arg_namespace.filter == 'python':
+            watch_filter_kwargs['extra_extensions'] = arg_namespace.extensions
+        else:
+            logger.warning('"--extensions" argument ignored as "%s" filter was selected', arg_namespace.filter)
+
+    if arg_namespace.filter == 'python':
+        watch_filter: Optional[DefaultFilter] = PythonFilter(**watch_filter_kwargs)
+    elif arg_namespace.filter == 'default':
+        watch_filter = DefaultFilter(**watch_filter_kwargs)
+    else:
+        watch_filter = None
 
     run_process(
         *paths,
         target=run_function,
         args=(arg_namespace.function, tty_path),
         callback=callback,
-        watch_filter=PythonFilter(**watch_filter_kwargs),
+        watch_filter=watch_filter,
+        debug=arg_namespace.verbosity == 'debug',
     )

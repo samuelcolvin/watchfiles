@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 from dirty_equals import FunctionCheck, IsInstance
 
-from watchfiles import PythonFilter
+from watchfiles import DefaultFilter, PythonFilter
 from watchfiles.cli import callback, cli, run_function, set_tty, sys_argv
 
 pytestmark = pytest.mark.skipif(sys.platform == 'win32', reason='many tests fail on windows')
@@ -21,6 +21,7 @@ def test_simple(mocker, tmp_path):
         args=('os.getcwd', '/path/to/tty'),
         callback=callback,
         watch_filter=IsInstance(PythonFilter),
+        debug=False,
     )
 
 
@@ -47,6 +48,7 @@ def test_ignore_extensions(mocker, tmp_work_path):
             & FunctionCheck(lambda f: f.extensions == ('.py', '.pyx', '.pyd', '.md'))
             & FunctionCheck(lambda f: f._ignore_paths == ('/foo/bar', '/apple/banana'))
         ),
+        debug=False,
     )
 
 
@@ -87,6 +89,7 @@ def test_tty_os_error(mocker, tmp_work_path):
         args=('os.getcwd', '/dev/tty'),
         callback=callback,
         watch_filter=IsInstance(PythonFilter),
+        debug=False,
     )
 
 
@@ -100,6 +103,7 @@ def test_tty_attribute_error(mocker, tmp_work_path):
         args=('os.getcwd', None),
         callback=callback,
         watch_filter=IsInstance(PythonFilter),
+        debug=False,
     )
 
 
@@ -163,6 +167,56 @@ def test_func_with_parser(tmp_work_path, create_test_function, mocker, initial, 
         args=('os.getcwd', None),
         callback=callback,
         watch_filter=IsInstance(PythonFilter),
+        debug=False,
     )
     assert file.exists()
     assert file.read_text(encoding='utf-8') == ' '.join(expected)
+
+
+def test_verbose(mocker, tmp_path):
+    mocker.patch('watchfiles.cli.sys.stdin.fileno')
+    mocker.patch('os.ttyname', return_value='/path/to/tty')
+    mock_run_process = mocker.patch('watchfiles.cli.run_process')
+    cli('os.getcwd', str(tmp_path), '--verbosity', 'debug')
+    mock_run_process.assert_called_once_with(
+        tmp_path,
+        target=run_function,
+        args=('os.getcwd', '/path/to/tty'),
+        callback=callback,
+        watch_filter=IsInstance(PythonFilter),
+        debug=True,
+    )
+
+
+def test_filter_all(mocker, tmp_path, capsys):
+    mocker.patch('watchfiles.cli.sys.stdin.fileno')
+    mocker.patch('os.ttyname', return_value='/path/to/tty')
+    mock_run_process = mocker.patch('watchfiles.cli.run_process')
+    cli('os.getcwd', str(tmp_path), '--filter', 'all', '--ignore-paths', 'foo', '--extensions', '.txt')
+    mock_run_process.assert_called_once_with(
+        tmp_path,
+        target=run_function,
+        args=('os.getcwd', '/path/to/tty'),
+        callback=callback,
+        watch_filter=None,
+        debug=False,
+    )
+    out, err = capsys.readouterr()
+    assert out == ''
+    assert '"--ignore-paths" argument ignored as "all" filter was selected\n' in err
+    assert '"--extensions" argument ignored as "all" filter was selected\n' in err
+
+
+def test_filter_default(mocker, tmp_path):
+    mocker.patch('watchfiles.cli.sys.stdin.fileno')
+    mocker.patch('os.ttyname', return_value='/path/to/tty')
+    mock_run_process = mocker.patch('watchfiles.cli.run_process')
+    cli('os.getcwd', str(tmp_path), '--filter', 'default')
+    mock_run_process.assert_called_once_with(
+        tmp_path,
+        target=run_function,
+        args=('os.getcwd', '/path/to/tty'),
+        callback=callback,
+        watch_filter=IsInstance(DefaultFilter, only_direct_instance=True),
+        debug=False,
+    )
