@@ -61,7 +61,9 @@ impl RustNotify {
                     };
                     let change = match event.kind {
                         EventKind::Create(_) => CHANGE_ADDED,
-                        EventKind::Modify(ModifyKind::Metadata(_)) | EventKind::Modify(ModifyKind::Data(_)) => {
+                        EventKind::Modify(ModifyKind::Metadata(_))
+                        | EventKind::Modify(ModifyKind::Data(_))
+                        | EventKind::Modify(ModifyKind::Any) => {
                             // these events sometimes happen when creating files and deleting them, hence these checks
                             let changes = changes_clone.lock().unwrap();
                             if changes.contains(&(CHANGE_DELETED, path.clone()))
