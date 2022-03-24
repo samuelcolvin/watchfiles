@@ -1,4 +1,4 @@
-black==21.12b0
+black==22.1.0
 mkdocs==1.2.3
 mkdocs-material==8.2.6
 mkdocs-simple-hooks==0.1.5
