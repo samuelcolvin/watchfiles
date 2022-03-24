@@ -5,7 +5,8 @@ from typing import TYPE_CHECKING
 import pytest
 
 from watchfiles import arun_process, run_process
-from watchfiles.main import Change, _start_process
+from watchfiles.main import Change
+from watchfiles.run import _start_process
 
 if TYPE_CHECKING:
     from conftest import MockRustType
@@ -25,8 +26,8 @@ class FakeProcess:
 
 
 def test_alive_terminates(mocker, mock_rust_notify: 'MockRustType'):
-    mock_start_process = mocker.patch('watchfiles.main._start_process', return_value=FakeProcess())
-    mock_kill = mocker.patch('watchfiles.main.os.kill')
+    mock_start_process = mocker.patch('watchfiles.run._start_process', return_value=FakeProcess())
+    mock_kill = mocker.patch('watchfiles.run.os.kill')
     mock_rust_notify([{(1, '/path/to/foobar.py')}])
 
     assert run_process('/x/y/z', target=object(), debounce=5, step=1) == 1
@@ -35,8 +36,8 @@ def test_alive_terminates(mocker, mock_rust_notify: 'MockRustType'):
 
 
 def test_dead_callback(mocker, mock_rust_notify: 'MockRustType'):
-    mock_start_process = mocker.patch('watchfiles.main._start_process', return_value=FakeProcess(is_alive=False))
-    mock_kill = mocker.patch('watchfiles.main.os.kill')
+    mock_start_process = mocker.patch('watchfiles.run._start_process', return_value=FakeProcess(is_alive=False))
+    mock_kill = mocker.patch('watchfiles.run.os.kill')
     mock_rust_notify([{(1, '/path/to/foobar.py')}, {(1, '/path/to/foobar.py')}])
 
     c = mocker.MagicMock()
@@ -50,8 +51,8 @@ def test_dead_callback(mocker, mock_rust_notify: 'MockRustType'):
 
 @pytest.mark.skipif(sys.platform == 'win32', reason='fails on windows')
 def test_alive_doesnt_terminate(mocker, mock_rust_notify: 'MockRustType'):
-    mock_start_process = mocker.patch('watchfiles.main._start_process', return_value=FakeProcess(exitcode=None))
-    mock_kill = mocker.patch('watchfiles.main.os.kill')
+    mock_start_process = mocker.patch('watchfiles.run._start_process', return_value=FakeProcess(exitcode=None))
+    mock_kill = mocker.patch('watchfiles.run.os.kill')
     mock_rust_notify([{(1, '/path/to/foobar.py')}])
 
     assert run_process('/x/y/z', target=object(), debounce=5, step=1) == 1
@@ -60,7 +61,7 @@ def test_alive_doesnt_terminate(mocker, mock_rust_notify: 'MockRustType'):
 
 
 def test_start_process(mocker):
-    mock_process = mocker.patch('watchfiles.main.spawn_context.Process')
+    mock_process = mocker.patch('watchfiles.run.spawn_context.Process')
     v = object()
     _start_process(v, (1, 2, 3), {})
     assert mock_process.call_count == 1
@@ -69,7 +70,7 @@ def test_start_process(mocker):
 
 
 def test_start_process_env(mocker):
-    mock_process = mocker.patch('watchfiles.main.spawn_context.Process')
+    mock_process = mocker.patch('watchfiles.run.spawn_context.Process')
     v = object()
     changes = [(Change.added, 'a.py'), (Change.modified, 'b.py'), (Change.deleted, 'c.py')]  # use a list to keep order
     _start_process(v, (1, 2, 3), {}, changes)
@@ -79,8 +80,8 @@ def test_start_process_env(mocker):
 
 
 async def test_async_alive_terminates(mocker, mock_rust_notify: 'MockRustType'):
-    mock_start_process = mocker.patch('watchfiles.main._start_process', return_value=FakeProcess())
-    mock_kill = mocker.patch('watchfiles.main.os.kill')
+    mock_start_process = mocker.patch('watchfiles.run._start_process', return_value=FakeProcess())
+    mock_kill = mocker.patch('watchfiles.run.os.kill')
     mock_rust_notify([{(1, '/path/to/foobar.py')}])
 
     callback_calls = []
@@ -95,8 +96,8 @@ async def test_async_alive_terminates(mocker, mock_rust_notify: 'MockRustType'):
 
 
 async def test_async_sync_callback(mocker, mock_rust_notify: 'MockRustType'):
-    mock_start_process = mocker.patch('watchfiles.main._start_process', return_value=FakeProcess())
-    mock_kill = mocker.patch('watchfiles.main.os.kill')
+    mock_start_process = mocker.patch('watchfiles.run._start_process', return_value=FakeProcess())
+    mock_kill = mocker.patch('watchfiles.run.os.kill')
     mock_rust_notify([{(1, '/path/to/foo.py')}, {(2, '/path/to/bar.py')}])
 
     callback_calls = []

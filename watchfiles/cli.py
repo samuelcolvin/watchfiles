@@ -9,7 +9,7 @@ from textwrap import dedent
 from typing import Any, Dict, Generator, List, Optional, Sized
 
 from .filters import DefaultFilter, PythonFilter
-from .main import run_process
+from .run import run_process
 from .version import VERSION
 
 logger = logging.getLogger('watchfiles.cli')
@@ -167,6 +167,7 @@ def cli(*args_: str) -> None:  # noqa: C901 (ignore complexity)
     except AttributeError:
         # on windows. No idea of a better solution
         tty_path = None
+
     paths_str = ', '.join(f'"{p}"' for p in paths)
     logger.info('watching %s and reloading "%s" on changes...', paths_str, arg_namespace.function)
     sys.argv = sys_argv(arg_namespace.function)
