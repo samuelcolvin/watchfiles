@@ -6,7 +6,7 @@ import sys
 from importlib import import_module
 from pathlib import Path
 from textwrap import dedent
-from typing import Any, Dict, Generator, List, Optional, Sized, Type
+from typing import Any, Dict, Generator, List, Optional, Sized
 
 from .filters import DefaultFilter, PythonFilter
 from .main import run_process
@@ -78,7 +78,7 @@ def sys_argv(function: str) -> List[str]:
     return [base]  # strip all args if no additional args were provided
 
 
-def cli(*args_: str) -> None:
+def cli(*args_: str) -> None:  # noqa: C901 (ignore complexity)
     """
     Watch one or more directories and execute a python function on file changes.
 
