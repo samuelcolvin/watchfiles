@@ -199,7 +199,7 @@ def start_process(
             target_ = run_function
             kwargs = {}
         else:
-            assert callable(target)
+            assert not isinstance(target, (str, list))
             target_ = target
 
         process = spawn_context.Process(target=target_, args=args, kwargs=kwargs)
@@ -216,7 +216,7 @@ def start_process(
 
 
 def detect_target_type(target: Union[str, List[str], Callable[..., Any]]) -> Literal['function', 'command']:
-    if callable(target):
+    if not isinstance(target, (str, list, tuple)):
         return 'function'
 
     if isinstance(target, list):

@@ -77,7 +77,7 @@ def cli(*args_: str) -> None:
         help=(
             'Which files to watch, defaults to "default" which uses the "DefaultFilter", '
             '"python" uses the "PythonFilter", "all" uses no filter, '
-            'any other value is interpreted as a python function/class path'
+            'any other value is interpreted as a python function/class path which is imported'
         ),
     )
     parser.add_argument(
