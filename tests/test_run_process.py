@@ -1,12 +1,13 @@
 import os
 import sys
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
 
 from watchfiles import arun_process, run_process
 from watchfiles.main import Change
-from watchfiles.run import _start_process
+from watchfiles.run import run_function, set_tty, start_process
 
 if TYPE_CHECKING:
     from conftest import MockRustType
@@ -26,7 +27,7 @@ class FakeProcess:
 
 
 def test_alive_terminates(mocker, mock_rust_notify: 'MockRustType'):
-    mock_start_process = mocker.patch('watchfiles.run._start_process', return_value=FakeProcess())
+    mock_start_process = mocker.patch('watchfiles.run.start_process', return_value=FakeProcess())
     mock_kill = mocker.patch('watchfiles.run.os.kill')
     mock_rust_notify([{(1, '/path/to/foobar.py')}])
 
@@ -36,7 +37,7 @@ def test_alive_terminates(mocker, mock_rust_notify: 'MockRustType'):
 
 
 def test_dead_callback(mocker, mock_rust_notify: 'MockRustType'):
-    mock_start_process = mocker.patch('watchfiles.run._start_process', return_value=FakeProcess(is_alive=False))
+    mock_start_process = mocker.patch('watchfiles.run.start_process', return_value=FakeProcess(is_alive=False))
     mock_kill = mocker.patch('watchfiles.run.os.kill')
     mock_rust_notify([{(1, '/path/to/foobar.py')}, {(1, '/path/to/foobar.py')}])
 
@@ -51,7 +52,7 @@ def test_dead_callback(mocker, mock_rust_notify: 'MockRustType'):
 
 @pytest.mark.skipif(sys.platform == 'win32', reason='fails on windows')
 def test_alive_doesnt_terminate(mocker, mock_rust_notify: 'MockRustType'):
-    mock_start_process = mocker.patch('watchfiles.run._start_process', return_value=FakeProcess(exitcode=None))
+    mock_start_process = mocker.patch('watchfiles.run.start_process', return_value=FakeProcess(exitcode=None))
     mock_kill = mocker.patch('watchfiles.run.os.kill')
     mock_rust_notify([{(1, '/path/to/foobar.py')}])
 
@@ -63,7 +64,7 @@ def test_alive_doesnt_terminate(mocker, mock_rust_notify: 'MockRustType'):
 def test_start_process(mocker):
     mock_process = mocker.patch('watchfiles.run.spawn_context.Process')
     v = object()
-    _start_process(v, (1, 2, 3), {})
+    start_process(v, (1, 2, 3), {})
     assert mock_process.call_count == 1
     mock_process.assert_called_with(target=v, args=(1, 2, 3), kwargs={})
     assert os.getenv('WATCHFILES_CHANGES') == '[]'
@@ -73,14 +74,14 @@ def test_start_process_env(mocker):
     mock_process = mocker.patch('watchfiles.run.spawn_context.Process')
     v = object()
     changes = [(Change.added, 'a.py'), (Change.modified, 'b.py'), (Change.deleted, 'c.py')]  # use a list to keep order
-    _start_process(v, (1, 2, 3), {}, changes)
+    start_process(v, (1, 2, 3), {}, changes)
     assert mock_process.call_count == 1
     mock_process.assert_called_with(target=v, args=(1, 2, 3), kwargs={})
     assert os.getenv('WATCHFILES_CHANGES') == '[["added", "a.py"], ["modified", "b.py"], ["deleted", "c.py"]]'
 
 
 async def test_async_alive_terminates(mocker, mock_rust_notify: 'MockRustType'):
-    mock_start_process = mocker.patch('watchfiles.run._start_process', return_value=FakeProcess())
+    mock_start_process = mocker.patch('watchfiles.run.start_process', return_value=FakeProcess())
     mock_kill = mocker.patch('watchfiles.run.os.kill')
     mock_rust_notify([{(1, '/path/to/foobar.py')}])
 
@@ -96,7 +97,7 @@ async def test_async_alive_terminates(mocker, mock_rust_notify: 'MockRustType'):
 
 
 async def test_async_sync_callback(mocker, mock_rust_notify: 'MockRustType'):
-    mock_start_process = mocker.patch('watchfiles.run._start_process', return_value=FakeProcess())
+    mock_start_process = mocker.patch('watchfiles.run.start_process', return_value=FakeProcess())
     mock_kill = mocker.patch('watchfiles.run.os.kill')
     mock_rust_notify([{(1, '/path/to/foo.py')}, {(2, '/path/to/bar.py')}])
 
@@ -106,3 +107,21 @@ async def test_async_sync_callback(mocker, mock_rust_notify: 'MockRustType'):
     assert mock_start_process.call_count == 3
     assert mock_kill.call_count == 3
     assert callback_calls == [{(Change.added, '/path/to/foo.py')}, {(Change.modified, '/path/to/bar.py')}]
+
+
+def test_run_function(tmp_work_path: Path, create_test_function):
+    assert not (tmp_work_path / 'sentinel').exists()
+    run_function(create_test_function, None)
+    assert (tmp_work_path / 'sentinel').exists()
+
+
+def test_run_function_tty(tmp_work_path: Path, create_test_function):
+    # could this cause problems by changing sys.stdin?
+    assert not (tmp_work_path / 'sentinel').exists()
+    run_function(create_test_function, '/dev/tty')
+    assert (tmp_work_path / 'sentinel').exists()
+
+
+def test_set_tty_error():
+    with set_tty('/foo/bar'):
+        pass

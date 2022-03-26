@@ -191,6 +191,9 @@ def start_process(
     process: Union[SpawnProcess, subprocess.Popen[bytes]]
     if target_type == 'function':
         kwargs = kwargs or {}
+        if isinstance(target, list):
+            target = target[0]
+
         if isinstance(target, str):
             args = target, get_tty_path(), args, kwargs
             target_ = run_function
@@ -223,7 +226,7 @@ def detect_target_type(target: Union[str, List[str], Callable[..., Any]]) -> Lit
     else:
         target_str = target
 
-    if re.fullmatch(r'[a-zA-Z0-9_]+(\.[a-zA-Z0-9_]+)*', target_str) and not target_str.endswith(('.py', '.sh')):
+    if not target_str.endswith(('.py', '.sh')) and re.fullmatch(r'[a-zA-Z0-9_]+(\.[a-zA-Z0-9_]+)+', target_str):
         return 'function'
     else:
         return 'command'

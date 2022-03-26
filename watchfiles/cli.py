@@ -4,7 +4,7 @@ import os
 import sys
 from pathlib import Path
 from textwrap import dedent
-from typing import Any, Callable, List, Tuple, Union
+from typing import Any, Callable, List, Optional, Tuple, Union
 
 from . import Change
 from .filters import BaseFilter, DefaultFilter, PythonFilter
@@ -24,7 +24,15 @@ def resolve_path(path_str: str) -> Path:
 
 def cli(*args_: str) -> None:
     """
-    Watch one or more directories and execute a python function on file changes.
+    Watch one or more directories and execute either a shell command or a python function on file changes.
+
+    Example of watching the current directory and calling a python function:
+
+        watchfiles . foobar.main
+
+    Example of watching two local directories and calling a shell command:
+
+        watchfiles src,tests pytest -v
 
     See https://watchfiles.helpmanual.io/cli/ for more information.
     """
@@ -34,18 +42,43 @@ def cli(*args_: str) -> None:
         description=dedent((cli.__doc__ or '').strip('\n')),
         formatter_class=argparse.RawTextHelpFormatter,
     )
-    parser.add_argument('path', help='Filesystem path to watch, defaults to current directory')
+    parser.add_argument(
+        'paths',
+        help=('Filesystem path to watch, to watch multiple paths use a comma as separator, e.g. "." or "src,tests"'),
+    )
     # argparse.PARSER ("A...") seems to be an undocumented required variant of argparse.REMAINDER ("...")
-    parser.add_argument('target', nargs='A...', help='Command to run or dotted path to function')
+    parser.add_argument('target', nargs='A...', help='Command or dotted function path to run')
 
-    parser.add_argument('--extra-path', nargs='*', help='Extra paths to watch')
+    parser.add_argument(
+        '--ignore-paths',
+        nargs='?',
+        type=str,
+        help=(
+            'Specify directories to ignore, '
+            'to ignore multiple paths use a comma as separator, e.g. "env" or "env,node_modules"'
+        ),
+    )
     parser.add_argument(
         '--target-type',
         nargs='?',
         type=str,
         default='auto',
         choices=['command', 'function', 'auto'],
-        help='Whether the command should be a shell command or a python function, defaults to inference',
+        help=(
+            'Whether the target should be intercepted as a shell command or a python function, '
+            'defaults to "auto" which infers the target type from the target string'
+        ),
+    )
+    parser.add_argument(
+        '--filter',
+        nargs='?',
+        type=str,
+        default='default',
+        help=(
+            'Which files to watch, defaults to "default" which uses the "DefaultFilter", '
+            '"python" uses the "PythonFilter", "all" uses no filter, '
+            'any other value is interpreted as a python function/class path'
+        ),
     )
     parser.add_argument(
         '--verbosity',
@@ -54,23 +87,6 @@ def cli(*args_: str) -> None:
         default='info',
         choices=['warning', 'info', 'debug'],
         help='Log level, defaults to "info"',
-    )
-    parser.add_argument(
-        '--filter',
-        nargs='?',
-        type=str,
-        default='default',
-        help=(
-            'Which files to watch, defaults to "default" which uses the "DefaultFilter", "all" uses no filter, '
-            '"python" uses the "PythonFilter", any other value is interpreted as a python function path'
-        ),
-    )
-    parser.add_argument(
-        '--ignore-paths',
-        nargs='*',
-        type=str,
-        default=[],
-        help='Specify directories to ignore',
     )
     parser.add_argument('--version', '-V', action='version', version=f'%(prog)s v{VERSION}')
     arg_namespace = parser.parse_args(args)
@@ -89,25 +105,21 @@ def cli(*args_: str) -> None:
         target_type = arg_namespace.target_type
 
     if target_type == 'function':
-        # check that the import works before continuing
-        import_exit(arg_namespace.target)
-
-    raw_paths = [arg_namespace.path]
-    if arg_namespace.extra_path:
-        raw_paths.extend(arg_namespace.extra_path)
+        function_path = arg_namespace.target[0]
+        logger.debug('target_type=function, attempting import of "%s"', function_path)
+        import_exit(function_path)
 
     try:
-        paths = [resolve_path(p) for p in raw_paths]
+        paths = [resolve_path(p) for p in arg_namespace.paths.split(',')]
     except FileNotFoundError as e:
         print(f'path "{e}" does not exist', file=sys.stderr)
         sys.exit(1)
-        return  # required to molify mypy
 
     watch_filter, watch_filter_str = build_filter(arg_namespace.filter, arg_namespace.ignore_paths)
 
     logger.info(
         'watchfiles 👀  path=%s target="%s" (%s) filter=%s...',
-        ', '.join(f'"{p.relative_to(Path.cwd())}"' for p in paths),
+        ', '.join(f'"{p}"' for p in paths),
         ' '.join(arg_namespace.target),
         target_type,
         watch_filter_str,
@@ -135,9 +147,11 @@ def import_exit(function_path: str) -> Any:
 
 
 def build_filter(
-    filter_name: str, ignore_paths_str: List[str]
+    filter_name: str, ignore_paths_str: Optional[str]
 ) -> Tuple[Union[None, DefaultFilter, Callable[[Change, str], bool]], str]:
-    ignore_paths = [Path(p).resolve() for p in ignore_paths_str]
+    ignore_paths: List[Path] = []
+    if ignore_paths_str:
+        ignore_paths = [Path(p).resolve() for p in ignore_paths_str.split(',')]
 
     if filter_name == 'default':
         return DefaultFilter(ignore_paths=ignore_paths), 'DefaultFilter'
@@ -146,7 +160,7 @@ def build_filter(
     elif filter_name == 'all':
         if ignore_paths:
             logger.warning('"--ignore-paths" argument ignored as "all" filter was selected')
-        return None, 'no filter'
+        return None, '(no filter)'
 
     watch_filter_cls = import_exit(filter_name)
     if issubclass(watch_filter_cls, DefaultFilter):
