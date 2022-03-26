@@ -207,6 +207,9 @@ jobs:
 
       - run: twine check dist/*
 
+      - uses: Swatinem/rust-cache@v1
+        if: matrix.os != 'ubuntu'
+
       - uses: actions/upload-artifact@v2
         with:
           name: pypi_files
