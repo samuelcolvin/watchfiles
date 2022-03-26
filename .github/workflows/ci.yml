@@ -49,19 +49,7 @@ jobs:
           ${{ hashFiles('tests/requirements.txt') }}
           ${{ hashFiles('setup.py') }}
 
-    - uses: actions/cache@v2
-      id: cache-rust
-      with:
-        path: |
-          target
-          ~/.rustup
-          ~/.cargo
-        key: >
-          rust-stable
-          ${{ runner.os }}
-          ${{ hashFiles('Cargo.toml') }}
-          ${{ hashFiles('Cargo.lock') }}
-          ${{ hashFiles('setup.py') }}
+    - uses: Swatinem/rust-cache@v1
 
     - run: pip install -r tests/requirements.txt
       if: steps.cache-py.outputs.cache-hit != 'true'
@@ -106,18 +94,7 @@ jobs:
           ${{ hashFiles('tests/requirements-linting.txt') }}
           ${{ hashFiles('setup.py') }}
 
-    - uses: actions/cache@v2
-      id: cache-rust
-      with:
-        path: |
-          target
-          ~/.rustup
-          ~/.cargo
-        key: >
-          rust-stable
-          ${{ hashFiles('Cargo.toml') }}
-          ${{ hashFiles('Cargo.lock') }}
-          ${{ hashFiles('setup.py') }}
+    - uses: Swatinem/rust-cache@v1
 
     - run: pip install -r tests/requirements-linting.txt
       if: steps.cache-py.outputs.cache-hit != 'true'
