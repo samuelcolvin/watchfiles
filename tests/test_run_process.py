@@ -97,7 +97,6 @@ def test_start_process_env(mocker):
     assert os.getenv('WATCHFILES_CHANGES') == '[["added", "a.py"], ["modified", "b.py"], ["deleted", "c.py"]]'
 
 
-@pytest.mark.skipif(, reason='fails on windows')
 def test_function_string_not_win(mocker, mock_rust_notify: 'MockRustType', caplog):
     caplog.set_level('DEBUG', 'watchfiles')
     mock_spawn_process = mocker.patch('watchfiles.run.spawn_context.Process', return_value=FakeProcess())
