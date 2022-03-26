@@ -41,9 +41,14 @@ def run_process(
     debug: bool = False,
 ) -> int:
     """
-    Run a function in a subprocess using `multiprocessing.Process`
-    (technically `multiprocessing.get_context('spawn').Process` to avoid forking and improve code reload),
-    restart it whenever files change in path.
+    Run a process and restart it upon file changes.
+
+    `run_process` can work in two ways:
+
+    * Using `multiprocessing.Process` (technically `multiprocessing.get_context('spawn').Process`
+        to avoid forking and improve code reload) to run a python function
+    * Or, use `subprocess.Popen` to run a shell-like command
+
 
     Internally, `run_process` uses [`watch`][watchfiles.watch] with `raise_interrupt=False` so the function
     exits cleanly upon `Ctrl+C`.
@@ -222,6 +227,28 @@ def start_process(
 
 
 def detect_target_type(target: Union[str, List[str], Callable[..., Any]]) -> "Literal['function', 'command']":
+    """
+    Used by [`run_process`][watchfiles.run_process], [`arun_process`][watchfiles.arun_process]
+    and indirectly the CLI to determine the target type with `target_type` is `auto`.
+
+    Detects the target type - either `function` or `command`. This method is only called with `target_type='auto'`.
+
+    The following logic is employed:
+
+    * If `target` is not a string or list of strings, it is assumed to be a function
+    * If `target` is a list with more than one element, it is assumed to be a command
+    * If `target` (or the first element of target) ends with `.py` or `.sh`, it is assumed to be a command
+    * Otherwise, the target is assumed to be a function if it matches the regex `[a-zA-Z0-9_]+(\\.[a-zA-Z0-9_]+)+`
+
+    If this logic does not work for you, specify the target type explicitly using the `target_type` function argument
+    or `--target-type` command line argument.
+
+    Args:
+        target: The target value
+
+    Returns:
+        either `'function'` or `'command'`
+    """
     if not isinstance(target, (str, list, tuple)):
         return 'function'
 
