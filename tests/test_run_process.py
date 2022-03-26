@@ -97,7 +97,8 @@ def test_start_process_env(mocker):
     assert os.getenv('WATCHFILES_CHANGES') == '[["added", "a.py"], ["modified", "b.py"], ["deleted", "c.py"]]'
 
 
-def test_function_string(mocker, mock_rust_notify: 'MockRustType', caplog):
+@pytest.mark.skipif(, reason='fails on windows')
+def test_function_string_not_win(mocker, mock_rust_notify: 'MockRustType', caplog):
     caplog.set_level('DEBUG', 'watchfiles')
     mock_spawn_process = mocker.patch('watchfiles.run.spawn_context.Process', return_value=FakeProcess())
     mocker.patch('watchfiles.run.os.kill')
@@ -105,9 +106,11 @@ def test_function_string(mocker, mock_rust_notify: 'MockRustType', caplog):
 
     assert run_process('/x/y/z', target='os.getcwd', debounce=5, step=1) == 1
     assert mock_spawn_process.call_count == 2
-    mock_spawn_process.assert_called_with(
-        target=run_function, args=('os.getcwd', IsStr(regex='/dev/.+'), (), {}), kwargs={}
-    )
+
+    # get_tty_path returns None on windows
+    tty_path = None if sys.platform == 'win32' else IsStr(regex='/dev/.+')
+    mock_spawn_process.assert_called_with(target=run_function, args=('os.getcwd', tty_path, (), {}), kwargs={})
+
     assert 'watchfiles.main DEBUG: running "os.getcwd" as function\n' in caplog.text
 
 
