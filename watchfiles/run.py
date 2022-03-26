@@ -11,12 +11,18 @@ from importlib import import_module
 from multiprocessing import get_context
 from multiprocessing.context import SpawnProcess
 from pathlib import Path
-from typing import Any, Callable, Dict, Generator, List, Literal, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, Generator, List, Optional, Set, Tuple, Union
 
 import anyio
 
 from .filters import PythonFilter
 from .main import Change, FileChange, awatch, watch
+
+if TYPE_CHECKING:
+    try:
+        from typing import Literal
+    except ImportError:
+        from typing_extensions import Literal  # type: ignore[misc]
 
 __all__ = 'run_process', 'arun_process', 'detect_target_type', 'import_string'
 logger = logging.getLogger('watchfiles.main')
@@ -27,7 +33,7 @@ def run_process(
     target: Union[str, List[str], Callable[..., Any]],
     args: Tuple[Any, ...] = (),
     kwargs: Optional[Dict[str, Any]] = None,
-    target_type: Literal['function', 'command', 'auto'] = 'auto',
+    target_type: "Literal['function', 'command', 'auto']" = 'auto',
     callback: Optional[Callable[[Set[FileChange]], None]] = None,
     watch_filter: Optional[Callable[[Change, str], bool]] = PythonFilter(),
     debounce: int = 1_600,
@@ -111,7 +117,7 @@ async def arun_process(
     target: Union[str, List[str], Callable[..., Any]],
     args: Tuple[Any, ...] = (),
     kwargs: Optional[Dict[str, Any]] = None,
-    target_type: Literal['function', 'command', 'auto'] = 'auto',
+    target_type: "Literal['function', 'command', 'auto']" = 'auto',
     callback: Optional[Callable[[Set[FileChange]], Any]] = None,
     watch_filter: Optional[Callable[[Change, str], bool]] = PythonFilter(),
     debounce: int = 1_600,
@@ -176,7 +182,7 @@ spawn_context = get_context('spawn')
 
 def start_process(
     target: Union[str, List[str], Callable[..., Any]],
-    target_type: Literal['function', 'command'],
+    target_type: "Literal['function', 'command']",
     args: Tuple[Any, ...],
     kwargs: Optional[Dict[str, Any]],
     changes: Optional[Set[FileChange]] = None,
@@ -188,7 +194,7 @@ def start_process(
 
     os.environ['WATCHFILES_CHANGES'] = changes_env_var
 
-    process: Union[SpawnProcess, subprocess.Popen[bytes]]
+    process: 'Union[SpawnProcess, subprocess.Popen[bytes]]'
     if target_type == 'function':
         kwargs = kwargs or {}
         if isinstance(target, list):
@@ -215,7 +221,7 @@ def start_process(
     return CombinedProcess(process)
 
 
-def detect_target_type(target: Union[str, List[str], Callable[..., Any]]) -> Literal['function', 'command']:
+def detect_target_type(target: Union[str, List[str], Callable[..., Any]]) -> "Literal['function', 'command']":
     if not isinstance(target, (str, list, tuple)):
         return 'function'
 
@@ -233,7 +239,7 @@ def detect_target_type(target: Union[str, List[str], Callable[..., Any]]) -> Lit
 
 
 class CombinedProcess:
-    def __init__(self, p: Union[SpawnProcess, subprocess.Popen[bytes]]):
+    def __init__(self, p: 'Union[SpawnProcess, subprocess.Popen[bytes]]'):
         self._p = p
         assert self.pid is not None, 'process not yet spawned'
 

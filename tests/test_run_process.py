@@ -9,7 +9,7 @@ from dirty_equals import IsStr
 
 from watchfiles import arun_process, run_process
 from watchfiles.main import Change
-from watchfiles.run import run_function, set_tty, start_process, import_string
+from watchfiles.run import import_string, run_function, set_tty, start_process
 
 if TYPE_CHECKING:
     from conftest import MockRustType
