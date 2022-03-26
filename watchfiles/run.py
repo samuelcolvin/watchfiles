@@ -301,7 +301,12 @@ def import_string(dotted_path: str) -> Any:
         raise ImportError(f'Module "{module_path}" does not define a "{class_name}" attribute') from e
 
 
-def get_tty_path() -> Optional[str]:
+def get_tty_path() -> Optional[str]:  # pragma: no cover
+    """
+    Return the path to the current TTY, if any.
+
+    Virtually impossible to test in pytest, hence no cover.
+    """
     try:
         return os.ttyname(sys.stdin.fileno())
     except OSError:

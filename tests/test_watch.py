@@ -1,4 +1,3 @@
-import logging
 import sys
 from contextlib import contextmanager
 from pathlib import Path
@@ -73,7 +72,7 @@ async def test_awatch_interrupt_raise(mocker, mock_rust_notify: 'MockRustType'):
 
 @pytest.mark.skipif(sys.platform == 'win32', reason='fails on windows')
 async def test_awatch_interrupt_warning(mocker, mock_rust_notify: 'MockRustType', caplog):
-    caplog.set_level(logging.INFO, 'watchfiles')
+    caplog.set_level('INFO', 'watchfiles')
     mocker.patch('watchfiles.main.anyio.open_signal_receiver', side_effect=mock_open_signal_receiver)
     mock_rust_notify([{(1, 'foo.txt')}])
 
@@ -88,7 +87,7 @@ async def test_awatch_interrupt_warning(mocker, mock_rust_notify: 'MockRustType'
 def test_watch_no_yield(mock_rust_notify: 'MockRustType', caplog):
     mock = mock_rust_notify([{(1, 'spam.pyc')}, {(1, 'spam.py'), (2, 'ham.txt')}])
 
-    caplog.set_level(logging.INFO, 'watchfiles')
+    caplog.set_level('INFO', 'watchfiles')
     assert next(watch('.')) == {(Change.added, 'spam.py'), (Change.modified, 'ham.txt')}
     assert mock.watch_count == 2
     assert caplog.text == 'watchfiles.main INFO: 2 changes detected\n'
@@ -97,7 +96,7 @@ def test_watch_no_yield(mock_rust_notify: 'MockRustType', caplog):
 async def test_awatch_no_yield(mock_rust_notify: 'MockRustType', caplog):
     mock = mock_rust_notify([{(1, 'spam.pyc')}, {(1, 'spam.py')}])
 
-    caplog.set_level(logging.DEBUG, 'watchfiles')
+    caplog.set_level('DEBUG', 'watchfiles')
     changes = None
     async for changes in awatch('.'):
         pass

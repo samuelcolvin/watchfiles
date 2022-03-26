@@ -4,7 +4,7 @@ import os
 import sys
 from pathlib import Path
 from textwrap import dedent
-from typing import Any, Callable, List, Optional, Tuple, Union
+from typing import Any, Callable, List, Optional, Tuple, Union, cast
 
 from . import Change
 from .filters import BaseFilter, DefaultFilter, PythonFilter
@@ -163,13 +163,14 @@ def build_filter(
         return None, '(no filter)'
 
     watch_filter_cls = import_exit(filter_name)
-    if issubclass(watch_filter_cls, DefaultFilter):
+    if isinstance(watch_filter_cls, type) and issubclass(watch_filter_cls, DefaultFilter):
         return watch_filter_cls(ignore_paths=ignore_paths), watch_filter_cls.__name__
 
     if ignore_paths:
         logger.warning('"--ignore-paths" argument ignored as filter is not a subclass of DefaultFilter')
 
-    if issubclass(watch_filter_cls, BaseFilter):
+    if isinstance(watch_filter_cls, type) and issubclass(watch_filter_cls, BaseFilter):
         return watch_filter_cls(), watch_filter_cls.__name__
     else:
-        return watch_filter_cls, repr(watch_filter_cls)
+        watch_filter = cast(Callable[[Change, str], bool], watch_filter_cls)
+        return watch_filter, repr(watch_filter_cls)

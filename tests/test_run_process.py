@@ -5,10 +5,11 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
+from dirty_equals import IsStr
 
 from watchfiles import arun_process, run_process
 from watchfiles.main import Change
-from watchfiles.run import run_function, set_tty, spawn_context as run_spawn_context, start_process
+from watchfiles.run import run_function, set_tty, start_process, import_string
 
 if TYPE_CHECKING:
     from conftest import MockRustType
@@ -38,25 +39,29 @@ class FakeProcess(SpawnProcess):
         pass
 
 
-def test_alive_terminates(mocker, mock_rust_notify: 'MockRustType'):
-    mock_start_process = mocker.patch.object(run_spawn_context, 'Process', return_value=FakeProcess())
+def test_alive_terminates(mocker, mock_rust_notify: 'MockRustType', caplog):
+    caplog.set_level('DEBUG', 'watchfiles')
+    mock_spawn_process = mocker.patch('watchfiles.run.spawn_context.Process', return_value=FakeProcess())
+    mock_popen = mocker.patch('watchfiles.run.subprocess.Popen', return_value=FakePopen())
     mock_kill = mocker.patch('watchfiles.run.os.kill')
     mock_rust_notify([{(1, '/path/to/foobar.py')}])
 
-    assert run_process('/x/y/z', target=object(), debounce=5, step=1) == 1
-    assert mock_start_process.call_count == 2
+    assert run_process('/x/y/z', target=os.getcwd, debounce=5, step=1) == 1
+    assert mock_spawn_process.call_count == 2
+    assert mock_popen.call_count == 0
     assert mock_kill.call_count == 2  # kill in loop + final kill
+    assert 'watchfiles.main DEBUG: running "<built-in function getcwd>" as function\n' in caplog.text
 
 
 def test_dead_callback(mocker, mock_rust_notify: 'MockRustType'):
-    mock_start_process = mocker.patch.object(run_spawn_context, 'Process', return_value=FakeProcess(is_alive=False))
+    mock_spawn_process = mocker.patch('watchfiles.run.spawn_context.Process', return_value=FakeProcess(is_alive=False))
     mock_kill = mocker.patch('watchfiles.run.os.kill')
     mock_rust_notify([{(1, '/path/to/foobar.py')}, {(1, '/path/to/foobar.py')}])
 
     c = mocker.MagicMock()
 
     assert run_process('/x/y/z', target=object(), callback=c, debounce=5, step=1) == 2
-    assert mock_start_process.call_count == 3
+    assert mock_spawn_process.call_count == 3
     assert mock_kill.call_count == 0
     assert c.call_count == 2
     c.assert_called_with({(Change.added, '/path/to/foobar.py')})
@@ -64,12 +69,12 @@ def test_dead_callback(mocker, mock_rust_notify: 'MockRustType'):
 
 @pytest.mark.skipif(sys.platform == 'win32', reason='fails on windows')
 def test_alive_doesnt_terminate(mocker, mock_rust_notify: 'MockRustType'):
-    mock_start_process = mocker.patch.object(run_spawn_context, 'Process', return_value=FakeProcess(exitcode=None))
+    mock_spawn_process = mocker.patch('watchfiles.run.spawn_context.Process', return_value=FakeProcess(exitcode=None))
     mock_kill = mocker.patch('watchfiles.run.os.kill')
     mock_rust_notify([{(1, '/path/to/foobar.py')}])
 
     assert run_process('/x/y/z', target=object(), debounce=5, step=1) == 1
-    assert mock_start_process.call_count == 2
+    assert mock_spawn_process.call_count == 2
     assert mock_kill.call_count == 4  # 2 kills in loop (graceful and termination) + 2 final kills
 
 
@@ -92,8 +97,32 @@ def test_start_process_env(mocker):
     assert os.getenv('WATCHFILES_CHANGES') == '[["added", "a.py"], ["modified", "b.py"], ["deleted", "c.py"]]'
 
 
+def test_function_string(mocker, mock_rust_notify: 'MockRustType', caplog):
+    caplog.set_level('DEBUG', 'watchfiles')
+    mock_spawn_process = mocker.patch('watchfiles.run.spawn_context.Process', return_value=FakeProcess())
+    mocker.patch('watchfiles.run.os.kill')
+    mock_rust_notify([{(1, '/path/to/foobar.py')}])
+
+    assert run_process('/x/y/z', target='os.getcwd', debounce=5, step=1) == 1
+    assert mock_spawn_process.call_count == 2
+    mock_spawn_process.assert_called_with(
+        target=run_function, args=('os.getcwd', IsStr(regex='/dev/.+'), (), {}), kwargs={}
+    )
+    assert 'watchfiles.main DEBUG: running "os.getcwd" as function\n' in caplog.text
+
+
+def test_function_list(mocker, mock_rust_notify: 'MockRustType'):
+    mock_spawn_process = mocker.patch('watchfiles.run.spawn_context.Process', return_value=FakeProcess())
+    mock_kill = mocker.patch('watchfiles.run.os.kill')
+    mock_rust_notify([{(1, '/path/to/foobar.py')}])
+
+    assert run_process('/x/y/z', target=['os.getcwd'], debounce=5, step=1) == 1
+    assert mock_spawn_process.call_count == 2
+    assert mock_kill.call_count == 2  # kill in loop + final kill
+
+
 async def test_async_alive_terminates(mocker, mock_rust_notify: 'MockRustType'):
-    mock_start_process = mocker.patch.object(run_spawn_context, 'Process', return_value=FakeProcess())
+    mock_spawn_process = mocker.patch('watchfiles.run.spawn_context.Process', return_value=FakeProcess())
     mock_kill = mocker.patch('watchfiles.run.os.kill')
     mock_rust_notify([{(1, '/path/to/foobar.py')}])
 
@@ -103,20 +132,25 @@ async def test_async_alive_terminates(mocker, mock_rust_notify: 'MockRustType'):
         callback_calls.append(changes)
 
     assert await arun_process('/x/y/async', target=object(), callback=c, debounce=5, step=1) == 1
-    assert mock_start_process.call_count == 2
+    assert mock_spawn_process.call_count == 2
     assert mock_kill.call_count == 2  # kill in loop + final kill
     assert callback_calls == [{(Change.added, '/path/to/foobar.py')}]
 
 
 async def test_async_sync_callback(mocker, mock_rust_notify: 'MockRustType'):
-    mock_start_process = mocker.patch.object(run_spawn_context, 'Process', return_value=FakeProcess())
+    mock_spawn_process = mocker.patch('watchfiles.run.spawn_context.Process', return_value=FakeProcess())
     mock_kill = mocker.patch('watchfiles.run.os.kill')
     mock_rust_notify([{(1, '/path/to/foo.py')}, {(2, '/path/to/bar.py')}])
 
     callback_calls = []
 
-    assert await arun_process('/x/y/async', target=object(), callback=callback_calls.append, debounce=5, step=1) == 2
-    assert mock_start_process.call_count == 3
+    assert (
+        await arun_process(
+            '/x/y/async', target='os.getcwd', target_type='function', callback=callback_calls.append, debounce=5, step=1
+        )
+        == 2
+    )
+    assert mock_spawn_process.call_count == 3
     assert mock_kill.call_count == 3
     assert callback_calls == [{(Change.added, '/path/to/foo.py')}, {(Change.modified, '/path/to/bar.py')}]
 
@@ -137,3 +171,49 @@ def test_run_function_tty(tmp_work_path: Path, create_test_function):
 def test_set_tty_error():
     with set_tty('/foo/bar'):
         pass
+
+
+class FakePopen:
+    def __init__(self, is_alive=True, returncode=1, pid=123):
+        self._is_alive = is_alive
+        self.returncode = returncode
+        self.pid = pid
+
+    def poll(self):
+        return None if self._is_alive else self.returncode
+
+    def wait(self, wait):
+        pass
+
+
+def test_command(mocker, mock_rust_notify: 'MockRustType', caplog):
+    caplog.set_level('DEBUG', 'watchfiles')
+    mock_spawn_process = mocker.patch('watchfiles.run.spawn_context.Process', return_value=FakeProcess())
+    mock_popen = mocker.patch('watchfiles.run.subprocess.Popen', return_value=FakePopen())
+    mock_kill = mocker.patch('watchfiles.run.os.kill')
+    mock_rust_notify([{(1, '/path/to/foobar.py')}])
+
+    assert run_process('/x/y/z', target='echo foobar', debounce=5, step=1) == 1
+    assert mock_spawn_process.call_count == 0
+    assert mock_popen.call_count == 2
+    mock_popen.assert_called_with(['echo', 'foobar'])
+    assert mock_kill.call_count == 2  # kill in loop + final kill
+    assert 'watchfiles.main DEBUG: running "echo foobar" as command\n' in caplog.text
+
+
+def test_command_list(mocker, mock_rust_notify: 'MockRustType'):
+    mock_popen = mocker.patch('watchfiles.run.subprocess.Popen', return_value=FakePopen())
+    mock_kill = mocker.patch('watchfiles.run.os.kill')
+    mock_rust_notify([{(1, '/path/to/foobar.py')}])
+
+    assert run_process('/x/y/z', target=['echo', 'foobar'], target_type='command', debounce=5, step=1) == 1
+    assert mock_popen.call_count == 2
+    mock_popen.assert_called_with(['echo', 'foobar'])
+    assert mock_kill.call_count == 2  # kill in loop + final kill
+
+
+def test_import_string():
+    assert import_string('os.getcwd') == os.getcwd
+
+    with pytest.raises(ImportError, match='"os" doesn\'t look like a module path'):
+        import_string('os')

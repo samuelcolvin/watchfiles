@@ -1,11 +1,12 @@
+import os
 import sys
 from pathlib import Path
 
 import pytest
 from dirty_equals import FunctionCheck, IsInstance
 
-from watchfiles import DefaultFilter, PythonFilter
-from watchfiles.cli import cli
+from watchfiles import BaseFilter, DefaultFilter, PythonFilter
+from watchfiles.cli import build_filter, cli
 
 pytestmark = pytest.mark.skipif(sys.platform == 'win32', reason='many tests fail on windows')
 
@@ -151,4 +152,54 @@ def test_filter_default(mocker, tmp_path):
         target_type='function',
         watch_filter=IsInstance(DefaultFilter, only_direct_instance=True),
         debug=False,
+    )
+
+
+def test_set_type(mocker, tmp_path):
+    mocker.patch('watchfiles.cli.sys.stdin.fileno')
+    mocker.patch('os.ttyname', return_value='/path/to/tty')
+    mock_run_process = mocker.patch('watchfiles.cli.run_process')
+    cli(str(tmp_path), '--target-type', 'command', 'os.getcwd')
+    mock_run_process.assert_called_once_with(
+        tmp_path,
+        target=['os.getcwd'],
+        target_type='command',
+        watch_filter=IsInstance(DefaultFilter, only_direct_instance=True),
+        debug=False,
+    )
+
+
+@pytest.mark.parametrize(
+    'filter_name,ignore_paths,expected_filter,expected_name',
+    [
+        ('all', None, None, '(no filter)'),
+        (
+            'default',
+            None,
+            IsInstance(DefaultFilter, only_direct_instance=True) & FunctionCheck(lambda f: f._ignore_paths == ()),
+            'DefaultFilter',
+        ),
+        ('python', None, IsInstance(PythonFilter, only_direct_instance=True), 'PythonFilter'),
+        ('watchfiles.PythonFilter', None, IsInstance(PythonFilter, only_direct_instance=True), 'PythonFilter'),
+        ('watchfiles.BaseFilter', None, IsInstance(BaseFilter, only_direct_instance=True), 'BaseFilter'),
+        ('os.getcwd', None, os.getcwd, '<built-in function getcwd>'),
+        (
+            'default',
+            'foo,bar',
+            IsInstance(DefaultFilter, only_direct_instance=True) & FunctionCheck(lambda f: len(f._ignore_paths) == 2),
+            'DefaultFilter',
+        ),
+    ],
+)
+def test_build_filter(filter_name, ignore_paths, expected_filter, expected_name):
+    assert build_filter(filter_name, ignore_paths) == (expected_filter, expected_name)
+
+
+def test_build_filter_warning(caplog):
+    caplog.set_level('INFO', 'watchfiles')
+    watch_filter, name = build_filter('os.getcwd', 'foo')
+    assert watch_filter is os.getcwd
+    assert name == '<built-in function getcwd>'
+    assert caplog.text == (
+        'watchfiles.cli WARNING: "--ignore-paths" argument ignored as filter is not a subclass of DefaultFilter\n'
     )

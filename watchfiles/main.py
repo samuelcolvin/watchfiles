@@ -211,7 +211,7 @@ def _prep_changes(
 
 
 def _log_changes(changes: Set[FileChange]) -> None:
-    if logger.isEnabledFor(logging.INFO):
+    if logger.isEnabledFor(logging.INFO):  # pragma: no branch
         count = len(changes)
         plural = '' if count == 1 else 's'
         if logger.isEnabledFor(logging.DEBUG):

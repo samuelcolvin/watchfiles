@@ -93,3 +93,8 @@ def test_customising_filters():
 
     # unchanged
     assert DefaultFilter.ignore_dirs == IsTuple('__pycache__', length=9)
+
+
+def test_repr():
+    f = DefaultFilter(ignore_dirs=['apple', 'banana'])
+    assert repr(f).startswith('DefaultFilter(_ignore_dirs={')
