@@ -11,22 +11,23 @@ from importlib import import_module
 from multiprocessing import get_context
 from multiprocessing.context import SpawnProcess
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional, Set, Tuple, Union, cast, Generator, Sized, List, Literal
+from typing import Any, Callable, Dict, Generator, List, Literal, Optional, Set, Tuple, Union
 
 import anyio
 
 from .filters import PythonFilter
 from .main import Change, FileChange, awatch, watch
 
-__all__ = 'run_process', 'arun_process'
+__all__ = 'run_process', 'arun_process', 'detect_target_type', 'import_string'
 logger = logging.getLogger('watchfiles.main')
 
 
 def run_process(
     *paths: Union[Path, str],
-    target: Union[str, Callable[..., Any]],
+    target: Union[str, List[str], Callable[..., Any]],
     args: Tuple[Any, ...] = (),
     kwargs: Optional[Dict[str, Any]] = None,
+    target_type: Literal['function', 'command', 'auto'] = 'auto',
     callback: Optional[Callable[[Set[FileChange]], None]] = None,
     watch_filter: Optional[Callable[[Change, str], bool]] = PythonFilter(),
     debounce: int = 1_600,
@@ -85,8 +86,11 @@ def run_process(
         run_process('./path/to/dir', target=foobar, args=(1, 2, 3))
     ```
     """
+    if target_type == 'auto':
+        target_type = detect_target_type(target)
 
-    process = start_process(target, args, kwargs)
+    logger.debug('running "%s" as %s', target, target_type)
+    process = start_process(target, target_type, args, kwargs)
     reloads = 0
 
     try:
@@ -95,7 +99,7 @@ def run_process(
         ):
             callback and callback(changes)
             process.stop()
-            process = start_process(target, args, kwargs, changes)
+            process = start_process(target, target_type, args, kwargs, changes)
             reloads += 1
     finally:
         process.stop()
@@ -104,9 +108,10 @@ def run_process(
 
 async def arun_process(
     *paths: Union[Path, str],
-    target: Union[str, Callable[..., Any]],
+    target: Union[str, List[str], Callable[..., Any]],
     args: Tuple[Any, ...] = (),
     kwargs: Optional[Dict[str, Any]] = None,
+    target_type: Literal['function', 'command', 'auto'] = 'auto',
     callback: Optional[Callable[[Set[FileChange]], Any]] = None,
     watch_filter: Optional[Callable[[Change, str], bool]] = PythonFilter(),
     debounce: int = 1_600,
@@ -142,7 +147,11 @@ async def arun_process(
     """
     import inspect
 
-    process = await anyio.to_thread.run_sync(start_process, target, args, kwargs)
+    if target_type == 'auto':
+        target_type = detect_target_type(target)
+
+    logger.debug('running "%s" as %s', target, target_type)
+    process = await anyio.to_thread.run_sync(start_process, target, target_type, args, kwargs)
     reloads = 0
 
     async for changes in awatch(
@@ -154,7 +163,7 @@ async def arun_process(
                 await r
 
         await anyio.to_thread.run_sync(process.stop)
-        process = await anyio.to_thread.run_sync(start_process, target, args, kwargs, changes)
+        process = await anyio.to_thread.run_sync(start_process, target, target_type, args, kwargs, changes)
         reloads += 1
     await anyio.to_thread.run_sync(process.stop)
     return reloads
@@ -166,7 +175,8 @@ spawn_context = get_context('spawn')
 
 
 def start_process(
-    target: Union[str, Callable[..., Any]],
+    target: Union[str, List[str], Callable[..., Any]],
+    target_type: Literal['function', 'command'],
     args: Tuple[Any, ...],
     kwargs: Optional[Dict[str, Any]],
     changes: Optional[Set[FileChange]] = None,
@@ -176,43 +186,55 @@ def start_process(
     else:
         changes_env_var = json.dumps([[c.raw_str(), p] for c, p in changes])
 
-    env = {'WATCHFILES_CHANGES': changes_env_var}
+    os.environ['WATCHFILES_CHANGES'] = changes_env_var
 
-    targe_type = detect_target_type(target)
-    logger.info('running "%s" as %s', target, targe_type)
-
-    if detect_target_type(target) == 'function':
+    process: Union[SpawnProcess, subprocess.Popen[bytes]]
+    if target_type == 'function':
         kwargs = kwargs or {}
         if isinstance(target, str):
             args = target, get_tty_path(), args, kwargs
-            target = run_function
+            target_ = run_function
             kwargs = {}
+        else:
+            assert callable(target)
+            target_ = target
 
-        os.environ.update(env)
-        process = spawn_context.Process(target=target, args=args, kwargs=kwargs)
+        process = spawn_context.Process(target=target_, args=args, kwargs=kwargs)
         process.start()
     else:
-        args = shlex.split(target)
-        process = subprocess.Popen(args, shell=True, env=env)
+        if isinstance(target, str):
+            popen_args = shlex.split(target)
+        else:
+            assert isinstance(target, list)
+            popen_args = target
+
+        process = subprocess.Popen(popen_args)
     return CombinedProcess(process)
 
 
-def detect_target_type(target: Union[str, Callable[..., Any]]) -> Literal['function', 'command']:
-    if not isinstance(target, str):
+def detect_target_type(target: Union[str, List[str], Callable[..., Any]]) -> Literal['function', 'command']:
+    if callable(target):
         return 'function'
 
-    if re.fullmatch(r'[a-zA-Z0-9_]+(\.[a-zA-Z0-9_]+)*', target) and not target.endswith('.py'):
+    if isinstance(target, list):
+        if len(target) > 1:
+            return 'command'
+        target_str = target[0]
+    else:
+        target_str = target
+
+    if re.fullmatch(r'[a-zA-Z0-9_]+(\.[a-zA-Z0-9_]+)*', target_str) and not target_str.endswith(('.py', '.sh')):
         return 'function'
     else:
         return 'command'
 
 
 class CombinedProcess:
-    def __init__(self, p: Union[SpawnProcess, subprocess.Popen]):
+    def __init__(self, p: Union[SpawnProcess, subprocess.Popen[bytes]]):
         self._p = p
         assert self.pid is not None, 'process not yet spawned'
 
-    def stop(self):
+    def stop(self) -> None:
         os.environ.pop('WATCHFILES_CHANGES', None)
         if self.is_alive():
             logger.debug('stopping process...')
@@ -237,13 +259,16 @@ class CombinedProcess:
     @property
     def pid(self) -> int:
         # we check the process has always been spawned when CombinedProcess is initialised
-        return self._p.pid
+        return self._p.pid  # type: ignore[return-value]
 
     def join(self, timeout: int) -> None:
-        self._p.join(timeout)
+        if isinstance(self._p, SpawnProcess):
+            self._p.join(timeout)
+        else:
+            self._p.wait(timeout)
 
     @property
-    def exitcode(self):
+    def exitcode(self) -> Optional[int]:
         if isinstance(self._p, SpawnProcess):
             return self._p.exitcode
         else:

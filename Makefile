@@ -19,6 +19,7 @@ build-dev:
 format:
 	$(isort)
 	$(black)
+	@echo 'max_width = 120' > .rustfmt.toml
 	cargo fmt
 
 .PHONY: lint-python
