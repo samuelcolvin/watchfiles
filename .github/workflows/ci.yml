@@ -50,7 +50,8 @@ jobs:
         toolchain: stable
         override: true
 
-    - uses: Swatinem/rust-cache@v1
+    - name: cache rust
+      uses: Swatinem/rust-cache@v1
 
     - run: pip install -r tests/requirements.txt
       if: steps.cache-py.outputs.cache-hit != 'true'
@@ -104,7 +105,8 @@ jobs:
         override: true
         components: rustfmt, clippy
 
-    - uses: Swatinem/rust-cache@v1
+    - name: cache rust
+      uses: Swatinem/rust-cache@v1
 
     - run: make lint
     - run: make mypy
@@ -162,7 +164,8 @@ jobs:
           toolchain: stable
           override: true
 
-      - uses: Swatinem/rust-cache@v1
+      - name: cache rust
+        uses: Swatinem/rust-cache@v1
         if: matrix.os != 'ubuntu'
 
       - run: curl -Lso set_version.py https://git.io/JT3rm
