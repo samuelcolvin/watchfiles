@@ -28,11 +28,11 @@ def cli(*args_: str) -> None:
 
     Example of watching the current directory and calling a python function:
 
-        watchfiles . foobar.main
+        watchfiles foobar.main
 
     Example of watching two local directories and calling a shell command:
 
-        watchfiles src,tests pytest -v
+        watchfiles "pytest -v" src tests
 
     See https://watchfiles.helpmanual.io/cli/ for more information.
     """
@@ -42,12 +42,10 @@ def cli(*args_: str) -> None:
         description=dedent((cli.__doc__ or '').strip('\n')),
         formatter_class=argparse.RawTextHelpFormatter,
     )
+    parser.add_argument('target', help='Command or dotted function path to run')
     parser.add_argument(
-        'paths',
-        help=('Filesystem path to watch, to watch multiple paths use a comma as separator, e.g. "." or "src,tests"'),
+        'paths', nargs='*', default='.', help='Filesystem paths to watch, defaults to current directory'
     )
-    # argparse.PARSER ("A...") seems to be an undocumented required variant of argparse.REMAINDER ("...")
-    parser.add_argument('target', nargs='A...', help='Command or dotted function path to run')
 
     parser.add_argument(
         '--ignore-paths',
@@ -105,12 +103,11 @@ def cli(*args_: str) -> None:
         target_type = arg_namespace.target_type
 
     if target_type == 'function':
-        function_path = arg_namespace.target[0]
-        logger.debug('target_type=function, attempting import of "%s"', function_path)
-        import_exit(function_path)
+        logger.debug('target_type=function, attempting import of "%s"', arg_namespace.target)
+        import_exit(arg_namespace.target)
 
     try:
-        paths = [resolve_path(p) for p in arg_namespace.paths.split(',')]
+        paths = [resolve_path(p) for p in arg_namespace.paths]
     except FileNotFoundError as e:
         print(f'path "{e}" does not exist', file=sys.stderr)
         sys.exit(1)

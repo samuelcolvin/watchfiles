@@ -203,17 +203,6 @@ def test_command(mocker, mock_rust_notify: 'MockRustType', caplog):
     assert 'watchfiles.main DEBUG: running "echo foobar" as command\n' in caplog.text
 
 
-def test_command_list(mocker, mock_rust_notify: 'MockRustType'):
-    mock_popen = mocker.patch('watchfiles.run.subprocess.Popen', return_value=FakePopen())
-    mock_kill = mocker.patch('watchfiles.run.os.kill')
-    mock_rust_notify([{(1, '/path/to/foobar.py')}])
-
-    assert run_process('/x/y/z', target=['echo', 'foobar'], target_type='command', debounce=5, step=1) == 1
-    assert mock_popen.call_count == 2
-    mock_popen.assert_called_with(['echo', 'foobar'])
-    assert mock_kill.call_count == 2  # kill in loop + final kill
-
-
 def test_import_string():
     assert import_string('os.getcwd') == os.getcwd
 

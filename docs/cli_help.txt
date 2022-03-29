@@ -2,23 +2,23 @@ usage: watchfiles [-h] [--ignore-paths [IGNORE_PATHS]]
                   [--target-type [{command,function,auto}]]
                   [--filter [FILTER]] [--verbosity [{warning,info,debug}]]
                   [--version]
-                  paths target ...
+                  target [paths ...]
 
 Watch one or more directories and execute either a shell command or a python function on file changes.
 
 Example of watching the current directory and calling a python function:
 
-    watchfiles . foobar.main
+    watchfiles foobar.main
 
 Example of watching two local directories and calling a shell command:
 
-    watchfiles src,tests pytest -v
+    watchfiles "pytest -v" src tests
 
 See https://watchfiles.helpmanual.io/cli/ for more information.
 
 positional arguments:
-  paths                 Filesystem path to watch, to watch multiple paths use a comma as separator, e.g. "." or "src,tests"
   target                Command or dotted function path to run
+  paths                 Filesystem paths to watch, defaults to current directory
 
 options:
   -h, --help            show this help message and exit

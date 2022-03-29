@@ -11,7 +11,7 @@ from importlib import import_module
 from multiprocessing import get_context
 from multiprocessing.context import SpawnProcess
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Dict, Generator, List, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, Generator, Optional, Set, Tuple, Union
 
 import anyio
 
@@ -30,7 +30,7 @@ logger = logging.getLogger('watchfiles.main')
 
 def run_process(
     *paths: Union[Path, str],
-    target: Union[str, List[str], Callable[..., Any]],
+    target: Union[str, Callable[..., Any]],
     args: Tuple[Any, ...] = (),
     kwargs: Optional[Dict[str, Any]] = None,
     target_type: "Literal['function', 'command', 'auto']" = 'auto',
@@ -58,6 +58,8 @@ def run_process(
         target: function to run
         args: arguments to pass to `target`
         kwargs: keyword arguments to pass to `target`
+        target_type: type of target. Can be `'function'`, `'command'`, or `'auto'` in which case
+            [`detect_target_type`][watchfiles.run_process.detect_target_type] is used to determine the type.
         callback: function to call on each reload, the function should accept a set of changes as the sole argument
         watch_filter: matches the same argument of [`watch`][watchfiles.watch], except an instance of
             [`PythonFilter`][watchfiles.PythonFilter] is used by default so only python files are watched.
@@ -119,7 +121,7 @@ def run_process(
 
 async def arun_process(
     *paths: Union[Path, str],
-    target: Union[str, List[str], Callable[..., Any]],
+    target: Union[str, Callable[..., Any]],
     args: Tuple[Any, ...] = (),
     kwargs: Optional[Dict[str, Any]] = None,
     target_type: "Literal['function', 'command', 'auto']" = 'auto',
@@ -186,7 +188,7 @@ spawn_context = get_context('spawn')
 
 
 def start_process(
-    target: Union[str, List[str], Callable[..., Any]],
+    target: Union[str, Callable[..., Any]],
     target_type: "Literal['function', 'command']",
     args: Tuple[Any, ...],
     kwargs: Optional[Dict[str, Any]],
@@ -202,31 +204,23 @@ def start_process(
     process: 'Union[SpawnProcess, subprocess.Popen[bytes]]'
     if target_type == 'function':
         kwargs = kwargs or {}
-        if isinstance(target, list):
-            target = target[0]
-
         if isinstance(target, str):
             args = target, get_tty_path(), args, kwargs
             target_ = run_function
             kwargs = {}
         else:
-            assert not isinstance(target, (str, list))
             target_ = target
 
         process = spawn_context.Process(target=target_, args=args, kwargs=kwargs)
         process.start()
     else:
-        if isinstance(target, str):
-            popen_args = shlex.split(target)
-        else:
-            assert isinstance(target, list)
-            popen_args = target
-
+        assert isinstance(target, str), 'target must be a string to run as a command'
+        popen_args = shlex.split(target)
         process = subprocess.Popen(popen_args)
     return CombinedProcess(process)
 
 
-def detect_target_type(target: Union[str, List[str], Callable[..., Any]]) -> "Literal['function', 'command']":
+def detect_target_type(target: Union[str, Callable[..., Any]]) -> "Literal['function', 'command']":
     """
     Used by [`run_process`][watchfiles.run_process], [`arun_process`][watchfiles.arun_process]
     and indirectly the CLI to determine the target type with `target_type` is `auto`.
@@ -235,9 +229,8 @@ def detect_target_type(target: Union[str, List[str], Callable[..., Any]]) -> "Li
 
     The following logic is employed:
 
-    * If `target` is not a string or list of strings, it is assumed to be a function
-    * If `target` is a list with more than one element, it is assumed to be a command
-    * If `target` (or the first element of target) ends with `.py` or `.sh`, it is assumed to be a command
+    * If `target` is not a string, it is assumed to be a function
+    * If `target` ends with `.py` or `.sh`, it is assumed to be a command
     * Otherwise, the target is assumed to be a function if it matches the regex `[a-zA-Z0-9_]+(\\.[a-zA-Z0-9_]+)+`
 
     If this logic does not work for you, specify the target type explicitly using the `target_type` function argument
@@ -249,17 +242,11 @@ def detect_target_type(target: Union[str, List[str], Callable[..., Any]]) -> "Li
     Returns:
         either `'function'` or `'command'`
     """
-    if not isinstance(target, (str, list, tuple)):
+    if not isinstance(target, str):
         return 'function'
-
-    if isinstance(target, list):
-        if len(target) > 1:
-            return 'command'
-        target_str = target[0]
-    else:
-        target_str = target
-
-    if not target_str.endswith(('.py', '.sh')) and re.fullmatch(r'[a-zA-Z0-9_]+(\.[a-zA-Z0-9_]+)+', target_str):
+    elif target.endswith(('.py', '.sh')):
+        return 'command'
+    elif re.fullmatch(r'[a-zA-Z0-9_]+(\.[a-zA-Z0-9_]+)+', target):
         return 'function'
     else:
         return 'command'

@@ -15,10 +15,10 @@ def test_function(mocker, tmp_path):
     mocker.patch('watchfiles.cli.sys.stdin.fileno')
     mocker.patch('os.ttyname', return_value='/path/to/tty')
     mock_run_process = mocker.patch('watchfiles.cli.run_process')
-    cli(str(tmp_path), 'os.getcwd')
+    cli('os.getcwd', str(tmp_path))
     mock_run_process.assert_called_once_with(
         tmp_path,
-        target=['os.getcwd'],
+        target='os.getcwd',
         target_type='function',
         watch_filter=IsInstance(DefaultFilter, only_direct_instance=True),
         debug=False,
@@ -30,16 +30,16 @@ def test_ignore_paths(mocker, tmp_work_path):
     mocker.patch('os.ttyname', return_value='/path/to/tty')
     mock_run_process = mocker.patch('watchfiles.cli.run_process')
     cli(
-        '.',
         '--ignore-paths',
         '/foo/bar,/apple/banana',
         '--filter',
         'python',
         'os.getcwd',
+        '.',
     )
     mock_run_process.assert_called_once_with(
         Path(str(tmp_work_path)),
-        target=['os.getcwd'],
+        target='os.getcwd',
         target_type='function',
         watch_filter=(
             IsInstance(PythonFilter)
@@ -57,7 +57,7 @@ class SysError(RuntimeError):
 def test_invalid_import1(mocker, tmp_work_path, capsys):
     sys_exit = mocker.patch('watchfiles.cli.sys.exit', side_effect=SysError)
     with pytest.raises(SysError):
-        cli('.', 'foo.bar')
+        cli('foo.bar')
     sys_exit.assert_called_once_with(1)
     out, err = capsys.readouterr()
     assert out == ''
@@ -67,7 +67,7 @@ def test_invalid_import1(mocker, tmp_work_path, capsys):
 def test_invalid_import2(mocker, tmp_work_path, capsys):
     sys_exit = mocker.patch('watchfiles.cli.sys.exit', side_effect=SysError)
     with pytest.raises(SysError):
-        cli('.', 'pprint.foobar')
+        cli('pprint.foobar')
 
     sys_exit.assert_called_once_with(1)
     out, err = capsys.readouterr()
@@ -78,7 +78,7 @@ def test_invalid_import2(mocker, tmp_work_path, capsys):
 def test_invalid_path(mocker, capsys):
     sys_exit = mocker.patch('watchfiles.cli.sys.exit', side_effect=SysError)
     with pytest.raises(SysError):
-        cli('/does/not/exist', 'os.getcwd')
+        cli('os.getcwd', '/does/not/exist')
 
     sys_exit.assert_called_once_with(1)
     out, err = capsys.readouterr()
@@ -90,34 +90,24 @@ def test_command(mocker, tmp_work_path):
     mocker.patch('watchfiles.cli.sys.stdin.fileno')
     mocker.patch('os.ttyname', return_value='/path/to/tty')
     mock_run_process = mocker.patch('watchfiles.cli.run_process')
-    cli('.', 'foo', '--bar', '-V', '3')
+    cli('foo --bar -V 3', '.')
     mock_run_process.assert_called_once_with(
         tmp_work_path,
-        target=['foo', '--bar', '-V', '3'],
+        target='foo --bar -V 3',
         target_type='command',
         watch_filter=IsInstance(DefaultFilter, only_direct_instance=True),
         debug=False,
     )
 
 
-args_list = [
-    ([], []),
-    (['--foo', 'bar'], []),
-    (['--foo', 'bar', '-a'], []),
-    (['--foo', 'bar', '--args'], []),
-    (['--foo', 'bar', '-a', '--foo', 'bar'], ['--foo', 'bar']),
-    (['--foo', 'bar', '-f', 'b', '--args', '-f', '-b', '-z', 'x'], ['-f', '-b', '-z', 'x']),
-]
-
-
 def test_verbose(mocker, tmp_path):
     mocker.patch('watchfiles.cli.sys.stdin.fileno')
     mocker.patch('os.ttyname', return_value='/path/to/tty')
     mock_run_process = mocker.patch('watchfiles.cli.run_process')
-    cli(str(tmp_path), '--verbosity', 'debug', 'os.getcwd')
+    cli('--verbosity', 'debug', 'os.getcwd', str(tmp_path))
     mock_run_process.assert_called_once_with(
         tmp_path,
-        target=['os.getcwd'],
+        target='os.getcwd',
         target_type='function',
         watch_filter=IsInstance(DefaultFilter, only_direct_instance=True),
         debug=True,
@@ -128,10 +118,10 @@ def test_filter_all(mocker, tmp_path, capsys):
     mocker.patch('watchfiles.cli.sys.stdin.fileno')
     mocker.patch('os.ttyname', return_value='/path/to/tty')
     mock_run_process = mocker.patch('watchfiles.cli.run_process')
-    cli(str(tmp_path), '--filter', 'all', '--ignore-paths', 'foo', 'os.getcwd')
+    cli('--filter', 'all', '--ignore-paths', 'foo', 'os.getcwd', str(tmp_path))
     mock_run_process.assert_called_once_with(
         tmp_path,
-        target=['os.getcwd'],
+        target='os.getcwd',
         target_type='function',
         watch_filter=None,
         debug=False,
@@ -145,10 +135,10 @@ def test_filter_default(mocker, tmp_path):
     mocker.patch('watchfiles.cli.sys.stdin.fileno')
     mocker.patch('os.ttyname', return_value='/path/to/tty')
     mock_run_process = mocker.patch('watchfiles.cli.run_process')
-    cli(str(tmp_path), '--filter', 'default', 'os.getcwd')
+    cli('--filter', 'default', 'os.getcwd', str(tmp_path))
     mock_run_process.assert_called_once_with(
         tmp_path,
-        target=['os.getcwd'],
+        target='os.getcwd',
         target_type='function',
         watch_filter=IsInstance(DefaultFilter, only_direct_instance=True),
         debug=False,
@@ -159,10 +149,10 @@ def test_set_type(mocker, tmp_path):
     mocker.patch('watchfiles.cli.sys.stdin.fileno')
     mocker.patch('os.ttyname', return_value='/path/to/tty')
     mock_run_process = mocker.patch('watchfiles.cli.run_process')
-    cli(str(tmp_path), '--target-type', 'command', 'os.getcwd')
+    cli('--target-type', 'command', 'os.getcwd', str(tmp_path))
     mock_run_process.assert_called_once_with(
         tmp_path,
-        target=['os.getcwd'],
+        target='os.getcwd',
         target_type='command',
         watch_filter=IsInstance(DefaultFilter, only_direct_instance=True),
         debug=False,
