@@ -9,7 +9,7 @@ from dirty_equals import IsStr
 
 from watchfiles import arun_process, run_process
 from watchfiles.main import Change
-from watchfiles.run import import_string, run_function, set_tty, start_process
+from watchfiles.run import detect_target_type, import_string, run_function, set_tty, start_process
 
 if TYPE_CHECKING:
     from conftest import MockRustType
@@ -203,8 +203,35 @@ def test_command(mocker, mock_rust_notify: 'MockRustType', caplog):
     assert 'watchfiles.main DEBUG: running "echo foobar" as command\n' in caplog.text
 
 
+def test_target_type_set(mocker, mock_rust_notify: 'MockRustType', caplog):
+    mock_spawn_process = mocker.patch('watchfiles.run.spawn_context.Process', return_value=FakeProcess())
+    mock_popen = mocker.patch('watchfiles.run.subprocess.Popen', return_value=FakePopen())
+    mock_kill = mocker.patch('watchfiles.run.os.kill')
+    mock_rust_notify([])
+
+    assert run_process('/x/y/z', target=os.getcwd, target_type='function', debounce=5, step=1) == 0
+    assert mock_spawn_process.call_count == 1
+    assert mock_popen.call_count == 0
+    assert mock_kill.call_count == 1
+
+
 def test_import_string():
     assert import_string('os.getcwd') == os.getcwd
 
     with pytest.raises(ImportError, match='"os" doesn\'t look like a module path'):
         import_string('os')
+
+
+@pytest.mark.parametrize(
+    'target, expected',
+    [
+        ('os.getcwd', 'function'),
+        (os.getcwd, 'function'),
+        ('foobar.py', 'command'),
+        ('foobar.sh', 'command'),
+        ('foobar.pyt', 'function'),
+        ('foo bar', 'command'),
+    ],
+)
+def test_detect_target_type(target, expected):
+    assert detect_target_type(target) == expected

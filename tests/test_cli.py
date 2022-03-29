@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 
 import pytest
-from dirty_equals import FunctionCheck, IsInstance
+from dirty_equals import HasAttributes, HasLen, IsInstance
 
 from watchfiles import BaseFilter, DefaultFilter, PythonFilter
 from watchfiles.cli import build_filter, cli
@@ -43,8 +43,7 @@ def test_ignore_paths(mocker, tmp_work_path):
         target_type='function',
         watch_filter=(
             IsInstance(PythonFilter)
-            & FunctionCheck(lambda f: f.extensions == ('.py', '.pyx', '.pyd'))
-            & FunctionCheck(lambda f: f._ignore_paths == ('/foo/bar', '/apple/banana'))
+            & HasAttributes(extensions=('.py', '.pyx', '.pyd'), _ignore_paths=('/foo/bar', '/apple/banana'))
         ),
         debug=False,
     )
@@ -166,7 +165,7 @@ def test_set_type(mocker, tmp_path):
         (
             'default',
             None,
-            IsInstance(DefaultFilter, only_direct_instance=True) & FunctionCheck(lambda f: f._ignore_paths == ()),
+            IsInstance(DefaultFilter, only_direct_instance=True) & HasAttributes(_ignore_paths=()),
             'DefaultFilter',
         ),
         ('python', None, IsInstance(PythonFilter, only_direct_instance=True), 'PythonFilter'),
@@ -176,7 +175,7 @@ def test_set_type(mocker, tmp_path):
         (
             'default',
             'foo,bar',
-            IsInstance(DefaultFilter, only_direct_instance=True) & FunctionCheck(lambda f: len(f._ignore_paths) == 2),
+            IsInstance(DefaultFilter, only_direct_instance=True) & HasAttributes(_ignore_paths=HasLen(2)),
             'DefaultFilter',
         ),
     ],
