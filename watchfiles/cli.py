@@ -1,6 +1,7 @@
 import argparse
 import logging
 import os
+import shlex
 import sys
 from pathlib import Path
 from textwrap import dedent
@@ -79,6 +80,12 @@ def cli(*args_: str) -> None:
         ),
     )
     parser.add_argument(
+        '--args',
+        nargs='?',
+        type=str,
+        help='Arguments to set on sys.argv before calling target function, used only if the target is a function',
+    )
+    parser.add_argument(
         '--verbosity',
         nargs='?',
         type=str,
@@ -105,6 +112,10 @@ def cli(*args_: str) -> None:
     if target_type == 'function':
         logger.debug('target_type=function, attempting import of "%s"', arg_namespace.target)
         import_exit(arg_namespace.target)
+        if arg_namespace.args:
+            sys.argv = [arg_namespace.target] + shlex.split(arg_namespace.args)
+    elif arg_namespace.args:
+        logger.warning('--args is only used when the target is a function')
 
     try:
         paths = [resolve_path(p) for p in arg_namespace.paths]

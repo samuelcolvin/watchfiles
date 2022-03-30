@@ -192,3 +192,38 @@ def test_build_filter_warning(caplog):
     assert caplog.text == (
         'watchfiles.cli WARNING: "--ignore-paths" argument ignored as filter is not a subclass of DefaultFilter\n'
     )
+
+
+def test_args(mocker, tmp_path, reset_argv, caplog):
+    caplog.set_level('INFO', 'watchfiles')
+    mocker.patch('watchfiles.cli.sys.stdin.fileno')
+    mocker.patch('os.ttyname', return_value='/path/to/tty')
+    mock_run_process = mocker.patch('watchfiles.cli.run_process')
+    cli('--args', '--version ', 'os.getcwd', str(tmp_path))
+
+    mock_run_process.assert_called_once_with(
+        tmp_path,
+        target='os.getcwd',
+        target_type='function',
+        watch_filter=IsInstance(DefaultFilter, only_direct_instance=True),
+        debug=False,
+    )
+    assert sys.argv == ['os.getcwd', '--version']
+    assert 'WARNING: --args' not in caplog.text
+
+
+def test_args_command(mocker, tmp_path, caplog):
+    caplog.set_level('INFO', 'watchfiles')
+    mocker.patch('watchfiles.cli.sys.stdin.fileno')
+    mocker.patch('os.ttyname', return_value='/path/to/tty')
+    mock_run_process = mocker.patch('watchfiles.cli.run_process')
+    cli('--args', '--version ', 'foobar.sh', str(tmp_path))
+
+    mock_run_process.assert_called_once_with(
+        tmp_path,
+        target='foobar.sh',
+        target_type='command',
+        watch_filter=IsInstance(DefaultFilter, only_direct_instance=True),
+        debug=False,
+    )
+    assert 'WARNING: --args is only used when the target is a function\n' in caplog.text
