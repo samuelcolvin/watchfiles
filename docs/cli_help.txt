@@ -1,29 +1,33 @@
-usage: watchfiles [-h] [--verbosity [{warning,info,debug}]]
-                  [--filter [{python,default,all}]]
-                  [--ignore-paths [IGNORE_PATHS ...]]
-                  [--extensions [EXTENSIONS ...]] [--args ...] [--version]
-                  function [paths ...]
+usage: watchfiles [-h] [--ignore-paths [IGNORE_PATHS]]
+                  [--target-type [{command,function,auto}]]
+                  [--filter [FILTER]] [--args [ARGS]]
+                  [--verbosity [{warning,info,debug}]] [--version]
+                  target [paths ...]
 
-Watch one or more directories and execute a python function on file changes.
+Watch one or more directories and execute either a shell command or a python function on file changes.
 
-Note: only changes to python files will prompt the function to be restarted,
-use `--extensions` to watch more file types.
+Example of watching the current directory and calling a python function:
+
+    watchfiles foobar.main
+
+Example of watching python files in two local directories and calling a shell command:
+
+    watchfiles --filter python 'pytest --lf' src tests
 
 See https://watchfiles.helpmanual.io/cli/ for more information.
 
 positional arguments:
-  function              Path to python function to execute
+  target                Command or dotted function path to run
   paths                 Filesystem paths to watch, defaults to current directory
 
 options:
   -h, --help            show this help message and exit
+  --ignore-paths [IGNORE_PATHS]
+                        Specify directories to ignore, to ignore multiple paths use a comma as separator, e.g. "env" or "env,node_modules"
+  --target-type [{command,function,auto}]
+                        Whether the target should be intercepted as a shell command or a python function, defaults to "auto" which infers the target type from the target string
+  --filter [FILTER]     Which files to watch, defaults to "default" which uses the "DefaultFilter", "python" uses the "PythonFilter", "all" uses no filter, any other value is interpreted as a python function/class path which is imported
+  --args [ARGS]         Arguments to set on sys.argv before calling target function, used only if the target is a function
   --verbosity [{warning,info,debug}]
                         Log level, defaults to "info"
-  --filter [{python,default,all}]
-                        which files to watch, defaults to "python" files
-  --ignore-paths [IGNORE_PATHS ...]
-                        Specify directories to ignore
-  --extensions [EXTENSIONS ...]
-                        Extra file extensions to watch, applies only if "--filter" is "python"
-  --args ..., -a ...    Arguments for argv inside executed function
   --version, -V         show program's version number and exit

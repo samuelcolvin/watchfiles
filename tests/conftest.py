@@ -124,3 +124,12 @@ def create_test_function(tmp_work_path: Path):
     yield 'test_function.foobar'
 
     sys.path = original_path
+
+
+@pytest.fixture
+def reset_argv():
+    original_argv = sys.argv[:]
+
+    yield
+
+    sys.argv = original_argv

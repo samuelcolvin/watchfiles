@@ -62,6 +62,10 @@ class BaseFilter:
         else:
             return True
 
+    def __repr__(self) -> str:
+        args = ', '.join(f'{k}={getattr(self, k, None)!r}' for k in self.__slots__)
+        return f'{self.__class__.__name__}({args})'
+
 
 class DefaultFilter(BaseFilter):
     """

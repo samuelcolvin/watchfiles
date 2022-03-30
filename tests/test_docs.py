@@ -15,11 +15,12 @@ from watchfiles.cli import cli
 if TYPE_CHECKING:
     from conftest import MockRustType
 
+pytestmark = pytest.mark.skipif(sys.platform == 'win32', reason='some tests fail on windows')
 ROOT_DIR = Path(__file__).parent.parent
 
 
 @pytest.fixture
-def import_execute(request, tmp_path: Path):
+def import_execute(request, tmp_work_path: Path):
     def _import_execute(module_name: str, source: str, rewrite_assertions: bool = False):
         if rewrite_assertions:
             loader = AssertionRewritingHook(config=request.config)
@@ -27,7 +28,11 @@ def import_execute(request, tmp_path: Path):
         else:
             loader = None
 
-        module_path = tmp_path / f'{module_name}.py'
+        example_bash_file = tmp_work_path / 'example.sh'
+        example_bash_file.write_text('#!/bin/sh\necho testing')
+        example_bash_file.chmod(0o755)
+
+        module_path = tmp_work_path / f'{module_name}.py'
         module_path.write_text(source)
         spec = importlib.util.spec_from_file_location('__main__', str(module_path), loader=loader)
         module = importlib.util.module_from_spec(spec)
@@ -70,8 +75,8 @@ def generate_code_chunks(*directories: str):
 @pytest.mark.parametrize('module_name,source_code', generate_code_chunks('watchfiles', 'docs'))
 def test_docs_examples(module_name, source_code, import_execute, mocker, mock_rust_notify: 'MockRustType'):
     mock_rust_notify([{(1, 'foo.txt'), (2, 'bar.py')}])
-    mocker.patch('watchfiles.main.spawn_context.Process')
-    mocker.patch('watchfiles.main.os.kill')
+    mocker.patch('watchfiles.run.spawn_context.Process')
+    mocker.patch('watchfiles.run.os.kill')
 
     async def dont_sleep(t):
         pass

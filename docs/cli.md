@@ -1,12 +1,18 @@
-*watchfiles* also comes with a CLI for running and reloading python code.
+*watchfiles* also comes with a CLI for running and reloading python code, the CLI uses
+[watchfiles.run_process][watchfiles.run_process] to run the code and like `run_process` can either run a python
+function or a shell-like command.
 
-Let's say you have `foobar.py` (this is a very simple web server using 
-[aiohttp](https://aiohttp.readthedocs.io/en/stable/)) which gets details about recent file changes from the 
-`WATCHFILES_CHANGES` see [`run_process` docs](./api/run_process.md#watchfiles.run_process) 
+The CLI can also be used either via `watchfiles ...` or `python -m watchfiles ...`.
+
+## Running and restarting a python function
+
+Let's say you have `foobar.py` (this is a very simple web server using
+[aiohttp](https://aiohttp.readthedocs.io/en/stable/)) which gets details about recent file changes from the
+`WATCHFILES_CHANGES` see [`run_process` docs](./api/run_process.md#watchfiles.run_process)
 environment variable and returns them as JSON.
 
 ```py
-title="Code to be run via the CLI"
+title="foobar.py"
 import os, json
 from aiohttp import web
 
@@ -25,18 +31,30 @@ def main():
 
 You could run this and reload it when any file in the current directory changes with:
 
-```bash title="CLI Usage"
+```bash title="Running a python function"
 watchfiles foobar.main
 ```
 
-By default the CLI will watch the current directory and all subdirectories, but the directory/directories watched
-can be changed, this:
+## Running and restarting a command
 
-```bash title="CLI Usage with custom directories"
-watchfiles foobar.main ./foo ./bar
+Let's say you want to re-run failing tests whenever python files change. You could do this with watchfiles using
+
+```bash title="Running a command"
+watchfiles 'pytest --lf'
 ```
 
-The CLI can also be used via `python -m watchfiles ...`.
+(pytest's `--lf` option is a shortcut for `--last-failed`,
+see [pytest docs](https://docs.pytest.org/en/latest/how-to/cache.html))
+
+By default the CLI will watch the current directory and all subdirectories, but the directory/directories watched
+can be changed.
+
+In this example, we might want to watch only the `src` and `tests` directories, and only react to changes in python
+files:
+
+```bash title="Watching custom directories and files"
+watchfiles --filter python 'pytest --lf' src tests
+```
 
 ## Help
 

@@ -165,6 +165,7 @@ jobs:
           override: true
 
       - name: cache rust
+        id: cache-rust
         uses: Swatinem/rust-cache@v1
         # caching here seems to break macos, hence only using cache with windows, macos is fairly quick anyway
         if: matrix.os == 'windows'
@@ -181,7 +182,7 @@ jobs:
         if: matrix.os == 'macos'
 
       - run: rustup toolchain install stable-i686-pc-windows-msvc
-        if: matrix.os == 'windows'
+        if: matrix.os == 'windows' && steps.cache-rust.outputs.cache-hit != 'true'
 
       - run: pip install -U setuptools wheel twine cibuildwheel
 
