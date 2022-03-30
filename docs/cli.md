@@ -1,15 +1,15 @@
-*watchfiles* also comes with a CLI for running and reloading python code, the CLI uses
+*watchfiles* comes with a CLI for running and reloading code, the CLI uses
 [watchfiles.run_process][watchfiles.run_process] to run the code and like `run_process` can either run a python
 function or a shell-like command.
 
-The CLI can also be used either via `watchfiles ...` or `python -m watchfiles ...`.
+The CLI can be used either via `watchfiles ...` or `python -m watchfiles ...`.
 
 ## Running and restarting a python function
 
-Let's say you have `foobar.py` (this is a very simple web server using
+Let's say you have `foobar.py` (in this case a very simple web server using
 [aiohttp](https://aiohttp.readthedocs.io/en/stable/)) which gets details about recent file changes from the
-`WATCHFILES_CHANGES` see [`run_process` docs](./api/run_process.md#watchfiles.run_process)
-environment variable and returns them as JSON.
+`WATCHFILES_CHANGES` environment variable (see [`run_process` docs](./api/run_process.md#watchfiles.run_process))
+and returns them as JSON.
 
 ```py
 title="foobar.py"
@@ -37,7 +37,7 @@ watchfiles foobar.main
 
 ## Running and restarting a command
 
-Let's say you want to re-run failing tests whenever python files change. You could do this with watchfiles using
+Let's say you want to re-run failing tests whenever files change. You could do this with **watchfiles** using
 
 ```bash title="Running a command"
 watchfiles 'pytest --lf'
