@@ -52,8 +52,6 @@ jobs:
 
     - name: cache rust
       uses: Swatinem/rust-cache@v1
-      with:
-        key: ${{ runner.os }}
 
     - run: pip install -r tests/requirements.txt
       if: steps.cache-py.outputs.cache-hit != 'true'
@@ -171,8 +169,6 @@ jobs:
         uses: Swatinem/rust-cache@v1
         # caching here seems to break macos, hence only using cache with windows, macos is fairly quick anyway
         if: matrix.os == 'windows'
-        with:
-          key: ${{ runner.os }}
 
       - run: curl -Lso set_version.py https://git.io/JT3rm
         if: "startsWith(github.ref, 'refs/tags/')"

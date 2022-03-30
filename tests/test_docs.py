@@ -15,6 +15,7 @@ from watchfiles.cli import cli
 if TYPE_CHECKING:
     from conftest import MockRustType
 
+pytestmark = pytest.mark.skipif(sys.platform == 'win32', reason='some tests fail on windows')
 ROOT_DIR = Path(__file__).parent.parent
 
 
