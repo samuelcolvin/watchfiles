@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, Generator, Optional, Set,
 
 import anyio
 
-from .filters import PythonFilter
+from .filters import DefaultFilter
 from .main import Change, FileChange, awatch, watch
 
 if TYPE_CHECKING:
@@ -35,7 +35,7 @@ def run_process(
     kwargs: Optional[Dict[str, Any]] = None,
     target_type: "Literal['function', 'command', 'auto']" = 'auto',
     callback: Optional[Callable[[Set[FileChange]], None]] = None,
-    watch_filter: Optional[Callable[[Change, str], bool]] = PythonFilter(),
+    watch_filter: Optional[Callable[[Change, str], bool]] = DefaultFilter(),
     debounce: int = 1_600,
     step: int = 50,
     debug: bool = False,
@@ -45,24 +45,26 @@ def run_process(
 
     `run_process` can work in two ways:
 
-    * Using `multiprocessing.Process` (technically `multiprocessing.get_context('spawn').Process`
-        to avoid forking and improve code reload) to run a python function
-    * Or, use `subprocess.Popen` to run a shell-like command
+    * Using `multiprocessing.Process` † to run a python function
+    * Or, use `subprocess.Popen` to run a command
 
+    !!! note
+
+        **†** technically `multiprocessing.get_context('spawn').Process` to avoid forking and improve
+        code reload/import.
 
     Internally, `run_process` uses [`watch`][watchfiles.watch] with `raise_interrupt=False` so the function
     exits cleanly upon `Ctrl+C`.
 
     Args:
         *paths: matches the same argument of [`watch`][watchfiles.watch]
-        target: function to run
-        args: arguments to pass to `target`
-        kwargs: keyword arguments to pass to `target`
+        target: function or command to run
+        args: arguments to pass to `target`, only used if `target` is a function
+        kwargs: keyword arguments to pass to `target`, only used if `target` is a function
         target_type: type of target. Can be `'function'`, `'command'`, or `'auto'` in which case
             [`detect_target_type`][watchfiles.run_process.detect_target_type] is used to determine the type.
         callback: function to call on each reload, the function should accept a set of changes as the sole argument
-        watch_filter: matches the same argument of [`watch`][watchfiles.watch], except an instance of
-            [`PythonFilter`][watchfiles.PythonFilter] is used by default so only python files are watched.
+        watch_filter: matches the same argument of [`watch`][watchfiles.watch]
         debounce: matches the same argument of [`watch`][watchfiles.watch]
         step: matches the same argument of [`watch`][watchfiles.watch]
         debug: matches the same argument of [`watch`][watchfiles.watch]
@@ -70,7 +72,7 @@ def run_process(
     Returns:
         number of times the function was reloaded.
 
-    ```py title="Example of run_process usage"
+    ```py title="Example of run_process running a function"
     from watchfiles import run_process
 
     def callback(changes):
@@ -97,6 +99,20 @@ def run_process(
 
     if __name__ == '__main__':
         run_process('./path/to/dir', target=foobar, args=(1, 2, 3))
+    ```
+
+    Again with the target as `command`, `WATCHFILES_CHANGES` can be used
+    to access changes.
+
+    ```bash title="example.sh"
+    echo "changers: ${WATCHFILES_CHANGES}"
+    ```
+
+    ```py title="Example of run_process running a command"
+    from watchfiles import run_process
+
+    if __name__ == '__main__':
+        run_process('.', target='./example.sh')
     ```
     """
     if target_type == 'auto':
@@ -126,7 +142,7 @@ async def arun_process(
     kwargs: Optional[Dict[str, Any]] = None,
     target_type: "Literal['function', 'command', 'auto']" = 'auto',
     callback: Optional[Callable[[Set[FileChange]], Any]] = None,
-    watch_filter: Optional[Callable[[Change, str], bool]] = PythonFilter(),
+    watch_filter: Optional[Callable[[Change, str], bool]] = DefaultFilter(),
     debounce: int = 1_600,
     step: int = 50,
     debug: bool = False,
@@ -214,6 +230,9 @@ def start_process(
         process = spawn_context.Process(target=target_, args=args, kwargs=kwargs)
         process.start()
     else:
+        if args or kwargs:
+            logger.warning('ignoring args and kwargs for "command" target')
+
         assert isinstance(target, str), 'target must be a string to run as a command'
         popen_args = shlex.split(target)
         process = subprocess.Popen(popen_args)

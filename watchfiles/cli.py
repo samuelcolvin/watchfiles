@@ -30,9 +30,9 @@ def cli(*args_: str) -> None:
 
         watchfiles foobar.main
 
-    Example of watching two local directories and calling a shell command:
+    Example of watching python files in two local directories and calling a shell command:
 
-        watchfiles "pytest -v" src tests
+        watchfiles --filter python 'pytest --lf' src tests
 
     See https://watchfiles.helpmanual.io/cli/ for more information.
     """
@@ -117,7 +117,7 @@ def cli(*args_: str) -> None:
     logger.info(
         'watchfiles 👀  path=%s target="%s" (%s) filter=%s...',
         ', '.join(f'"{p}"' for p in paths),
-        ' '.join(arg_namespace.target),
+        arg_namespace.target,
         target_type,
         watch_filter_str,
     )

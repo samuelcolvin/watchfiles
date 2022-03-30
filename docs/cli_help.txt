@@ -10,9 +10,9 @@ Example of watching the current directory and calling a python function:
 
     watchfiles foobar.main
 
-Example of watching two local directories and calling a shell command:
+Example of watching python files in two local directories and calling a shell command:
 
-    watchfiles "pytest -v" src tests
+    watchfiles --filter python 'pytest --lf' src tests
 
 See https://watchfiles.helpmanual.io/cli/ for more information.
 

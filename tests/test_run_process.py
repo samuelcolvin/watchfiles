@@ -203,16 +203,19 @@ def test_command(mocker, mock_rust_notify: 'MockRustType', caplog):
     assert 'watchfiles.main DEBUG: running "echo foobar" as command\n' in caplog.text
 
 
-def test_target_type_set(mocker, mock_rust_notify: 'MockRustType', caplog):
+def test_command_with_args(mocker, mock_rust_notify: 'MockRustType', caplog):
+    caplog.set_level('INFO', 'watchfiles')
     mock_spawn_process = mocker.patch('watchfiles.run.spawn_context.Process', return_value=FakeProcess())
     mock_popen = mocker.patch('watchfiles.run.subprocess.Popen', return_value=FakePopen())
     mock_kill = mocker.patch('watchfiles.run.os.kill')
-    mock_rust_notify([])
+    mock_rust_notify([{(1, '/path/to/foobar.py')}])
 
-    assert run_process('/x/y/z', target=os.getcwd, target_type='function', debounce=5, step=1) == 0
-    assert mock_spawn_process.call_count == 1
-    assert mock_popen.call_count == 0
-    assert mock_kill.call_count == 1
+    assert run_process('/x/y/z', target='echo foobar', args=(1, 2), target_type='command', debounce=5, step=1) == 1
+    assert mock_spawn_process.call_count == 0
+    assert mock_popen.call_count == 2
+    mock_popen.assert_called_with(['echo', 'foobar'])
+    assert mock_kill.call_count == 2  # kill in loop + final kill
+    assert 'watchfiles.main WARNING: ignoring args and kwargs for "command" target\n' in caplog.text
 
 
 def test_import_string():
