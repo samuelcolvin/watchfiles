@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://watchfiles.helpmanual.io/api/run_process/">
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.2.3, mkdocs-material-8.2.6">
+      <meta name="generator" content="mkdocs-1.2.3, mkdocs-material-8.2.7">
     
     
       
@@ -366,6 +366,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#watchfiles.run.detect_target_type" class="md-nav__link">
+    detect_target_type()
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -447,6 +454,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#watchfiles.run.detect_target_type" class="md-nav__link">
+    detect_target_type()
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -474,26 +488,35 @@ run_process
 <a href="#watchfiles.run_process" class="headerlink" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">run_process</span><span class="p">(</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="o">*</span><span class="n">paths</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">target</span><span class="p">:</span> <span class="s2">&quot;AnyCallable&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">target</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">args</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">callback</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        <span class="n">Callable</span><span class="p">[[</span><span class="n">Set</span><span class="p">[</span><span class="n">FileChange</span><span class="p">]],</span> <span class="kc">None</span><span class="p">]</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">watch_filter</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>        <span class="n">Callable</span><span class="p">[[</span><span class="n">Change</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]</span>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="p">]</span> <span class="o">=</span> <span class="n">PythonFilter</span><span class="p">(),</span>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="n">debounce</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1600</span><span class="p">,</span>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    <span class="n">step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">target_type</span><span class="p">:</span> <span class="s2">&quot;Literal[&#39;function&#39;, &#39;command&#39;, &#39;auto&#39;]&quot;</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">callback</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        <span class="n">Callable</span><span class="p">[[</span><span class="n">Set</span><span class="p">[</span><span class="n">FileChange</span><span class="p">]],</span> <span class="kc">None</span><span class="p">]</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="n">watch_filter</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>        <span class="n">Callable</span><span class="p">[[</span><span class="n">Change</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="p">]</span> <span class="o">=</span> <span class="n">DefaultFilter</span><span class="p">(),</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    <span class="n">debounce</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1600</span><span class="p">,</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    <span class="n">step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
-      <p>Run a function in a subprocess using <code>multiprocessing.Process</code>
-(technically <code>multiprocessing.get_context('spawn').Process</code> to avoid forking and improve code reload),
-restart it whenever files change in path.</p>
+      <p>Run a process and restart it upon file changes.</p>
+<p><code>run_process</code> can work in two ways:</p>
+<ul>
+<li>Using <code>multiprocessing.Process</code> † to run a python function</li>
+<li>Or, use <code>subprocess.Popen</code> to run a command</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>†</strong> technically <code>multiprocessing.get_context('spawn').Process</code> to avoid forking and improve
+code reload/import.</p>
+</div>
 <p>Internally, <code>run_process</code> uses <a class="autorefs autorefs-internal" href="../watch/#watchfiles.watch"><code>watch</code></a> with <code>raise_interrupt=False</code> so the function
 exits cleanly upon <code>Ctrl+C</code>.</p>
 
@@ -521,9 +544,9 @@ exits cleanly upon <code>Ctrl+C</code>.</p>
         <tr>
           <td><code>target</code></td>
           <td>
-                <code>&#39;AnyCallable&#39;</code>
+                <code><span title="typing.Union">Union</span>[str, <span title="typing.Callable">Callable</span>[..., <span title="typing.Any">Any</span>]]</code>
           </td>
-          <td><p>function to run</p></td>
+          <td><p>function or command to run</p></td>
           <td>
               <em>required</em>
           </td>
@@ -533,7 +556,7 @@ exits cleanly upon <code>Ctrl+C</code>.</p>
           <td>
                 <code><span title="typing.Tuple">Tuple</span>[<span title="typing.Any">Any</span>, ...]</code>
           </td>
-          <td><p>arguments to pass to <code>target</code></p></td>
+          <td><p>arguments to pass to <code>target</code>, only used if <code>target</code> is a function</p></td>
           <td>
                 <code>()</code>
           </td>
@@ -543,9 +566,20 @@ exits cleanly upon <code>Ctrl+C</code>.</p>
           <td>
                 <code><span title="typing.Optional">Optional</span>[<span title="typing.Dict">Dict</span>[str, <span title="typing.Any">Any</span>]]</code>
           </td>
-          <td><p>keyword arguments to pass to <code>target</code></p></td>
+          <td><p>keyword arguments to pass to <code>target</code>, only used if <code>target</code> is a function</p></td>
           <td>
                 <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>target_type</code></td>
+          <td>
+                <code>&#34;Literal[&#39;function&#39;, &#39;command&#39;, &#39;auto&#39;]&#34;</code>
+          </td>
+          <td><p>type of target. Can be <code>'function'</code>, <code>'command'</code>, or <code>'auto'</code> in which case
+[<code>detect_target_type</code>][watchfiles.run_process.detect_target_type] is used to determine the type.</p></td>
+          <td>
+                <code>&#39;auto&#39;</code>
           </td>
         </tr>
         <tr>
@@ -563,10 +597,9 @@ exits cleanly upon <code>Ctrl+C</code>.</p>
           <td>
                 <code><span title="typing.Optional">Optional</span>[<span title="typing.Callable">Callable</span>[[<a class="autorefs autorefs-internal" title="watchfiles.main.Change" href="../watch/#watchfiles.Change">Change</a>, str], bool]]</code>
           </td>
-          <td><p>matches the same argument of <a class="autorefs autorefs-internal" href="../watch/#watchfiles.watch"><code>watch</code></a>, except an instance of
-<a class="autorefs autorefs-internal" href="../filters/#watchfiles.PythonFilter"><code>PythonFilter</code></a> is used by default so only python files are watched.</p></td>
+          <td><p>matches the same argument of <a class="autorefs autorefs-internal" href="../watch/#watchfiles.watch"><code>watch</code></a></p></td>
           <td>
-                <code>PythonFilter()</code>
+                <code>DefaultFilter()</code>
           </td>
         </tr>
         <tr>
@@ -619,7 +652,7 @@ exits cleanly upon <code>Ctrl+C</code>.</p>
         </tr>
     </tbody>
   </table>
-      <div class="highlight"><span class="filename">Example of run_process usage</span><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span> <span class="nn">watchfiles</span> <span class="kn">import</span> <span class="n">run_process</span>
+      <div class="highlight"><span class="filename">Example of run_process running a function</span><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span> <span class="nn">watchfiles</span> <span class="kn">import</span> <span class="n">run_process</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="k">def</span> <span class="nf">callback</span><span class="p">(</span><span class="n">changes</span><span class="p">):</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;changes detected:&#39;</span><span class="p">,</span> <span class="n">changes</span><span class="p">)</span>
@@ -643,6 +676,15 @@ using the <code>WATCHFILES_CHANGES</code> environment variable.</p>
 <a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
 <a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>    <span class="n">run_process</span><span class="p">(</span><span class="s1">&#39;./path/to/dir&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">foobar</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
 </code></pre></div>
+<p>Again with the target as <code>command</code>, <code>WATCHFILES_CHANGES</code> can be used
+to access changes.</p>
+<div class="highlight"><span class="filename">example.sh</span><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nb">echo</span> <span class="s2">&quot;changers: </span><span class="si">${</span><span class="nv">WATCHFILES_CHANGES</span><span class="si">}</span><span class="s2">&quot;</span>
+</code></pre></div>
+<div class="highlight"><span class="filename">Example of run_process running a command</span><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span> <span class="nn">watchfiles</span> <span class="kn">import</span> <span class="n">run_process</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="n">run_process</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s1">&#39;./example.sh&#39;</span><span class="p">)</span>
+</code></pre></div>
 
     </div>
 
@@ -664,19 +706,20 @@ arun_process
 <a href="#watchfiles.arun_process" class="headerlink" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">arun_process</span><span class="p">(</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="o">*</span><span class="n">paths</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">target</span><span class="p">:</span> <span class="s2">&quot;AnyCallable&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">target</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">args</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">callback</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        <span class="n">Callable</span><span class="p">[[</span><span class="n">Set</span><span class="p">[</span><span class="n">FileChange</span><span class="p">]],</span> <span class="n">Any</span><span class="p">]</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">watch_filter</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>        <span class="n">Callable</span><span class="p">[[</span><span class="n">Change</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]</span>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="p">]</span> <span class="o">=</span> <span class="n">PythonFilter</span><span class="p">(),</span>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="n">debounce</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1600</span><span class="p">,</span>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    <span class="n">step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">target_type</span><span class="p">:</span> <span class="s2">&quot;Literal[&#39;function&#39;, &#39;command&#39;, &#39;auto&#39;]&quot;</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">callback</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        <span class="n">Callable</span><span class="p">[[</span><span class="n">Set</span><span class="p">[</span><span class="n">FileChange</span><span class="p">]],</span> <span class="n">Any</span><span class="p">]</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="n">watch_filter</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>        <span class="n">Callable</span><span class="p">[[</span><span class="n">Change</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="p">]</span> <span class="o">=</span> <span class="n">DefaultFilter</span><span class="p">(),</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    <span class="n">debounce</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1600</span><span class="p">,</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    <span class="n">step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -702,6 +745,82 @@ so the function exits cleanly upon <code>Ctrl+C</code>.</p>
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
 <a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
 </code></pre></div>
+
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-function">
+
+
+
+<h2 id="watchfiles.run.detect_target_type" class="doc doc-heading">
+detect_target_type
+
+
+<a href="#watchfiles.run.detect_target_type" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">detect_target_type</span><span class="p">(</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">target</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Literal[&#39;function&#39;, &#39;command&#39;]&quot;</span>
+</code></pre></div>
+
+    <div class="doc doc-contents first">
+
+      <p>Used by <a class="autorefs autorefs-internal" href="#watchfiles.run_process"><code>run_process</code></a>, <a class="autorefs autorefs-internal" href="#watchfiles.arun_process"><code>arun_process</code></a>
+and indirectly the CLI to determine the target type with <code>target_type</code> is <code>auto</code>.</p>
+<p>Detects the target type - either <code>function</code> or <code>command</code>. This method is only called with <code>target_type='auto'</code>.</p>
+<p>The following logic is employed:</p>
+<ul>
+<li>If <code>target</code> is not a string, it is assumed to be a function</li>
+<li>If <code>target</code> ends with <code>.py</code> or <code>.sh</code>, it is assumed to be a command</li>
+<li>Otherwise, the target is assumed to be a function if it matches the regex <code>[a-zA-Z0-9_]+(\.[a-zA-Z0-9_]+)+</code></li>
+</ul>
+<p>If this logic does not work for you, specify the target type explicitly using the <code>target_type</code> function argument
+or <code>--target-type</code> command line argument.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>target</code></td>
+          <td>
+                <code><span title="typing.Union">Union</span>[str, <span title="typing.Callable">Callable</span>[..., <span title="typing.Any">Any</span>]]</code>
+          </td>
+          <td><p>The target value</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+                <code>&#34;Literal[&#39;function&#39;, &#39;command&#39;]&#34;</code>
+          </td>
+          <td><p>either <code>'function'</code> or <code>'command'</code></p></td>
+        </tr>
+    </tbody>
+  </table>
 
     </div>
 

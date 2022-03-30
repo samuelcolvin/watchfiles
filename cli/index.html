@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://watchfiles.helpmanual.io/cli/">
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.2.3, mkdocs-material-8.2.6">
+      <meta name="generator" content="mkdocs-1.2.3, mkdocs-material-8.2.7">
     
     
       
@@ -69,7 +69,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#help" class="md-skip">
+        <a href="#running-and-restarting-a-python-function" class="md-skip">
           Skip to content
         </a>
       
@@ -281,6 +281,20 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#running-and-restarting-a-python-function" class="md-nav__link">
+    Running and restarting a python function
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-and-restarting-a-command" class="md-nav__link">
+    Running and restarting a command
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#help" class="md-nav__link">
     Help
   </a>
@@ -425,6 +439,20 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#running-and-restarting-a-python-function" class="md-nav__link">
+    Running and restarting a python function
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-and-restarting-a-command" class="md-nav__link">
+    Running and restarting a command
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#help" class="md-nav__link">
     Help
   </a>
@@ -447,12 +475,16 @@
 
   <h1>CLI</h1>
 
-<p><em>watchfiles</em> also comes with a CLI for running and reloading python code.</p>
-<p>Let's say you have <code>foobar.py</code> (this is a very simple web server using 
-<a href="https://aiohttp.readthedocs.io/en/stable/">aiohttp</a>) which gets details about recent file changes from the 
-<code>WATCHFILES_CHANGES</code> see <a href="../api/run_process/#watchfiles.run_process"><code>run_process</code> docs</a> 
-environment variable and returns them as JSON.</p>
-<div class="highlight"><span class="filename">Code to be run via the CLI</span><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">json</span>
+<p><em>watchfiles</em> comes with a CLI for running and reloading code, the CLI uses
+<a class="autorefs autorefs-internal" href="../api/run_process/#watchfiles.run_process">watchfiles.run_process</a> to run the code and like <code>run_process</code> can either run a python
+function or a shell-like command.</p>
+<p>The CLI can be used either via <code>watchfiles ...</code> or <code>python -m watchfiles ...</code>.</p>
+<h2 id="running-and-restarting-a-python-function">Running and restarting a python function<a class="headerlink" href="#running-and-restarting-a-python-function" title="Permanent link">&para;</a></h2>
+<p>Let's say you have <code>foobar.py</code> (in this case a very simple web server using
+<a href="https://aiohttp.readthedocs.io/en/stable/">aiohttp</a>) which gets details about recent file changes from the
+<code>WATCHFILES_CHANGES</code> environment variable (see <a href="../api/run_process/#watchfiles.run_process"><code>run_process</code> docs</a>)
+and returns them as JSON.</p>
+<div class="highlight"><span class="filename">foobar.py</span><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">json</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span> <span class="nn">aiohttp</span> <span class="kn">import</span> <span class="n">web</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="k">async</span> <span class="k">def</span> <span class="nf">handle</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
@@ -468,38 +500,55 @@ environment variable and returns them as JSON.</p>
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    <span class="n">web</span><span class="o">.</span><span class="n">run_app</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">8000</span><span class="p">)</span>
 </code></pre></div>
 <p>You could run this and reload it when any file in the current directory changes with:</p>
-<div class="highlight"><span class="filename">CLI Usage</span><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>watchfiles foobar.main
+<div class="highlight"><span class="filename">Running a python function</span><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>watchfiles foobar.main
 </code></pre></div>
+<h2 id="running-and-restarting-a-command">Running and restarting a command<a class="headerlink" href="#running-and-restarting-a-command" title="Permanent link">&para;</a></h2>
+<p>Let's say you want to re-run failing tests whenever files change. You could do this with <strong>watchfiles</strong> using</p>
+<div class="highlight"><span class="filename">Running a command</span><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>watchfiles <span class="s1">&#39;pytest --lf&#39;</span>
+</code></pre></div>
+<p>(pytest's <code>--lf</code> option is a shortcut for <code>--last-failed</code>,
+see <a href="https://docs.pytest.org/en/latest/how-to/cache.html">pytest docs</a>)</p>
 <p>By default the CLI will watch the current directory and all subdirectories, but the directory/directories watched
-can be changed, this:</p>
-<div class="highlight"><span class="filename">CLI Usage with custom directories</span><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>watchfiles foobar.main ./foo ./bar
+can be changed.</p>
+<p>In this example, we might want to watch only the <code>src</code> and <code>tests</code> directories, and only react to changes in python
+files:</p>
+<div class="highlight"><span class="filename">Watching custom directories and files</span><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>watchfiles --filter python <span class="s1">&#39;pytest --lf&#39;</span> src tests
 </code></pre></div>
-<p>The CLI can also be used via <code>python -m watchfiles ...</code>.</p>
 <h2 id="help">Help<a class="headerlink" href="#help" title="Permanent link">&para;</a></h2>
 <p>Run <code>watchfiles --help</code> for more options.</p>
-<div class="highlight"><span class="filename">watchfiles --help</span><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>usage: watchfiles [-h] [--verbosity [VERBOSITY]]
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>                  [--ignore-paths [IGNORE_PATHS ...]]
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>                  [--extensions [EXTENSIONS ...]] [--args ...]
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>                  function [paths ...]
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>Watch one or more directories and execute a python function on changes.
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>Note: only changes to python files will prompt the function to be restarted,
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>use `--extensions` to watch more file types.
-<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>
-<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>positional arguments:
-<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>  function              Path to python function to execute.
-<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>  paths                 Filesystem paths to watch, defaults to current directory.
-<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>
-<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>options:
-<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>  -h, --help            show this help message and exit
-<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>  --verbosity [VERBOSITY]
-<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>                        0, 1 (default) or 2
-<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>  --ignore-paths [IGNORE_PATHS ...]
-<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>                        Specify paths to directories to ignore their updates
-<a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>  --extensions [EXTENSIONS ...]
-<a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>                        Extra file extensions to watch
-<a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a>  --args ..., -a ...    Arguments for argv inside executed function
+<div class="highlight"><span class="filename">watchfiles --help</span><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>usage: watchfiles [-h] [--ignore-paths [IGNORE_PATHS]]
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>                  [--target-type [{command,function,auto}]]
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>                  [--filter [FILTER]] [--args [ARGS]]
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>                  [--verbosity [{warning,info,debug}]] [--version]
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>                  target [paths ...]
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>Watch one or more directories and execute either a shell command or a python function on file changes.
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>Example of watching the current directory and calling a python function:
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>    watchfiles foobar.main
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>Example of watching python files in two local directories and calling a shell command:
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>    watchfiles --filter python &#39;pytest --lf&#39; src tests
+<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>
+<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>See https://watchfiles.helpmanual.io/cli/ for more information.
+<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>
+<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>positional arguments:
+<a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>  target                Command or dotted function path to run
+<a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>  paths                 Filesystem paths to watch, defaults to current directory
+<a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>
+<a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>options:
+<a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>  -h, --help            show this help message and exit
+<a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>  --ignore-paths [IGNORE_PATHS]
+<a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a>                        Specify directories to ignore, to ignore multiple paths use a comma as separator, e.g. &quot;env&quot; or &quot;env,node_modules&quot;
+<a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a>  --target-type [{command,function,auto}]
+<a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a>                        Whether the target should be intercepted as a shell command or a python function, defaults to &quot;auto&quot; which infers the target type from the target string
+<a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a>  --filter [FILTER]     Which files to watch, defaults to &quot;default&quot; which uses the &quot;DefaultFilter&quot;, &quot;python&quot; uses the &quot;PythonFilter&quot;, &quot;all&quot; uses no filter, any other value is interpreted as a python function/class path which is imported
+<a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a>  --args [ARGS]         Arguments to set on sys.argv before calling target function, used only if the target is a function
+<a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a>  --verbosity [{warning,info,debug}]
+<a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a>                        Log level, defaults to &quot;info&quot;
+<a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a>  --version, -V         show program&#39;s version number and exit
 </code></pre></div>
 
               
