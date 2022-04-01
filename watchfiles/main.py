@@ -43,10 +43,15 @@ of the file or directory that changed.
 
 if TYPE_CHECKING:
     import asyncio
+    from typing import Protocol
 
     import trio
 
     AnyEvent = Union[anyio.Event, asyncio.Event, trio.Event]
+
+    class AbstractEvent(Protocol):
+        def is_set(self) -> bool:
+            ...
 
 
 def watch(
@@ -54,6 +59,7 @@ def watch(
     watch_filter: Optional[Callable[['Change', str], bool]] = DefaultFilter(),
     debounce: int = 1_600,
     step: int = 50,
+    stop_event: Optional['AbstractEvent'] = None,
     debug: bool = False,
     raise_interrupt: bool = True,
 ) -> Generator[Set[FileChange], None, None]:
@@ -69,6 +75,8 @@ def watch(
         debounce: maximum time in milliseconds to group changes over before yielding them.
         step: time to wait for new changes in milliseconds, if no changes are detected in this time, and
             at least one change has been detected, the changes are yielded.
+        stop_event: event to stop watching, if this is set, the generator will stop yielding changes,
+            this can be anything with an `is_set()` method which returns a bool, e.g. `threading.Event()`.
         debug: whether to print information about all filesystem changes in rust to stdout.
         raise_interrupt: whether to re-raise `KeyboardInterrupt`s, or suppress the error and just stop iterating.
 
@@ -84,18 +92,20 @@ def watch(
     """
     watcher = RustNotify([str(p) for p in paths], debug)
     while True:
-        raw_changes = watcher.watch(debounce, step, None)
-        if raw_changes is None:
+        raw_changes = watcher.watch(debounce, step, stop_event)
+        if raw_changes == 'signalled':
             if raise_interrupt:
                 raise KeyboardInterrupt
             else:
                 logger.warning('KeyboardInterrupt caught, stopping watch')
                 return
-
-        changes = _prep_changes(raw_changes, watch_filter)
-        if changes:
-            _log_changes(changes)
-            yield changes
+        elif raw_changes == 'stopped':
+            return
+        else:
+            changes = _prep_changes(raw_changes, watch_filter)
+            if changes:
+                _log_changes(changes)
+                yield changes
 
 
 async def awatch(
@@ -186,7 +196,8 @@ async def awatch(
             raw_changes = await anyio.to_thread.run_sync(watcher.watch, debounce, step, stop_event_)
             tg.cancel_scope.cancel()
 
-        if raw_changes is None:
+        # cover both cases here although in theory the watch thread should never get a signal
+        if raw_changes == 'stopped' or raw_changes == 'signalled':
             if interrupted:
                 if raise_interrupt:
                     raise KeyboardInterrupt
