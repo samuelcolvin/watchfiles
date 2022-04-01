@@ -73,7 +73,7 @@ class MockRustNotify:
         try:
             change = next(self.iter_changes)
         except StopIteration:
-            return None
+            return 'signalled'
         else:
             self.watch_count += 1
             return change

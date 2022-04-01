@@ -1,4 +1,4 @@
-from typing import List, Optional, Protocol, Set, Tuple
+from typing import List, Literal, Optional, Protocol, Set, Tuple, Union
 
 __all__ = 'RustNotify', 'WatchfilesRustInternalError'
 
@@ -25,8 +25,8 @@ class RustNotify:
         self,
         debounce_ms: int,
         step_ms: int,
-        cancel_event: Optional[AbstractEvent],
-    ) -> Optional[Set[Tuple[int, str]]]:
+        stop_event: Optional[AbstractEvent],
+    ) -> Union[Literal['signalled', 'stopped'], Set[Tuple[int, str]]]:
         """
         Watch for changes and return a set of `(event_type, path)` tuples.
 
@@ -40,11 +40,12 @@ class RustNotify:
             debounce_ms: maximum time in milliseconds to group changes over before returning.
             step_ms: time to wait for new changes in milliseconds, if no changes are detected
                 in this time, and at least one change has been detected, the changes are yielded.
-            cancel_event: event to check on every iteration to see if this function should return early.
+            stop_event: event to check on every iteration to see if this function should return early.
 
         Returns:
-            A set of `(event_type, path)` tuples,
-            the event types are ints which match [`Change`][watchfiles.Change].
+            Either a set of `(event_type, path)` tuples
+            (the event types are ints which match [`Change`][watchfiles.Change]),
+            `'signalled'` if a signal was received, or `'stopped'` if the `stop_event` was set.
         """
 
 class WatchfilesRustInternalError(RuntimeError):

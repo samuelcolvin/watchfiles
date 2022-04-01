@@ -108,20 +108,19 @@ impl RustNotify {
         })
     }
 
-    pub fn watch(&self, py: Python, debounce_ms: u64, step_ms: u64, cancel_event: PyObject) -> PyResult<PyObject> {
-        let event_not_none = !cancel_event.is_none(py);
+    pub fn watch(&self, py: Python, debounce_ms: u64, step_ms: u64, stop_event: PyObject) -> PyResult<PyObject> {
+        let event_not_none = !stop_event.is_none(py);
 
         let mut max_time: Option<SystemTime> = None;
         let step_time = Duration::from_millis(step_ms);
         let mut last_size: usize = 0;
-        let none: Option<bool> = None;
         loop {
             py.allow_threads(|| sleep(step_time));
             match py.check_signals() {
                 Ok(_) => (),
                 Err(_) => {
                     self.clear();
-                    return Ok(none.to_object(py));
+                    return Ok("signalled".to_object(py));
                 }
             };
 
@@ -130,9 +129,9 @@ impl RustNotify {
                 return Err(WatchfilesRustInternalError::new_err(error.clone()));
             }
 
-            if event_not_none && cancel_event.getattr(py, "is_set")?.call0(py)?.is_true(py)? {
+            if event_not_none && stop_event.getattr(py, "is_set")?.call0(py)?.is_true(py)? {
                 self.clear();
-                return Ok(none.to_object(py));
+                return Ok("stopped".to_object(py));
             }
 
             let size = self.changes.lock().unwrap().len();
