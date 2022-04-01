@@ -89,4 +89,4 @@ jobs:
         run: twine upload dist/*
         env:
           TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.pypi_token }}
+          TWINE_PASSWORD: ${{ secrets.watchgod_pypi_token }}
