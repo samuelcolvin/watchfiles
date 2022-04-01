@@ -7,6 +7,21 @@
 
 Simple, modern file watching and code reload in python.
 
+---
+
+## NOTICE - Package Renamed to `watchfiles`
+
+**Please note:** This package (watchgod) has been renamed to [**watchfiles**](https://pypi.org/project/watchfiles/). 
+Please replace `watchgod` with `watchfiles`, see [the migration guide](https://watchfiles.helpmanual.io/migrating/)
+for help and instructions.
+
+As well as a better name, **watchfiles** has a whole new backend based on rust-notify which makes watching
+for filesystem events much more efficient.
+
+**The package under the name `watchgod` will not be further developed and will only receive critical security fixes.**
+
+---
+
 *(watchgod is inspired by [watchdog](https://pythonhosted.org/watchdog/), hence the name, but tries to fix
 some of the frustrations I found with watchdog, namely: separate approaches for each OS, an inelegant approach to
 concurrency using threading, challenges around debouncing changes and bugs which weren't being fixed)*

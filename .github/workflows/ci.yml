@@ -3,7 +3,7 @@ name: ci
 on:
   push:
     branches:
-      - master
+      - watchgod
     tags:
       - '**'
   pull_request: {}
