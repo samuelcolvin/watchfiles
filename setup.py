@@ -39,7 +39,7 @@ setup(
     ],
     author='Samuel Colvin',
     author_email='s@muelcolvin.com',
-    url='https://github.com/samuelcolvin/watchgod',
+    url='https://github.com/samuelcolvin/watchfiles',
     entry_points="""
         [console_scripts]
         watchgod=watchgod.cli:cli
