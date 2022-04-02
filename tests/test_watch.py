@@ -118,6 +118,38 @@ async def test_awatch_no_yield(mock_rust_notify: 'MockRustType', caplog):
     assert caplog.text == "watchfiles.main DEBUG: 1 change detected: {(<Change.added: 1>, 'spam.py')}\n"
 
 
+def test_watch_timeout(mock_rust_notify: 'MockRustType', caplog):
+    mock = mock_rust_notify(['timeout', {(1, 'spam.py')}], exit_code='stop')
+
+    caplog.set_level('DEBUG', 'watchfiles')
+    change_list = []
+    for changes in watch('.'):
+        change_list.append(changes)
+
+    assert change_list == [{(Change.added, 'spam.py')}]
+    assert mock.watch_count == 2
+    assert caplog.text == (
+        "watchfiles.main DEBUG: rust notify timeout, continuing\n"  # noqa: Q000
+        "watchfiles.main DEBUG: 1 change detected: {(<Change.added: 1>, 'spam.py')}\n"
+    )
+
+
+async def test_awatch_timeout(mock_rust_notify: 'MockRustType', caplog):
+    mock = mock_rust_notify(['timeout', {(1, 'spam.py')}], exit_code='stop')
+
+    caplog.set_level('DEBUG', 'watchfiles')
+    change_list = []
+    async for changes in awatch('.'):
+        change_list.append(changes)
+
+    assert change_list == [{(Change.added, 'spam.py')}]
+    assert mock.watch_count == 2
+    assert caplog.text == (
+        "watchfiles.main DEBUG: rust notify timeout, continuing\n"  # noqa: Q000
+        "watchfiles.main DEBUG: 1 change detected: {(<Change.added: 1>, 'spam.py')}\n"
+    )
+
+
 @pytest.mark.skipif(sys.platform == 'win32', reason='different on windows')
 def test_calc_async_timeout_posix():
     assert _calc_async_timeout(123) == 123

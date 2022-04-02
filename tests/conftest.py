@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 from threading import Thread
 from time import sleep, time
-from typing import Callable, List, Set, Tuple
+from typing import TYPE_CHECKING, Any, List, Set, Tuple
 
 import pytest
 
@@ -65,27 +65,33 @@ ChangesType = List[Set[Tuple[int, str]]]
 
 
 class MockRustNotify:
-    def __init__(self, changes: ChangesType):
+    def __init__(self, changes: ChangesType, exit_code: str):
         self.iter_changes = iter(changes)
+        self.exit_code = exit_code
         self.watch_count = 0
 
     def watch(self, debounce_ms: int, step_ms: int, timeout_ms: int, cancel_event):
         try:
             change = next(self.iter_changes)
         except StopIteration:
-            return 'signal'
+            return self.exit_code
         else:
             self.watch_count += 1
             return change
 
 
-MockRustType = Callable[[ChangesType], MockRustNotify]
+if TYPE_CHECKING:
+    from typing import Literal, Protocol
+
+    class MockRustType(Protocol):
+        def __call__(self, changes: ChangesType, *, exit_code: Literal['signal', 'stop', 'timeout'] = 'signal') -> Any:
+            ...
 
 
 @pytest.fixture
 def mock_rust_notify(mocker):
-    def mock(changes: ChangesType):
-        m = MockRustNotify(changes)
+    def mock(changes: ChangesType, *, exit_code: str = 'signal'):
+        m = MockRustNotify(changes, exit_code)
         mocker.patch('watchfiles.main.RustNotify', return_value=m)
         return m
 
