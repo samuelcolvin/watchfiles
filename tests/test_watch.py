@@ -9,6 +9,7 @@ import anyio
 import pytest
 
 from watchfiles import Change, awatch, watch
+from watchfiles.main import _calc_async_timeout
 
 if TYPE_CHECKING:
     from conftest import MockRustType
@@ -115,3 +116,15 @@ async def test_awatch_no_yield(mock_rust_notify: 'MockRustType', caplog):
     assert changes == {(Change.added, 'spam.py')}
     assert mock.watch_count == 2
     assert caplog.text == "watchfiles.main DEBUG: 1 change detected: {(<Change.added: 1>, 'spam.py')}\n"
+
+
+@pytest.mark.skipif(sys.platform == 'win32', reason='different on windows')
+def test_calc_async_timeout_posix():
+    assert _calc_async_timeout(123) == 123
+    assert _calc_async_timeout(None) == 5_000
+
+
+@pytest.mark.skipif(sys.platform != 'win32', reason='different on windows')
+def test_calc_async_timeout_win():
+    assert _calc_async_timeout(123) == 123
+    assert _calc_async_timeout(None) == 1_000

@@ -59,6 +59,7 @@ def watch(
     watch_filter: Optional[Callable[['Change', str], bool]] = DefaultFilter(),
     debounce: int = 1_600,
     step: int = 50,
+    rust_timeout: int = 5_000,
     stop_event: Optional['AbstractEvent'] = None,
     debug: bool = False,
     raise_interrupt: bool = True,
@@ -77,6 +78,7 @@ def watch(
         debounce: maximum time in milliseconds to group changes over before yielding them.
         step: time to wait for new changes in milliseconds, if no changes are detected in this time, and
             at least one change has been detected, the changes are yielded.
+        rust_timeout: maximum time in milliseconds to wait in rust for changes, `0` means no timeout.
         stop_event: event to stop watching, if this is set, the generator will stop iteration,
             this can be anything with an `is_set()` method which returns a bool, e.g. `threading.Event()`.
         debug: whether to print information about all filesystem changes in rust to stdout.
@@ -94,14 +96,16 @@ def watch(
     """
     watcher = RustNotify([str(p) for p in paths], debug)
     while True:
-        raw_changes = watcher.watch(debounce, step, stop_event)
-        if raw_changes == 'signalled':
+        raw_changes = watcher.watch(debounce, step, rust_timeout, stop_event)
+        if raw_changes == 'timeout':
+            logger.debug('rust notify timeout, continuing')
+        elif raw_changes == 'signal':
             if raise_interrupt:
                 raise KeyboardInterrupt
             else:
                 logger.warning('KeyboardInterrupt caught, stopping watch')
                 return
-        elif raw_changes == 'stopped':
+        elif raw_changes == 'stop':
             return
         else:
             changes = _prep_changes(raw_changes, watch_filter)
@@ -110,11 +114,12 @@ def watch(
                 yield changes
 
 
-async def awatch(
+async def awatch(  # noqa C901
     *paths: Union[Path, str],
     watch_filter: Optional[Callable[[Change, str], bool]] = DefaultFilter(),
     debounce: int = 1_600,
     step: int = 50,
+    rust_timeout: Optional[int] = None,
     stop_event: Optional['AnyEvent'] = None,
     debug: bool = False,
     raise_interrupt: bool = True,
@@ -130,6 +135,9 @@ async def awatch(
         watch_filter: matches the same argument of [`watch`][watchfiles.watch].
         debounce: matches the same argument of [`watch`][watchfiles.watch].
         step: matches the same argument of [`watch`][watchfiles.watch].
+        rust_timeout: matches the same argument of [`watch`][watchfiles.watch], except that `None` means
+            use `1_000` on Windows and `5_000` on other platforms thus helping with exiting on `Ctrl+C` on Windows,
+            see [#110](https://github.com/samuelcolvin/watchfiles/issues/110)
         stop_event: `anyio.Event` which can be used to stop iteration, see example below.
         debug: matches the same argument of [`watch`][watchfiles.watch].
         raise_interrupt: matches the same argument of [`watch`][watchfiles.watch].
@@ -180,7 +188,7 @@ async def awatch(
         nonlocal interrupted
 
         if sys.platform == 'win32':
-            # add_signal_handler is not implemented on windows
+            # add_signal_handler is not implemented on Windows
             # repeat ctrl+c should still stop the watcher
             return
 
@@ -191,25 +199,28 @@ async def awatch(
                 break
 
     watcher = RustNotify([str(p) for p in paths], debug)
+    timeout = _calc_async_timeout(rust_timeout)
     while True:
         async with anyio.create_task_group() as tg:
             tg.start_soon(signal_handler)
-            raw_changes = await anyio.to_thread.run_sync(watcher.watch, debounce, step, stop_event_)
+            raw_changes = await anyio.to_thread.run_sync(watcher.watch, debounce, step, timeout, stop_event_)
             tg.cancel_scope.cancel()
 
-        # cover both cases here although in theory the watch thread should never get a signal
-        if raw_changes == 'stopped' or raw_changes == 'signalled':
+        if raw_changes == 'timeout':
+            logger.debug('rust notify timeout, continuing')
+        elif raw_changes == 'stop' or raw_changes == 'signal':
+            # cover both cases here although in theory the watch thread should never get a signal
             if interrupted:
                 if raise_interrupt:
                     raise KeyboardInterrupt
                 else:
                     logger.warning('KeyboardInterrupt caught, stopping awatch')
             return
-
-        changes = _prep_changes(raw_changes, watch_filter)
-        if changes:
-            _log_changes(changes)
-            yield changes
+        else:
+            changes = _prep_changes(raw_changes, watch_filter)
+            if changes:
+                _log_changes(changes)
+                yield changes
 
 
 def _prep_changes(
@@ -230,3 +241,16 @@ def _log_changes(changes: Set[FileChange]) -> None:
             logger.debug('%d change%s detected: %s', count, plural, changes)
         else:
             logger.info('%d change%s detected', count, plural)
+
+
+def _calc_async_timeout(timeout: Optional[int]) -> int:
+    """
+    see https://github.com/samuelcolvin/watchfiles/issues/110
+    """
+    if timeout is None:
+        if sys.platform == 'win32':
+            return 1_000
+        else:
+            return 5_000
+    else:
+        return timeout

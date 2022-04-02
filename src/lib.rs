@@ -108,19 +108,30 @@ impl RustNotify {
         })
     }
 
-    pub fn watch(&self, py: Python, debounce_ms: u64, step_ms: u64, stop_event: PyObject) -> PyResult<PyObject> {
+    pub fn watch(
+        &self,
+        py: Python,
+        debounce_ms: u64,
+        step_ms: u64,
+        timeout_ms: u64,
+        stop_event: PyObject,
+    ) -> PyResult<PyObject> {
         let event_not_none = !stop_event.is_none(py);
 
         let mut max_time: Option<SystemTime> = None;
         let step_time = Duration::from_millis(step_ms);
         let mut last_size: usize = 0;
+        let timeout: Option<SystemTime> = match timeout_ms {
+            0 => None,
+            _ => Some(SystemTime::now() + Duration::from_millis(timeout_ms)),
+        };
         loop {
             py.allow_threads(|| sleep(step_time));
             match py.check_signals() {
                 Ok(_) => (),
                 Err(_) => {
                     self.clear();
-                    return Ok("signalled".to_object(py));
+                    return Ok("signal".to_object(py));
                 }
             };
 
@@ -131,7 +142,7 @@ impl RustNotify {
 
             if event_not_none && stop_event.getattr(py, "is_set")?.call0(py)?.is_true(py)? {
                 self.clear();
-                return Ok("stopped".to_object(py));
+                return Ok("stop".to_object(py));
             }
 
             let size = self.changes.lock().unwrap().len();
@@ -148,6 +159,11 @@ impl RustNotify {
                     }
                 } else {
                     max_time = Some(now + Duration::from_millis(debounce_ms));
+                }
+            } else if let Some(timeout) = timeout {
+                if timeout > SystemTime::now() {
+                    self.clear();
+                    return Ok("timeout".to_object(py));
                 }
             }
         }

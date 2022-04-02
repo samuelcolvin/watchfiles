@@ -69,11 +69,11 @@ class MockRustNotify:
         self.iter_changes = iter(changes)
         self.watch_count = 0
 
-    def watch(self, debounce_ms: int, step_ms: int, cancel_event):
+    def watch(self, debounce_ms: int, step_ms: int, timeout_ms: int, cancel_event):
         try:
             change = next(self.iter_changes)
         except StopIteration:
-            return 'signalled'
+            return 'signal'
         else:
             self.watch_count += 1
             return change
