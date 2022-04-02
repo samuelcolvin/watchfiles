@@ -46,7 +46,7 @@ def run_process(
     `run_process` can work in two ways:
 
     * Using `multiprocessing.Process` † to run a python function
-    * Or, use `subprocess.Popen` to run a command
+    * Or, using `subprocess.Popen` to run a command
 
     !!! note
 
@@ -62,7 +62,7 @@ def run_process(
         args: arguments to pass to `target`, only used if `target` is a function
         kwargs: keyword arguments to pass to `target`, only used if `target` is a function
         target_type: type of target. Can be `'function'`, `'command'`, or `'auto'` in which case
-            [`detect_target_type`][watchfiles.run_process.detect_target_type] is used to determine the type.
+            [`detect_target_type`][watchfiles.run.detect_target_type] is used to determine the type.
         callback: function to call on each reload, the function should accept a set of changes as the sole argument
         watch_filter: matches the same argument of [`watch`][watchfiles.watch]
         debounce: matches the same argument of [`watch`][watchfiles.watch]

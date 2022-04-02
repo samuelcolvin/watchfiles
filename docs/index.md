@@ -26,6 +26,9 @@ for changes in watch('./path/to/dir'):
 ```
 See [`watch` docs][watchfiles.watch] for more details.
 
+`watch` (and all other methods) can watch either files or directories and can watch more than one path with
+a single instance.
+
 ```py
 title="awatch Usage"
 import asyncio

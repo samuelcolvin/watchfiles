@@ -20,11 +20,11 @@ class Change(IntEnum):
     """
 
     added = 1
-    """A new file was added."""
+    """A new file or directory was added."""
     modified = 2
-    """A file was modified, can be either a metadata or data change."""
+    """A file or directory was modified, can be either a metadata or data change."""
     deleted = 3
-    """A file was deleted."""
+    """A file or directory was deleted."""
 
     def raw_str(self) -> str:
         if self == Change.added:
@@ -64,18 +64,20 @@ def watch(
     raise_interrupt: bool = True,
 ) -> Generator[Set[FileChange], None, None]:
     """
-    Watch one or more directories and yield a set of changes whenever files change
-    in those directories (or subdirectories).
+    Watch one or more paths and yield a set of changes whenever files change.
+
+    The paths watched can be directories or files, directories are watched recursively - changes in subdirectories
+    are also detected.
 
     Args:
-        *paths: filesystem directories to watch
+        *paths: filesystem paths to watch
         watch_filter: callable used to filter out changes which are not important, you can either use a raw callable
             or a [`BaseFilter`][watchfiles.BaseFilter] instance,
             defaults to an instance of [`DefaultFilter`][watchfiles.DefaultFilter]. To keep all changes, use `None`.
         debounce: maximum time in milliseconds to group changes over before yielding them.
         step: time to wait for new changes in milliseconds, if no changes are detected in this time, and
             at least one change has been detected, the changes are yielded.
-        stop_event: event to stop watching, if this is set, the generator will stop yielding changes,
+        stop_event: event to stop watching, if this is set, the generator will stop iteration,
             this can be anything with an `is_set()` method which returns a bool, e.g. `threading.Event()`.
         debug: whether to print information about all filesystem changes in rust to stdout.
         raise_interrupt: whether to re-raise `KeyboardInterrupt`s, or suppress the error and just stop iterating.
@@ -124,13 +126,12 @@ async def awatch(
     All async methods use [anyio](https://anyio.readthedocs.io/en/latest/) to run the event loop.
 
     Args:
-        *paths: filesystem directories to watch
-        stop_event:
+        *paths: filesystem paths to watch
         watch_filter: matches the same argument of [`watch`][watchfiles.watch].
         debounce: matches the same argument of [`watch`][watchfiles.watch].
         step: matches the same argument of [`watch`][watchfiles.watch].
-        debug: matches the same argument of [`watch`][watchfiles.watch].
         stop_event: `anyio.Event` which can be used to stop iteration, see example below.
+        debug: matches the same argument of [`watch`][watchfiles.watch].
         raise_interrupt: matches the same argument of [`watch`][watchfiles.watch].
 
     Yields:

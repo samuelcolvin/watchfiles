@@ -15,10 +15,10 @@ class RustNotify:
         """
         Create a new RustNotify instance and start a thread to watch for changes.
 
-        `FileNotFoundError` is raised if one of the directories does not exist.
+        `FileNotFoundError` is raised if one of the paths does not exist.
 
         Args:
-            watch_paths: file system paths to watch for changes
+            watch_paths: file system paths to watch for changes, can be directories or files
             debug: if true, print details about all events to stderr
         """
     def watch(
