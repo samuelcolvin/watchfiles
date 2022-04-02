@@ -77,10 +77,15 @@ def test_watch_multiple(tmp_path: Path):
     assert not any('not_included.txt' in p for c, p in changes)
 
 
-def test_return_timeout(test_dir: Path):
-    watcher = RustNotify([str(test_dir)], True)
+skip_unless_linux = pytest.mark.skipif('linux' not in sys.platform, reason='avoid time differences on other platforms')
 
-    assert watcher.watch(20, 10, 50, None) == 'timeout'
+
+@skip_unless_linux
+def test_return_timeout(test_dir: Path, time_taken):
+    watcher = RustNotify([str(test_dir)], False)
+
+    with time_taken(40, 70):
+        assert watcher.watch(20, 1, 50, None) == 'timeout'
 
 
 class AbstractEvent:
@@ -91,13 +96,27 @@ class AbstractEvent:
         return self._is_set
 
 
-def test_return_event_set(test_dir: Path):
+@skip_unless_linux
+def test_return_event_set(test_dir: Path, time_taken):
+    watcher = RustNotify([str(test_dir)], False)
+
+    with time_taken(0, 20):
+        assert watcher.watch(100, 1, 500, AbstractEvent(True)) == 'stop'
+
+
+@skip_unless_linux
+def test_return_event_unset(test_dir: Path, time_taken):
+    watcher = RustNotify([str(test_dir)], False)
+
+    with time_taken(40, 70):
+        assert watcher.watch(20, 1, 50, AbstractEvent(False)) == 'timeout'
+
+
+@skip_unless_linux
+def test_return_debounce_no_timeout(test_dir: Path, time_taken):
+    # would return sooner if the timeout logic wasn't in an else clause
     watcher = RustNotify([str(test_dir)], True)
+    (test_dir / 'debounce.txt').write_text('foobar')
 
-    assert watcher.watch(20, 10, 50, AbstractEvent(True)) == 'stop'
-
-
-def test_return_event_unset(test_dir: Path):
-    watcher = RustNotify([str(test_dir)], True)
-
-    assert watcher.watch(20, 10, 50, AbstractEvent(False)) == 'timeout'
+    with time_taken(50, 130):
+        assert watcher.watch(100, 50, 20, None) == {(1, str(test_dir / 'debounce.txt'))}

@@ -3,7 +3,7 @@ import os
 import sys
 from pathlib import Path
 from threading import Thread
-from time import sleep
+from time import sleep, time
 from typing import Callable, List, Set, Tuple
 
 import pytest
@@ -133,3 +133,34 @@ def reset_argv():
     yield
 
     sys.argv = original_argv
+
+
+class TimeTaken:
+    def __init__(self, name: str, min_time: int, max_time: int):
+        self.name = name
+        self.min_time = min_time
+        self.max_time = max_time
+        self.start = time()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, *args):
+        diff = (time() - self.start) * 1000
+        if exc_type is None:
+            if diff > self.max_time:
+                pytest.fail(f'{self.name} code took too long: {diff:0.2f}ms')
+                return
+            elif diff < self.min_time:
+                pytest.fail(f'{self.name} code did not take long enough: {diff:0.2f}ms')
+                return
+
+        print(f'{self.name} code took {diff:0.2f}ms')
+
+
+@pytest.fixture
+def time_taken(request):
+    def time_taken(min_time: int, max_time: int):
+        return TimeTaken(request.node.name, min_time, max_time)
+
+    return time_taken

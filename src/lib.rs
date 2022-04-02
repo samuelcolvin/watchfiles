@@ -118,10 +118,10 @@ impl RustNotify {
     ) -> PyResult<PyObject> {
         let event_not_none = !stop_event.is_none(py);
 
-        let mut max_time: Option<SystemTime> = None;
+        let mut max_debounce_time: Option<SystemTime> = None;
         let step_time = Duration::from_millis(step_ms);
         let mut last_size: usize = 0;
-        let timeout: Option<SystemTime> = match timeout_ms {
+        let max_timeout_time: Option<SystemTime> = match timeout_ms {
             0 => None,
             _ => Some(SystemTime::now() + Duration::from_millis(timeout_ms)),
         };
@@ -153,15 +153,15 @@ impl RustNotify {
                 last_size = size;
 
                 let now = SystemTime::now();
-                if let Some(max_time) = max_time {
+                if let Some(max_time) = max_debounce_time {
                     if now > max_time {
                         break;
                     }
                 } else {
-                    max_time = Some(now + Duration::from_millis(debounce_ms));
+                    max_debounce_time = Some(now + Duration::from_millis(debounce_ms));
                 }
-            } else if let Some(timeout) = timeout {
-                if timeout > SystemTime::now() {
+            } else if let Some(max_time) = max_timeout_time {
+                if SystemTime::now() > max_time {
                     self.clear();
                     return Ok("timeout".to_object(py));
                 }

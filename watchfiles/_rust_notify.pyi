@@ -42,14 +42,14 @@ class RustNotify:
             step_ms: time to wait for new changes in milliseconds, if no changes are detected
                 in this time, and at least one change has been detected, the changes are yielded.
             timeout_ms: maximum time in milliseconds to wait for changes before returning,
-                `0` means wait indefinitely.
+                `0` means wait indefinitely, `debounce_ms` takes precedence over `timeout_ms` once
+                a change is detected.
             stop_event: event to check on every iteration to see if this function should return early.
 
         Returns:
             Either a set of `(event_type, path)` tuples
             (the event types are ints which match [`Change`][watchfiles.Change]),
-            `'signal'` if a signal was received,
-            `'stop'` if the `stop_event` was set,
+            `'signal'` if a signal was received, `'stop'` if the `stop_event` was set,
             or `'timeout'` if `timeout_ms` was exceeded.
         """
 
