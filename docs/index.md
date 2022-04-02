@@ -11,7 +11,7 @@ Simple, modern and high performance file watching and code reload in python.
 
 Underlying file system notifications are handled by the [Notify](https://github.com/notify-rs/notify) rust library.
 
-This package used to be called "watchgod", see [Migrating from watchgod](./migrating.md) for more information.
+This package was previously named "watchgod", see [Migrating from watchgod](./migrating.md) for more information.
 
 ## Usage
 
@@ -85,7 +85,7 @@ Otherwise, you can install from source which requires Rust stable to be installe
 
 ## How Watchfiles Works
 
-*watchfiles* is based on the [Notify](https://github.com/notify-rs/notify) rust library.
+**watchfiles** is based on the [Notify](https://github.com/notify-rs/notify) rust library.
 
 All the hard work of integrating with the OS's file system events notifications and falling back to polling is palmed
 off onto the rust library.

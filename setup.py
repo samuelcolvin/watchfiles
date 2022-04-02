@@ -61,5 +61,11 @@ setup(
     install_requires=['anyio>=3.0.0,<4'],
     python_requires='>=3.7',
     zip_safe=False,
+    project_urls={
+        'Documentation': 'https://watchfiles.helpmanual.io',
+        'Funding': 'https://github.com/sponsors/samuelcolvin',
+        'Source': 'https://github.com/samuelcolvin/watchfiles',
+        'Changelog': 'https://github.com/samuelcolvin/watchfiles/releases',
+    },
     **extra,
 )
