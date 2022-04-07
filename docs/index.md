@@ -96,6 +96,12 @@ Using `conda` or `mamba`:
 mamba install -c conda-forge watchfiles
 ```
 
+Binaries are available for:
+
+* **Linux**: `x86_64`
+* **MacOS**: `x86_64`
+* **Windows**: `amd64`
+
 ### From source
 
 You can also install from source which requires Rust stable to be installed.
