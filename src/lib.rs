@@ -116,7 +116,13 @@ impl RustNotify {
         timeout_ms: u64,
         stop_event: PyObject,
     ) -> PyResult<PyObject> {
-        let event_not_none = !stop_event.is_none(py);
+        let stop_event: Option<&PyAny> = match stop_event.is_none(py) {
+            true => None,
+            false => {
+                let e: &PyAny = stop_event.extract(py)?;
+                Some(e)
+            }
+        };
 
         let mut max_debounce_time: Option<SystemTime> = None;
         let step_time = Duration::from_millis(step_ms);
@@ -140,9 +146,11 @@ impl RustNotify {
                 return Err(WatchfilesRustInternalError::new_err(error.clone()));
             }
 
-            if event_not_none && stop_event.getattr(py, "is_set")?.call0(py)?.is_true(py)? {
-                self.clear();
-                return Ok("stop".to_object(py));
+            if let Some(stop_event) = stop_event {
+                if stop_event.getattr("is_set")?.call0()?.is_true()? {
+                    self.clear();
+                    return Ok("stop".to_object(py));
+                }
             }
 
             let size = self.changes.lock().unwrap().len();
