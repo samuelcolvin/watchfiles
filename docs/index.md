@@ -74,6 +74,10 @@ See [`arun_process` docs][watchfiles.arun_process] for more details.
 
 **watchfiles** requires **Python 3.7** to **Python 3.10**.
 
+### From PyPI
+
+Using `pip`:
+
 ```bash
 pip install watchfiles
 ```
@@ -84,7 +88,23 @@ Binaries are available for:
 * **MacOS**: `x86_64` & `arm64` (except python 3.7)
 * **Windows**: `amd64` & `win32`
 
-Otherwise, you can install from source which requires Rust stable to be installed.
+### From conda-forge
+
+Using `conda` or `mamba`:
+
+```bash
+mamba install -c conda-forge watchfiles
+```
+
+Binaries are available for:
+
+* **Linux**: `x86_64`
+* **MacOS**: `x86_64`
+* **Windows**: `amd64`
+
+### From source
+
+You can also install from source which requires Rust stable to be installed.
 
 ## How Watchfiles Works
 
