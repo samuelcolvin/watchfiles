@@ -25,15 +25,15 @@ def tmp_work_path(tmp_path: Path):
 @pytest.fixture(scope='session')
 def test_dir():
     d = Path(__file__).parent / 'test_files'
+    files = {f.name: f.read_text() for f in d.iterdir()}
 
     yield d
 
     for f in d.iterdir():
         f.unlink()
 
-    (d / 'a.txt').write_text('a')
-    (d / 'b.txt').write_text('b')
-    (d / 'c.txt').write_text('c')
+    for name, content in files.items():
+        (d / name).write_text(content)
 
 
 @pytest.fixture(autouse=True)

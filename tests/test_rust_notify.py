@@ -21,7 +21,7 @@ def test_modify_write(test_dir: Path):
     assert watcher.watch(200, 50, 500, None) == {(2, str(test_dir / 'a.txt'))}
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason='fails on windows')
+@pytest.mark.skipif(sys.platform == 'win32', reason='fails on Windows')
 def test_modify_chmod(test_dir: Path):
     watcher = RustNotify([str(test_dir)], True)
 
@@ -38,6 +38,29 @@ def test_delete(test_dir: Path):
 
     assert watcher.watch(200, 50, 500, None) == {
         (3, str(test_dir / 'c.txt')),
+    }
+
+
+@pytest.mark.skipif(sys.platform == 'darwin', reason='fails on macOS')
+def test_rename_out(test_dir: Path):
+    # have to do it this way to avoid issues with different drives on Windows
+    new_dir = test_dir.parent.parent / 'sandbox'
+    new_dir.mkdir(exist_ok=True)
+    new_files = new_dir / 'd.txt', new_dir / 'e.txt'
+
+    # have to delete the destination files as it breaks rename on Windows
+    for f in new_files:
+        if f.exists():
+            f.unlink()
+
+    watcher = RustNotify([str(test_dir)], False)
+
+    for f in new_files:
+        (test_dir / f.name).rename(f)
+
+    assert watcher.watch(200, 50, 500, None) == {
+        (3, str(test_dir / 'd.txt')),
+        (3, str(test_dir / 'e.txt')),
     }
 
 
@@ -135,3 +158,59 @@ def test_return_debounce_no_timeout(test_dir: Path, time_taken):
 
     with time_taken(50, 130):
         assert watcher.watch(100, 50, 20, None) == {(1, str(test_dir / 'debounce.txt'))}
+
+
+@skip_unless_linux
+def test_rename_multiple_inside(tmp_path: Path):
+    d1 = tmp_path / 'd1'
+
+    d1.mkdir()
+    f1 = d1 / '1.txt'
+    f1.write_text('1')
+    f2 = d1 / '2.txt'
+    f2.write_text('2')
+    f3 = d1 / '3.txt'
+    f3.write_text('3')
+
+    d2 = tmp_path / 'd2'
+    d2.mkdir()
+
+    watcher_all = RustNotify([str(tmp_path)], False)
+
+    f1.rename(d2 / '1.txt')
+    f2.rename(d2 / '2.txt')
+    f3.rename(d2 / '3.txt')
+
+    assert watcher_all.watch(200, 50, 500, None) == {
+        (3, str(f1)),
+        (3, str(f2)),
+        (3, str(f3)),
+        (1, str(d2 / '1.txt')),
+        (1, str(d2 / '2.txt')),
+        (1, str(d2 / '3.txt')),
+    }
+
+
+@skip_unless_linux
+def test_rename_multiple_out(tmp_path: Path):
+    d1 = tmp_path / 'd1'
+
+    d1.mkdir()
+    f1 = d1 / '1.txt'
+    f1.write_text('1')
+    f2 = d1 / '2.txt'
+    f2.write_text('2')
+    f3 = d1 / '3.txt'
+    f3.write_text('3')
+
+    watcher_all = RustNotify([str(d1)], False)
+
+    f1.rename(tmp_path / '1.txt')
+    f2.rename(tmp_path / '2.txt')
+    f3.rename(tmp_path / '3.txt')
+
+    assert watcher_all.watch(200, 50, 500, None) == {
+        (3, str(f1)),
+        (3, str(f2)),
+        (3, str(f3)),
+    }
