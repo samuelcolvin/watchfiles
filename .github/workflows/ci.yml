@@ -141,11 +141,21 @@ jobs:
       matrix:
         os: [ubuntu, macos, windows]
         python-version: ['7', '8', '9', '10']
+        arch: ['auto', 'alt']
         include:
           - os: ubuntu
             platform: linux
           - os: windows
             ls: dir
+          - os: ubuntu
+            arch: alt
+            alt_arch_name: aarch64
+          - os: macos
+            arch: alt
+            alt_arch_name: arm64
+        exclude:
+          - os: windows
+            arch: alt
 
     runs-on: ${{ matrix.os }}-latest
     steps:
@@ -204,8 +214,8 @@ jobs:
           CIBW_BUILD: 'cp3${{ matrix.python-version }}-*'
           # rust doesn't seem to be available for musl linux on i686
           CIBW_SKIP: '*-musllinux_i686'
-          CIBW_ARCHS_LINUX: 'auto aarch64'
-          CIBW_ARCHS_MACOS: 'x86_64 arm64'
+          # we build for "alt_arch_name" if it exists, else 'auto
+          CIBW_ARCHS: ${{ matrix.alt_arch_name || 'auto' }}
           # see https://cibuildwheel.readthedocs.io/en/stable/faq/#universal2, tests can run on cross-compiled binaries
           CIBW_TEST_SKIP: '*-macosx_arm64'
           CIBW_TEST_REQUIRES: pytest pytest-mock pytest-timeout dirty-equals
@@ -231,7 +241,6 @@ jobs:
 
   release:
     needs: [build, docs]
-    if: "startsWith(github.ref, 'refs/tags/')"
     runs-on: ubuntu-latest
 
     steps:
@@ -261,12 +270,14 @@ jobs:
       - run: twine check dist/*
 
       - name: upload to pypi
+        if: "startsWith(github.ref, 'refs/tags/')"
         run: twine upload dist/*
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.pypi_token }}
 
       - name: publish docs
+        if: "startsWith(github.ref, 'refs/tags/')"
         uses: JamesIves/github-pages-deploy-action@v4.2.5
         with:
           branch: gh-pages
