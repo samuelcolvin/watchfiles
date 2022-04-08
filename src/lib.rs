@@ -9,7 +9,7 @@ use std::thread::sleep;
 use std::time::{Duration, SystemTime};
 
 use pyo3::create_exception;
-use pyo3::exceptions::{PyFileNotFoundError, PyRuntimeError};
+use pyo3::exceptions::{PyFileNotFoundError, PyRuntimeError, PyTypeError};
 use pyo3::prelude::*;
 
 use notify::event::{Event, EventKind, ModifyKind};
@@ -108,19 +108,40 @@ impl RustNotify {
         })
     }
 
-    pub fn watch(&self, py: Python, debounce_ms: u64, step_ms: u64, stop_event: PyObject) -> PyResult<PyObject> {
-        let event_not_none = !stop_event.is_none(py);
+    pub fn watch(
+        &self,
+        py: Python,
+        debounce_ms: u64,
+        step_ms: u64,
+        timeout_ms: u64,
+        stop_event: PyObject,
+    ) -> PyResult<PyObject> {
+        let stop_event_is_set: Option<&PyAny> = match stop_event.is_none(py) {
+            true => None,
+            false => {
+                let event: &PyAny = stop_event.extract(py)?;
+                let func: &PyAny = event.getattr("is_set")?.extract()?;
+                if !func.is_callable() {
+                    return Err(PyTypeError::new_err("'stop_event.is_set' must be callable".to_string()));
+                }
+                Some(func)
+            }
+        };
 
-        let mut max_time: Option<SystemTime> = None;
+        let mut max_debounce_time: Option<SystemTime> = None;
         let step_time = Duration::from_millis(step_ms);
         let mut last_size: usize = 0;
+        let max_timeout_time: Option<SystemTime> = match timeout_ms {
+            0 => None,
+            _ => Some(SystemTime::now() + Duration::from_millis(timeout_ms)),
+        };
         loop {
             py.allow_threads(|| sleep(step_time));
             match py.check_signals() {
                 Ok(_) => (),
                 Err(_) => {
                     self.clear();
-                    return Ok("signalled".to_object(py));
+                    return Ok("signal".to_object(py));
                 }
             };
 
@@ -129,9 +150,11 @@ impl RustNotify {
                 return Err(WatchfilesRustInternalError::new_err(error.clone()));
             }
 
-            if event_not_none && stop_event.getattr(py, "is_set")?.call0(py)?.is_true(py)? {
-                self.clear();
-                return Ok("stopped".to_object(py));
+            if let Some(is_set) = stop_event_is_set {
+                if is_set.call0()?.is_true()? {
+                    self.clear();
+                    return Ok("stop".to_object(py));
+                }
             }
 
             let size = self.changes.lock().unwrap().len();
@@ -142,12 +165,17 @@ impl RustNotify {
                 last_size = size;
 
                 let now = SystemTime::now();
-                if let Some(max_time) = max_time {
+                if let Some(max_time) = max_debounce_time {
                     if now > max_time {
                         break;
                     }
                 } else {
-                    max_time = Some(now + Duration::from_millis(debounce_ms));
+                    max_debounce_time = Some(now + Duration::from_millis(debounce_ms));
+                }
+            } else if let Some(max_time) = max_timeout_time {
+                if SystemTime::now() > max_time {
+                    self.clear();
+                    return Ok("timeout".to_object(py));
                 }
             }
         }

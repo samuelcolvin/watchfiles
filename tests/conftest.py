@@ -3,8 +3,8 @@ import os
 import sys
 from pathlib import Path
 from threading import Thread
-from time import sleep
-from typing import Callable, List, Set, Tuple
+from time import sleep, time
+from typing import TYPE_CHECKING, Any, List, Set, Tuple
 
 import pytest
 
@@ -65,27 +65,33 @@ ChangesType = List[Set[Tuple[int, str]]]
 
 
 class MockRustNotify:
-    def __init__(self, changes: ChangesType):
+    def __init__(self, changes: ChangesType, exit_code: str):
         self.iter_changes = iter(changes)
+        self.exit_code = exit_code
         self.watch_count = 0
 
-    def watch(self, debounce_ms: int, step_ms: int, cancel_event):
+    def watch(self, debounce_ms: int, step_ms: int, timeout_ms: int, cancel_event):
         try:
             change = next(self.iter_changes)
         except StopIteration:
-            return 'signalled'
+            return self.exit_code
         else:
             self.watch_count += 1
             return change
 
 
-MockRustType = Callable[[ChangesType], MockRustNotify]
+if TYPE_CHECKING:
+    from typing import Literal, Protocol
+
+    class MockRustType(Protocol):
+        def __call__(self, changes: ChangesType, *, exit_code: Literal['signal', 'stop', 'timeout'] = 'signal') -> Any:
+            ...
 
 
 @pytest.fixture
 def mock_rust_notify(mocker):
-    def mock(changes: ChangesType):
-        m = MockRustNotify(changes)
+    def mock(changes: ChangesType, *, exit_code: str = 'signal'):
+        m = MockRustNotify(changes, exit_code)
         mocker.patch('watchfiles.main.RustNotify', return_value=m)
         return m
 
@@ -133,3 +139,34 @@ def reset_argv():
     yield
 
     sys.argv = original_argv
+
+
+class TimeTaken:
+    def __init__(self, name: str, min_time: int, max_time: int):
+        self.name = name
+        self.min_time = min_time
+        self.max_time = max_time
+        self.start = time()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, *args):
+        diff = (time() - self.start) * 1000
+        if exc_type is None:
+            if diff > self.max_time:
+                pytest.fail(f'{self.name} code took too long: {diff:0.2f}ms')
+                return
+            elif diff < self.min_time:
+                pytest.fail(f'{self.name} code did not take long enough: {diff:0.2f}ms')
+                return
+
+        print(f'{self.name} code took {diff:0.2f}ms')
+
+
+@pytest.fixture
+def time_taken(request):
+    def time_taken(min_time: int, max_time: int):
+        return TimeTaken(request.node.name, min_time, max_time)
+
+    return time_taken

@@ -31,6 +31,8 @@ def import_execute(request, tmp_work_path: Path):
         example_bash_file = tmp_work_path / 'example.sh'
         example_bash_file.write_text('#!/bin/sh\necho testing')
         example_bash_file.chmod(0o755)
+        (tmp_work_path / 'first/path').mkdir(parents=True, exist_ok=True)
+        (tmp_work_path / 'second/path').mkdir(parents=True, exist_ok=True)
 
         module_path = tmp_work_path / f'{module_name}.py'
         module_path.write_text(source)
@@ -48,13 +50,15 @@ def extract_code_chunks(path: Path, text: str, offset: int):
     rel_path = path.relative_to(ROOT_DIR)
     for m_code in re.finditer(r'^```(.*?)$\n(.*?)^```', text, flags=re.M | re.S):
         prefix = m_code.group(1).lower()
-        if not prefix.startswith(('py', '{.py')) or 'test="false"' in prefix:
+        if not prefix.startswith(('py', '{.py')):
             continue
 
         start_line = offset + text[: m_code.start()].count('\n') + 1
         code = m_code.group(2)
         end_line = start_line + code.count('\n') + 1
         source = '\n' * start_line + code
+        if 'test="skip"' in prefix:
+            source = '__skip__'
         yield pytest.param(f'{path.stem}_{start_line}_{end_line}', source, id=f'{rel_path}:{start_line}-{end_line}')
 
 
@@ -77,6 +81,9 @@ def test_docs_examples(module_name, source_code, import_execute, mocker, mock_ru
     mock_rust_notify([{(1, 'foo.txt'), (2, 'bar.py')}])
     mocker.patch('watchfiles.run.spawn_context.Process')
     mocker.patch('watchfiles.run.os.kill')
+
+    if source_code == '__skip__':
+        pytest.skip('test="skip" on code snippet')
 
     async def dont_sleep(t):
         pass

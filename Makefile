@@ -15,7 +15,7 @@ install:
 build-dev:
 	python setup.py develop
 
-.PHONY: isort
+.PHONY: format
 format:
 	$(isort)
 	$(black)
