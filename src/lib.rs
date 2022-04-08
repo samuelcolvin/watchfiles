@@ -12,7 +12,7 @@ use pyo3::create_exception;
 use pyo3::exceptions::{PyFileNotFoundError, PyRuntimeError, PyTypeError};
 use pyo3::prelude::*;
 
-use notify::event::{Event, EventKind, ModifyKind};
+use notify::event::{Event, EventKind, ModifyKind, RenameMode};
 use notify::{recommended_watcher, RecommendedWatcher, RecursiveMode, Result as NotifyResult, Watcher};
 
 create_exception!(
@@ -63,6 +63,7 @@ impl RustNotify {
                         EventKind::Create(_) => CHANGE_ADDED,
                         EventKind::Modify(ModifyKind::Metadata(_))
                         | EventKind::Modify(ModifyKind::Data(_))
+                        | EventKind::Modify(ModifyKind::Other)
                         | EventKind::Modify(ModifyKind::Any) => {
                             // these events sometimes happen when creating files and deleting them, hence these checks
                             let changes = changes_clone.lock().unwrap();
@@ -75,8 +76,13 @@ impl RustNotify {
                                 CHANGE_MODIFIED
                             }
                         }
+                        EventKind::Modify(ModifyKind::Name(RenameMode::From)) => CHANGE_DELETED,
+                        EventKind::Modify(ModifyKind::Name(RenameMode::To)) => CHANGE_ADDED,
+                        // RenameMode::Both duplicates RenameMode::From & RenameMode::To
+                        EventKind::Modify(ModifyKind::Name(RenameMode::Both)) => return,
                         EventKind::Modify(ModifyKind::Name(_)) => {
-                            // this just alternates `last_rename` between true and false
+                            // this just alternates `last_rename` between true and false,
+                            // to give a best guess at the change type
                             if last_rename.fetch_xor(true, Ordering::SeqCst) {
                                 CHANGE_ADDED
                             } else {
@@ -99,6 +105,9 @@ impl RustNotify {
             _watcher
                 .watch(Path::new(&watch_path), RecursiveMode::Recursive)
                 .map_err(|e| PyFileNotFoundError::new_err(format!("{}", e)))?;
+        }
+        if debug {
+            eprintln!("watcher: {:?}", _watcher);
         }
 
         Ok(RustNotify {
