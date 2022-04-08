@@ -134,18 +134,34 @@ jobs:
         path: site
 
   build:
-    name: build py3.${{ matrix.python-version }} on ${{ matrix.platform || matrix.os }}
+    name: >
+      build py3.${{ matrix.python-version }} on ${{ matrix.platform || matrix.os }}
+      (${{ matrix.alt_arch_name || matrix.arch }})
     needs: [test, lint]
+    if: "success() && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main')"
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu, macos, windows]
         python-version: ['7', '8', '9', '10']
+        arch: [main, alt]
         include:
           - os: ubuntu
             platform: linux
           - os: windows
             ls: dir
+          - os: ubuntu
+            arch: alt
+            alt_arch_name: aarch64
+          - os: macos
+            arch: alt
+            alt_arch_name: arm64
+        exclude:
+          - os: windows
+            arch: alt
+          - os: macos
+            python-version: '7'
+            arch: alt
 
     runs-on: ${{ matrix.os }}-latest
     steps:
@@ -192,13 +208,20 @@ jobs:
         env:
           SKIP_RUST_EXTENSION: 1
 
+      - name: Set up QEMU
+        if: matrix.os == 'ubuntu'
+        uses: docker/setup-qemu-action@v1
+        with:
+          platforms: all
+
       - name: build ${{ matrix.platform || matrix.os }} binaries
         run: cibuildwheel --output-dir dist
         env:
           CIBW_BUILD: 'cp3${{ matrix.python-version }}-*'
           # rust doesn't seem to be available for musl linux on i686
           CIBW_SKIP: '*-musllinux_i686'
-          CIBW_ARCHS_MACOS: 'x86_64 arm64'
+          # we build for "alt_arch_name" if it exists, else 'auto
+          CIBW_ARCHS: ${{ matrix.alt_arch_name || 'auto' }}
           # see https://cibuildwheel.readthedocs.io/en/stable/faq/#universal2, tests can run on cross-compiled binaries
           CIBW_TEST_SKIP: '*-macosx_arm64'
           CIBW_TEST_REQUIRES: pytest pytest-mock pytest-timeout dirty-equals
@@ -222,9 +245,24 @@ jobs:
           name: pypi_files
           path: dist
 
+  list-pypi-files:
+    needs: [build]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: get dist artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: pypi_files
+          path: dist
+
+      - run: ls -lh dist/
+
   release:
     needs: [build, docs]
-    if: "startsWith(github.ref, 'refs/tags/')"
+    if: "success() && startsWith(github.ref, 'refs/tags/')"
     runs-on: ubuntu-latest
 
     steps:
@@ -248,8 +286,6 @@ jobs:
         with:
           name: docs
           path: site
-
-      - run: ls -lh dist/
 
       - run: twine check dist/*
 
