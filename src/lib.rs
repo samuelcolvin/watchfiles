@@ -9,7 +9,7 @@ use std::thread::sleep;
 use std::time::{Duration, SystemTime};
 
 use pyo3::create_exception;
-use pyo3::exceptions::{PyFileNotFoundError, PyRuntimeError};
+use pyo3::exceptions::{PyFileNotFoundError, PyRuntimeError, PyTypeError};
 use pyo3::prelude::*;
 
 use notify::event::{Event, EventKind, ModifyKind};
@@ -116,11 +116,15 @@ impl RustNotify {
         timeout_ms: u64,
         stop_event: PyObject,
     ) -> PyResult<PyObject> {
-        let stop_event: Option<&PyAny> = match stop_event.is_none(py) {
+        let stop_event_is_set: Option<&PyAny> = match stop_event.is_none(py) {
             true => None,
             false => {
-                let e: &PyAny = stop_event.extract(py)?;
-                Some(e)
+                let event: &PyAny = stop_event.extract(py)?;
+                let func: &PyAny = event.getattr("is_set")?.extract()?;
+                if !func.is_callable() {
+                    return Err(PyTypeError::new_err("'stop_event.is_set' must be callable".to_string()));
+                }
+                Some(func)
             }
         };
 
@@ -146,8 +150,8 @@ impl RustNotify {
                 return Err(WatchfilesRustInternalError::new_err(error.clone()));
             }
 
-            if let Some(stop_event) = stop_event {
-                if stop_event.getattr("is_set")?.call0()?.is_true()? {
+            if let Some(is_set) = stop_event_is_set {
+                if is_set.call0()?.is_true()? {
                     self.clear();
                     return Ok("stop".to_object(py));
                 }
