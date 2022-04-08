@@ -1,3 +1,4 @@
+import asyncio
 import sys
 import threading
 from contextlib import contextmanager
@@ -115,3 +116,34 @@ async def test_awatch_no_yield(mock_rust_notify: 'MockRustType', caplog):
     assert changes == {(Change.added, 'spam.py')}
     assert mock.watch_count == 2
     assert caplog.text == "watchfiles.main DEBUG: 1 change detected: {(<Change.added: 1>, 'spam.py')}\n"
+
+
+async def test_watch_directory(tmp_path: Path):
+    stop_event = asyncio.Event()
+
+    async def stop_soon():
+        await asyncio.sleep(0.4)
+        stop_event.set()
+
+    async def change_dir():
+        await asyncio.sleep(0.1)
+        (tmp_path / 'file0').write_text('foo')
+        await asyncio.sleep(0.1)
+        with open(tmp_path / 'file0', 'a') as f:
+            f.write(' bar')
+        await asyncio.sleep(0.1)
+        (tmp_path / 'file0').unlink()
+
+    tasks = [asyncio.create_task(stop_soon()), asyncio.create_task(change_dir())]
+
+    changes = []
+    async for change in awatch(tmp_path, stop_event=stop_event, step=1):
+        changes.append(change)
+
+    assert changes == [
+        {(Change.added, str(tmp_path / 'file0'))},
+        {(Change.modified, str(tmp_path / 'file0'))},
+        {(Change.deleted, str(tmp_path / 'file0'))},
+    ]
+
+    await asyncio.gather(*tasks)
