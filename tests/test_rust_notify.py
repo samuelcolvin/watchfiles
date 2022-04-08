@@ -41,6 +41,19 @@ def test_delete(test_dir: Path):
     }
 
 
+def test_rename_out(test_dir: Path, tmp_path: Path):
+    watcher = RustNotify([str(test_dir)], False)
+
+    # notify those files
+    (test_dir / 'd.txt').rename(tmp_path / 'd.txt')
+    (test_dir / 'e.txt').rename(tmp_path / 'e.txt')
+
+    assert watcher.watch(200, 50, 500, None) == {
+        (3, str(test_dir / 'd.txt')),
+        (3, str(test_dir / 'e.txt')),
+    }
+
+
 def test_does_not_exist(tmp_path: Path):
     p = tmp_path / 'missing'
     with pytest.raises(FileNotFoundError):
@@ -137,8 +150,8 @@ def test_return_debounce_no_timeout(test_dir: Path, time_taken):
         assert watcher.watch(100, 50, 20, None) == {(1, str(test_dir / 'debounce.txt'))}
 
 
-# @skip_unless_linux
-def test_move_multiple(tmp_path: Path):
+@skip_unless_linux
+def test_rename_multiple_inside(tmp_path: Path):
     d1 = tmp_path / 'd1'
 
     d1.mkdir()
@@ -168,8 +181,8 @@ def test_move_multiple(tmp_path: Path):
     }
 
 
-# @skip_unless_linux
-def test_move_multiple_out(tmp_path: Path):
+@skip_unless_linux
+def test_rename_multiple_out(tmp_path: Path):
     d1 = tmp_path / 'd1'
 
     d1.mkdir()

@@ -31,9 +31,12 @@ def test_dir():
     for f in d.iterdir():
         f.unlink()
 
-    (d / 'a.txt').write_text('a')
-    (d / 'b.txt').write_text('b')
-    (d / 'c.txt').write_text('c')
+    (d / 'README.md').write_text('This directory is required for testing due event delays in FsEvent on macOS.\n')
+    (d / 'a.txt').write_text('a\n')
+    (d / 'b.txt').write_text('b\n')
+    (d / 'c.txt').write_text('c\n')
+    (d / 'd.txt').write_text('d\n')
+    (d / 'e.txt').write_text('e\n')
 
 
 @pytest.fixture(autouse=True)
