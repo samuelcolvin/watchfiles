@@ -43,13 +43,20 @@ def test_delete(test_dir: Path):
 
 @pytest.mark.skipif(sys.platform == 'darwin', reason='fails on macOS')
 def test_rename_out(test_dir: Path):
-    watcher = RustNotify([str(test_dir)], False)
-
     # have to do it this way to avoid issues with different drives on Windows
     new_dir = test_dir.parent.parent / 'sandbox'
     new_dir.mkdir(exist_ok=True)
-    (test_dir / 'd.txt').rename(new_dir / 'd.txt')
-    (test_dir / 'e.txt').rename(new_dir / 'e.txt')
+    new_files = new_dir / 'd.txt', new_dir / 'e.txt'
+
+    # have to delete the destination files as it breaks rename on Windows
+    for f in new_files:
+        if f.exists():
+            f.unlink()
+
+    watcher = RustNotify([str(test_dir)], False)
+
+    for f in new_files:
+        (test_dir / f.name).rename(f)
 
     assert watcher.watch(200, 50, 500, None) == {
         (3, str(test_dir / 'd.txt')),
