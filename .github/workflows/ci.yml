@@ -134,14 +134,16 @@ jobs:
         path: site
 
   build:
-    name: build py3.${{ matrix.python-version }} on ${{ matrix.platform || matrix.os }}
+    name: >
+      build py3.${{ matrix.python-version }} on ${{ matrix.platform || matrix.os }}
+      (${{ matrix.arch || matrix.alt_arch_name }})
     needs: [test, lint]
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu, macos, windows]
         python-version: ['7', '8', '9', '10']
-        arch: ['auto', 'alt']
+        arch: [main, alt]
         include:
           - os: ubuntu
             platform: linux
@@ -155,6 +157,9 @@ jobs:
             alt_arch_name: arm64
         exclude:
           - os: windows
+            arch: alt
+          - os: macos
+            python-version: '7'
             arch: alt
 
     runs-on: ${{ matrix.os }}-latest
