@@ -1,1 +1,1 @@
-This directory is required for testing due event delays in FsEvent on macOS.
+This directory is required for testing due to event delays in FsEvent on macOS.

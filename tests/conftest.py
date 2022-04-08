@@ -25,18 +25,15 @@ def tmp_work_path(tmp_path: Path):
 @pytest.fixture(scope='session')
 def test_dir():
     d = Path(__file__).parent / 'test_files'
+    files = {f.name: f.read_text() for f in d.iterdir()}
 
     yield d
 
     for f in d.iterdir():
         f.unlink()
 
-    (d / 'README.md').write_text('This directory is required for testing due event delays in FsEvent on macOS.\n')
-    (d / 'a.txt').write_text('a\n')
-    (d / 'b.txt').write_text('b\n')
-    (d / 'c.txt').write_text('c\n')
-    (d / 'd.txt').write_text('d\n')
-    (d / 'e.txt').write_text('e\n')
+    for name, content in files.items():
+        (d / name).write_text(content)
 
 
 @pytest.fixture(autouse=True)
