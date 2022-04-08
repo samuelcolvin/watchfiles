@@ -136,7 +136,7 @@ jobs:
   build:
     name: >
       build py3.${{ matrix.python-version }} on ${{ matrix.platform || matrix.os }}
-      (${{ matrix.arch || matrix.alt_arch_name }})
+      (${{ matrix.alt_arch_name || matrix.arch }})
     needs: [test, lint]
     strategy:
       fail-fast: false
