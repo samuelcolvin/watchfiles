@@ -2,6 +2,7 @@
 requires = ['setuptools', 'wheel', 'setuptools-rust']
 
 [tool.pytest.ini_options]
+asyncio_mode = 'strict'
 testpaths = 'tests'
 log_format = '%(name)s %(levelname)s: %(message)s'
 filterwarnings = 'error'
