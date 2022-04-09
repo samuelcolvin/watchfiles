@@ -1,8 +1,8 @@
 # watchgod
 
-[![CI](https://github.com/samuelcolvin/watchgod/workflows/ci/badge.svg?event=push)](https://github.com/samuelcolvin/watchgod/actions?query=event%3Apush+branch%3Awatchgod+workflow%3Aci)
+[![CI](https://github.com/samuelcolvin/watchgod/workflows/ci/badge.svg?event=push&branch=watchgod)](https://github.com/samuelcolvin/watchgod/actions?query=event%3Apush+branch%3Awatchgod+workflow%3Aci)
 [![pypi](https://img.shields.io/pypi/v/watchgod.svg)](https://pypi.python.org/pypi/watchgod)
-[![license](https://img.shields.io/github/license/samuelcolvin/watchgod.svg)](https://github.com/samuelcolvin/watchgod/blob/watchgod/LICENSE)
+[![license](https://img.shields.io/github/license/samuelcolvin/watchfiles.svg)](https://github.com/samuelcolvin/watchfiles/blob/watchgod/LICENSE)
 
 Simple, modern file watching and code reload in python.
 
