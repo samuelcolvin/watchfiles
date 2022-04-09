@@ -25,15 +25,15 @@ def tmp_work_path(tmp_path: Path):
 @pytest.fixture(scope='session')
 def test_dir():
     d = Path(__file__).parent / 'test_files'
-    files = {f.name: f.read_text() for f in d.iterdir()}
+    files = {p: p.read_text() for p in d.glob('**/*.*')}
 
     yield d
 
-    for f in d.iterdir():
+    for f in d.glob('**/*.*'):
         f.unlink()
 
-    for name, content in files.items():
-        (d / name).write_text(content)
+    for path, content in files.items():
+        path.write_text(content)
 
 
 @pytest.fixture(autouse=True)
