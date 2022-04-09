@@ -1,15 +1,14 @@
 # watchgod
 
-[![CI](https://github.com/samuelcolvin/watchgod/workflows/ci/badge.svg?event=push)](https://github.com/samuelcolvin/watchgod/actions?query=event%3Apush+branch%3Amaster+workflow%3Aci)
-[![Coverage](https://codecov.io/gh/samuelcolvin/watchgod/branch/master/graph/badge.svg)](https://codecov.io/gh/samuelcolvin/watchgod)
+[![CI](https://github.com/samuelcolvin/watchgod/workflows/ci/badge.svg?event=push&branch=watchgod)](https://github.com/samuelcolvin/watchgod/actions?query=event%3Apush+branch%3Awatchgod+workflow%3Aci)
 [![pypi](https://img.shields.io/pypi/v/watchgod.svg)](https://pypi.python.org/pypi/watchgod)
-[![license](https://img.shields.io/github/license/samuelcolvin/watchgod.svg)](https://github.com/samuelcolvin/watchgod/blob/master/LICENSE)
+[![license](https://img.shields.io/github/license/samuelcolvin/watchfiles.svg)](https://github.com/samuelcolvin/watchfiles/blob/watchgod/LICENSE)
 
 Simple, modern file watching and code reload in python.
 
 ---
 
-## NOTICE - Package Renamed to `watchfiles`
+## NOTICE - Package Renamed to [watchfiles](https://pypi.org/project/watchfiles/)
 
 **Please note:** This package (watchgod) has been renamed to [watchfiles](https://pypi.org/project/watchfiles/). 
 Please replace `watchgod` with `watchfiles`, see [the migration guide](https://watchfiles.helpmanual.io/migrating/)
@@ -109,7 +108,7 @@ for changes in watch(directoryin, watcher_cls=RegExpWatcher, watcher_kwargs=dict
 ```
 
 For more details, checkout
-[`watcher.py`](https://github.com/samuelcolvin/watchgod/blob/master/watchgod/watcher.py),
+[`watcher.py`](https://github.com/samuelcolvin/watchfiles/blob/watchgod/watchgod/watcher.py),
 it's pretty simple.
 
 * **AllWatcher** The base watcher, all files are checked for changes.
