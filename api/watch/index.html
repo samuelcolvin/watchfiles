@@ -562,15 +562,18 @@ watch
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">debounce</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1600</span><span class="p">,</span>
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">stop_event</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;AbstractEvent&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="n">raise_interrupt</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">Set</span><span class="p">[</span><span class="n">FileChange</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">rust_timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5000</span><span class="p">,</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="n">yield_on_timeout</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="n">raise_interrupt</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">Set</span><span class="p">[</span><span class="n">FileChange</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
-      <p>Watch one or more directories and yield a set of changes whenever files change
-in those directories (or subdirectories).</p>
+      <p>Watch one or more paths and yield a set of changes whenever files change.</p>
+<p>The paths watched can be directories or files, directories are watched recursively - changes in subdirectories
+are also detected.</p>
 
   <p><strong>Parameters:</strong></p>
   <table>
@@ -588,7 +591,7 @@ in those directories (or subdirectories).</p>
           <td>
                 <code><span title="typing.Union">Union</span>[<span title="pathlib.Path">Path</span>, str]</code>
           </td>
-          <td><p>filesystem directories to watch</p></td>
+          <td><p>filesystem paths to watch.</p></td>
           <td>
                 <code>()</code>
           </td>
@@ -631,10 +634,30 @@ at least one change has been detected, the changes are yielded.</p></td>
           <td>
                 <code><span title="typing.Optional">Optional</span>[&#39;AbstractEvent&#39;]</code>
           </td>
-          <td><p>event to stop watching, if this is set, the generator will stop yielding changes,
+          <td><p>event to stop watching, if this is set, the generator will stop iteration,
 this can be anything with an <code>is_set()</code> method which returns a bool, e.g. <code>threading.Event()</code>.</p></td>
           <td>
                 <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>rust_timeout</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td><p>maximum time in milliseconds to wait in the rust code for changes, <code>0</code> means no timeout.</p></td>
+          <td>
+                <code>5000</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>yield_on_timeout</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>if <code>True</code>, the generator will yield upon timeout in rust even if no changes are detected.</p></td>
+          <td>
+                <code>False</code>
           </td>
         </tr>
         <tr>
@@ -709,9 +732,11 @@ awatch
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">debounce</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1600</span><span class="p">,</span>
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">stop_event</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;AnyEvent&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="n">raise_interrupt</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncGenerator</span><span class="p">[</span><span class="n">Set</span><span class="p">[</span><span class="n">FileChange</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">rust_timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="n">yield_on_timeout</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="n">raise_interrupt</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncGenerator</span><span class="p">[</span><span class="n">Set</span><span class="p">[</span><span class="n">FileChange</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -736,19 +761,9 @@ Arguments match those of <a class="autorefs autorefs-internal" href="#watchfiles
           <td>
                 <code><span title="typing.Union">Union</span>[<span title="pathlib.Path">Path</span>, str]</code>
           </td>
-          <td><p>filesystem directories to watch</p></td>
+          <td><p>filesystem paths to watch.</p></td>
           <td>
                 <code>()</code>
-          </td>
-        </tr>
-        <tr>
-          <td><code>stop_event</code></td>
-          <td>
-                <code><span title="typing.Optional">Optional</span>[&#39;AnyEvent&#39;]</code>
-          </td>
-          <td></td>
-          <td>
-                <code>None</code>
           </td>
         </tr>
         <tr>
@@ -782,7 +797,29 @@ Arguments match those of <a class="autorefs autorefs-internal" href="#watchfiles
           </td>
         </tr>
         <tr>
-          <td><code>debug</code></td>
+          <td><code>stop_event</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[&#39;AnyEvent&#39;]</code>
+          </td>
+          <td><p><code>anyio.Event</code> which can be used to stop iteration, see example below.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>rust_timeout</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[int]</code>
+          </td>
+          <td><p>matches the same argument of <a class="autorefs autorefs-internal" href="#watchfiles.watch"><code>watch</code></a>, except that <code>None</code> means
+use <code>1_000</code> on Windows and <code>5_000</code> on other platforms thus helping with exiting on <code>Ctrl+C</code> on Windows,
+see <a href="https://github.com/samuelcolvin/watchfiles/issues/110">#110</a>.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>yield_on_timeout</code></td>
           <td>
                 <code>bool</code>
           </td>
@@ -792,13 +829,13 @@ Arguments match those of <a class="autorefs autorefs-internal" href="#watchfiles
           </td>
         </tr>
         <tr>
-          <td><code>stop_event</code></td>
+          <td><code>debug</code></td>
           <td>
-                <code><span title="typing.Optional">Optional</span>[&#39;AnyEvent&#39;]</code>
+                <code>bool</code>
           </td>
-          <td><p><code>anyio.Event</code> which can be used to stop iteration, see example below.</p></td>
+          <td><p>matches the same argument of <a class="autorefs autorefs-internal" href="#watchfiles.watch"><code>watch</code></a>.</p></td>
           <td>
-                <code>None</code>
+                <code>False</code>
           </td>
         </tr>
         <tr>
@@ -914,7 +951,7 @@ added
 
     <div class="doc doc-contents ">
 
-      <p>A new file was added.</p>
+      <p>A new file or directory was added.</p>
     </div>
 
   </div>
@@ -938,7 +975,7 @@ deleted
 
     <div class="doc doc-contents ">
 
-      <p>A file was deleted.</p>
+      <p>A file or directory was deleted.</p>
     </div>
 
   </div>
@@ -962,7 +999,7 @@ modified
 
     <div class="doc doc-contents ">
 
-      <p>A file was modified, can be either a metadata or data change.</p>
+      <p>A file or directory was modified, can be either a metadata or data change.</p>
     </div>
 
   </div>

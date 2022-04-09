@@ -281,6 +281,33 @@
     Installation
   </a>
   
+    <nav class="md-nav" aria-label="Installation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#from-pypi" class="md-nav__link">
+    From PyPI
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#from-conda-forge" class="md-nav__link">
+    From conda-forge
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#from-source" class="md-nav__link">
+    From source
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -456,6 +483,33 @@
     Installation
   </a>
   
+    <nav class="md-nav" aria-label="Installation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#from-pypi" class="md-nav__link">
+    From PyPI
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#from-conda-forge" class="md-nav__link">
+    From conda-forge
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#from-source" class="md-nav__link">
+    From source
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -484,10 +538,10 @@
 <a href="https://codecov.io/gh/samuelcolvin/watchfiles"><img alt="Coverage" src="https://codecov.io/gh/samuelcolvin/watchfiles/branch/main/graph/badge.svg" /></a>
 <a href="https://pypi.python.org/pypi/watchfiles"><img alt="pypi" src="https://img.shields.io/pypi/v/watchfiles.svg" /></a>
 <a href="https://github.com/samuelcolvin/watchfiles/blob/main/LICENSE"><img alt="license" src="https://img.shields.io/github/license/samuelcolvin/watchfiles.svg" /></a></p>
-<p>Documentation for version: <strong>v0.12</strong>.</p>
+<p>Documentation for version: <strong>v0.13</strong>.</p>
 <p>Simple, modern and high performance file watching and code reload in python.</p>
 <p>Underlying file system notifications are handled by the <a href="https://github.com/notify-rs/notify">Notify</a> rust library.</p>
-<p>This package used to be called "watchgod", see <a href="migrating/">Migrating from watchgod</a> for more information.</p>
+<p>This package was previously named "watchgod", see <a href="migrating/">Migrating from watchgod</a> for more information.</p>
 <h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h2>
 <p>Here are some examples of what <strong>watchfiles</strong> can do:</p>
 <p><div class="highlight"><span class="filename">watch Usage</span><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span> <span class="nn">watchfiles</span> <span class="kn">import</span> <span class="n">watch</span>
@@ -496,6 +550,8 @@
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">changes</span><span class="p">)</span>
 </code></pre></div>
 See <a class="autorefs autorefs-internal" href="api/watch/#watchfiles.watch"><code>watch</code> docs</a> for more details.</p>
+<p><code>watch</code> (and all other methods) can watch either files or directories and can watch more than one path with
+a single instance.</p>
 <p><div class="highlight"><span class="filename">awatch Usage</span><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">import</span> <span class="nn">asyncio</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">from</span> <span class="nn">watchfiles</span> <span class="kn">import</span> <span class="n">awatch</span>
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
@@ -530,17 +586,30 @@ See <a class="autorefs autorefs-internal" href="api/run_process/#watchfiles.run_
 See <a class="autorefs autorefs-internal" href="api/run_process/#watchfiles.arun_process"><code>arun_process</code> docs</a> for more details.</p>
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
 <p><strong>watchfiles</strong> requires <strong>Python 3.7</strong> to <strong>Python 3.10</strong>.</p>
+<h3 id="from-pypi">From PyPI<a class="headerlink" href="#from-pypi" title="Permanent link">&para;</a></h3>
+<p>Using <code>pip</code>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>pip install watchfiles
 </code></pre></div>
 <p>Binaries are available for:</p>
 <ul>
-<li><strong>Linux</strong>: <code>manylinux-x86_64</code>, <code>musllinux-x86_64</code> &amp; <code>manylinux-i686</code></li>
+<li><strong>Linux</strong>: <code>x86_64</code>, <code>aarch64</code>, <code>i686</code> &amp; <code>musl-aarch64</code></li>
 <li><strong>MacOS</strong>: <code>x86_64</code> &amp; <code>arm64</code> (except python 3.7)</li>
 <li><strong>Windows</strong>: <code>amd64</code> &amp; <code>win32</code></li>
 </ul>
-<p>Otherwise, you can install from source which requires Rust stable to be installed.</p>
+<h3 id="from-conda-forge">From conda-forge<a class="headerlink" href="#from-conda-forge" title="Permanent link">&para;</a></h3>
+<p>Using <code>conda</code> or <code>mamba</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>mamba install -c conda-forge watchfiles
+</code></pre></div>
+<p>Binaries are available for:</p>
+<ul>
+<li><strong>Linux</strong>: <code>x86_64</code></li>
+<li><strong>MacOS</strong>: <code>x86_64</code></li>
+<li><strong>Windows</strong>: <code>amd64</code></li>
+</ul>
+<h3 id="from-source">From source<a class="headerlink" href="#from-source" title="Permanent link">&para;</a></h3>
+<p>You can also install from source which requires Rust stable to be installed.</p>
 <h2 id="how-watchfiles-works">How Watchfiles Works<a class="headerlink" href="#how-watchfiles-works" title="Permanent link">&para;</a></h2>
-<p><em>watchfiles</em> is based on the <a href="https://github.com/notify-rs/notify">Notify</a> rust library.</p>
+<p><strong>watchfiles</strong> is based on the <a href="https://github.com/notify-rs/notify">Notify</a> rust library.</p>
 <p>All the hard work of integrating with the OS's file system events notifications and falling back to polling is palmed
 off onto the rust library.</p>
 <p>"Debouncing" changes - e.g. grouping changes into batches rather than firing a yield/reload for each file changed
