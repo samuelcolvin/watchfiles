@@ -40,7 +40,7 @@ def test_delete(test_dir: Path):
     }
 
 
-def test_rename_in(test_dir: Path):
+def test_move_in(test_dir: Path):
     # can't use tmp_path as it causes problems on Windows (different drive), and macOS (delayed events)
     src = test_dir / 'dir_a'
     assert src.is_dir()
@@ -87,12 +87,17 @@ def test_move_internal(test_dir: Path):
     for f in move_files:
         (src / f).rename(dst / f)
 
-    assert watcher.watch(200, 50, 500, None) == {
+    expected_changes = {
         (3, str(src / 'e.txt')),
         (3, str(src / 'f.txt')),
         (1, str(dst / 'e.txt')),
         (1, str(dst / 'f.txt')),
     }
+    if sys.platform == 'win32':
+        # Windows adds a "modified" event for the dst directory
+        expected_changes.add((2, str(dst)))
+
+    assert watcher.watch(200, 50, 500, None) == expected_changes
 
 
 def test_does_not_exist(tmp_path: Path):
