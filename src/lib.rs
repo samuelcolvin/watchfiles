@@ -3,7 +3,6 @@ extern crate pyo3;
 
 use std::collections::HashSet;
 use std::path::Path;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread::sleep;
 use std::time::{Duration, SystemTime};
@@ -43,7 +42,6 @@ impl RustNotify {
 
         let changes_clone = changes.clone();
         let error_clone = error.clone();
-        let last_rename = AtomicBool::new(false);
 
         let mut _watcher: RecommendedWatcher = recommended_watcher(move |res: NotifyResult<Event>| match res {
             Ok(event) => {
@@ -81,9 +79,10 @@ impl RustNotify {
                         // RenameMode::Both duplicates RenameMode::From & RenameMode::To
                         EventKind::Modify(ModifyKind::Name(RenameMode::Both)) => return,
                         EventKind::Modify(ModifyKind::Name(_)) => {
-                            // this just alternates `last_rename` between true and false,
-                            // to give a best guess at the change type
-                            if last_rename.fetch_xor(true, Ordering::SeqCst) {
+                            // On macOS the modify name event is triggered when a file is renamed,
+                            // but no information about whether it's the src or dst path is available.
+                            // Hence we have to check if the file exists instead.
+                            if Path::new(&path).exists() {
                                 CHANGE_ADDED
                             } else {
                                 CHANGE_DELETED

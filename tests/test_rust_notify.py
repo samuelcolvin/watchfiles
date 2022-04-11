@@ -8,9 +8,9 @@ from watchfiles._rust_notify import RustNotify
 
 def test_add(test_dir: Path):
     watcher = RustNotify([str(test_dir)], True)
-    (test_dir / 'foo.txt').write_text('foobar')
+    (test_dir / 'new_file.txt').write_text('foobar')
 
-    assert watcher.watch(200, 50, 500, None) == {(1, str(test_dir / 'foo.txt'))}
+    assert watcher.watch(200, 50, 500, None) == {(1, str(test_dir / 'new_file.txt'))}
 
 
 def test_modify_write(test_dir: Path):
@@ -25,15 +25,14 @@ def test_modify_write(test_dir: Path):
 def test_modify_chmod(test_dir: Path):
     watcher = RustNotify([str(test_dir)], True)
 
-    (test_dir / 'a.txt').chmod(0o444)
+    (test_dir / 'b.txt').chmod(0o444)
 
-    assert watcher.watch(200, 50, 500, None) == {(2, str(test_dir / 'a.txt'))}
+    assert watcher.watch(200, 50, 500, None) == {(2, str(test_dir / 'b.txt'))}
 
 
 def test_delete(test_dir: Path):
     watcher = RustNotify([str(test_dir)], False)
 
-    # notify those files
     (test_dir / 'c.txt').unlink()
 
     assert watcher.watch(200, 50, 500, None) == {
@@ -41,27 +40,64 @@ def test_delete(test_dir: Path):
     }
 
 
-@pytest.mark.skipif(sys.platform == 'darwin', reason='fails on macOS')
-def test_rename_out(test_dir: Path):
-    # have to do it this way to avoid issues with different drives on Windows
-    new_dir = test_dir.parent.parent / 'sandbox'
-    new_dir.mkdir(exist_ok=True)
-    new_files = new_dir / 'd.txt', new_dir / 'e.txt'
+def test_move_in(test_dir: Path):
+    # can't use tmp_path as it causes problems on Windows (different drive), and macOS (delayed events)
+    src = test_dir / 'dir_a'
+    assert src.is_dir()
+    dst = test_dir / 'dir_b'
+    assert dst.is_dir()
+    move_files = 'a.txt', 'b.txt'
 
-    # have to delete the destination files as it breaks rename on Windows
-    for f in new_files:
-        if f.exists():
-            f.unlink()
+    watcher = RustNotify([str(dst)], False)
+
+    for f in move_files:
+        (src / f).rename(dst / f)
+
+    assert watcher.watch(200, 50, 500, None) == {
+        (1, str(dst / 'a.txt')),
+        (1, str(dst / 'b.txt')),
+    }
+
+
+def test_move_out(test_dir: Path):
+    # can't use tmp_path as it causes problems on Windows (different drive), and macOS (delayed events)
+    src = test_dir / 'dir_a'
+    dst = test_dir / 'dir_b'
+    move_files = 'c.txt', 'd.txt'
+
+    watcher = RustNotify([str(src)], False)
+
+    for f in move_files:
+        (src / f).rename(dst / f)
+
+    assert watcher.watch(200, 50, 500, None) == {
+        (3, str(src / 'c.txt')),
+        (3, str(src / 'd.txt')),
+    }
+
+
+def test_move_internal(test_dir: Path):
+    # can't use tmp_path as it causes problems on Windows (different drive), and macOS (delayed events)
+    src = test_dir / 'dir_a'
+    dst = test_dir / 'dir_b'
+    move_files = 'e.txt', 'f.txt'
 
     watcher = RustNotify([str(test_dir)], False)
 
-    for f in new_files:
-        (test_dir / f.name).rename(f)
+    for f in move_files:
+        (src / f).rename(dst / f)
 
-    assert watcher.watch(200, 50, 500, None) == {
-        (3, str(test_dir / 'd.txt')),
-        (3, str(test_dir / 'e.txt')),
+    expected_changes = {
+        (3, str(src / 'e.txt')),
+        (3, str(src / 'f.txt')),
+        (1, str(dst / 'e.txt')),
+        (1, str(dst / 'f.txt')),
     }
+    if sys.platform == 'win32':
+        # Windows adds a "modified" event for the dst directory
+        expected_changes.add((2, str(dst)))
+
+    assert watcher.watch(200, 50, 500, None) == expected_changes
 
 
 def test_does_not_exist(tmp_path: Path):
@@ -188,29 +224,4 @@ def test_rename_multiple_inside(tmp_path: Path):
         (1, str(d2 / '1.txt')),
         (1, str(d2 / '2.txt')),
         (1, str(d2 / '3.txt')),
-    }
-
-
-@skip_unless_linux
-def test_rename_multiple_out(tmp_path: Path):
-    d1 = tmp_path / 'd1'
-
-    d1.mkdir()
-    f1 = d1 / '1.txt'
-    f1.write_text('1')
-    f2 = d1 / '2.txt'
-    f2.write_text('2')
-    f3 = d1 / '3.txt'
-    f3.write_text('3')
-
-    watcher_all = RustNotify([str(d1)], False)
-
-    f1.rename(tmp_path / '1.txt')
-    f2.rename(tmp_path / '2.txt')
-    f3.rename(tmp_path / '3.txt')
-
-    assert watcher_all.watch(200, 50, 500, None) == {
-        (3, str(f1)),
-        (3, str(f2)),
-        (3, str(f3)),
     }
