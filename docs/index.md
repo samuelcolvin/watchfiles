@@ -99,7 +99,7 @@ mamba install -c conda-forge watchfiles
 Binaries are available for:
 
 * **Linux**: `x86_64`
-* **MacOS**: `x86_64`
+* **MacOS**: `x86_64` & `arm64` (except python 3.7)
 * **Windows**: `amd64`
 
 ### From source
