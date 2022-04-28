@@ -84,7 +84,7 @@ pip install watchfiles
 
 Binaries are available for:
 
-* **Linux**: `x86_64`, `aarch64`, `i686` & `musl-aarch64`
+* **Linux**: `x86_64`, `aarch64`, `i686`, `musl-x86_64` & `musl-aarch64`
 * **MacOS**: `x86_64` & `arm64` (except python 3.7)
 * **Windows**: `amd64` & `win32`
 
