@@ -1,5 +1,5 @@
 [build-system]
-requires = ['setuptools', 'wheel', 'setuptools-rust']
+requires = ['setuptools', 'setuptools-rust']
 
 [tool.pytest.ini_options]
 testpaths = 'tests'
