@@ -129,6 +129,7 @@ async def awatch(  # noqa C901
     yield_on_timeout: bool = False,
     debug: bool = False,
     raise_interrupt: bool = True,
+    exit_on_signal: bool = True,
 ) -> AsyncGenerator[Set[FileChange], None]:
     """
     Asynchronous equivalent of [`watch`][watchfiles.watch] using threads to wait for changes.
@@ -148,6 +149,7 @@ async def awatch(  # noqa C901
         yield_on_timeout: matches the same argument of [`watch`][watchfiles.watch].
         debug: matches the same argument of [`watch`][watchfiles.watch].
         raise_interrupt: matches the same argument of [`watch`][watchfiles.watch].
+        exit_on_signal: whether to watch for, and exit upon `SIGINT`, ignored on Windows where signals don't work.
 
     Yields:
         The generator yields sets of [`FileChange`][watchfiles.main.FileChange]s.
@@ -194,11 +196,6 @@ async def awatch(  # noqa C901
     async def signal_handler() -> None:
         nonlocal interrupted
 
-        if sys.platform == 'win32':
-            # add_signal_handler is not implemented on Windows
-            # repeat ctrl+c should still stop the watcher
-            return
-
         with anyio.open_signal_receiver(signal.SIGINT) as signals:
             async for _ in signals:
                 interrupted = True
@@ -209,7 +206,9 @@ async def awatch(  # noqa C901
     timeout = _calc_async_timeout(rust_timeout)
     while True:
         async with anyio.create_task_group() as tg:
-            tg.start_soon(signal_handler)
+            # add_signal_handler is not implemented on Windows repeat ctrl+c should still stops the watcher
+            if exit_on_signal and sys.platform != 'win32':
+                tg.start_soon(signal_handler)
             raw_changes = await anyio.to_thread.run_sync(watcher.watch, debounce, step, timeout, stop_event_)
             tg.cancel_scope.cancel()
 
