@@ -64,6 +64,8 @@ def watch(
     yield_on_timeout: bool = False,
     debug: bool = False,
     raise_interrupt: bool = True,
+    force_polling: bool = False,
+    poll_delay_ms: int = 30,
 ) -> Generator[Set[FileChange], None, None]:
     """
     Watch one or more paths and yield a set of changes whenever files change.
@@ -85,6 +87,8 @@ def watch(
         yield_on_timeout: if `True`, the generator will yield upon timeout in rust even if no changes are detected.
         debug: whether to print information about all filesystem changes in rust to stdout.
         raise_interrupt: whether to re-raise `KeyboardInterrupt`s, or suppress the error and just stop iterating.
+        force_polling: if true, always use polling instead of file system notifications.
+        poll_delay_ms: delay between polling for changes, only used if `force_polling=True`.
 
     Yields:
         The generator yields sets of [`FileChange`][watchfiles.main.FileChange]s.
@@ -96,7 +100,7 @@ def watch(
         print(changes)
     ```
     """
-    watcher = RustNotify([str(p) for p in paths], debug)
+    watcher = RustNotify([str(p) for p in paths], debug, force_polling, poll_delay_ms)
     while True:
         raw_changes = watcher.watch(debounce, step, rust_timeout, stop_event)
         if raw_changes == 'timeout':
@@ -129,6 +133,8 @@ async def awatch(  # noqa C901
     yield_on_timeout: bool = False,
     debug: bool = False,
     raise_interrupt: bool = True,
+    force_polling: bool = False,
+    poll_delay_ms: int = 30,
 ) -> AsyncGenerator[Set[FileChange], None]:
     """
     Asynchronous equivalent of [`watch`][watchfiles.watch] using threads to wait for changes.
@@ -148,6 +154,8 @@ async def awatch(  # noqa C901
         yield_on_timeout: matches the same argument of [`watch`][watchfiles.watch].
         debug: matches the same argument of [`watch`][watchfiles.watch].
         raise_interrupt: matches the same argument of [`watch`][watchfiles.watch].
+        force_polling: if true, always use polling instead of file system notifications.
+        poll_delay_ms: delay between polling for changes, only used if `force_polling=True`.
 
     Yields:
         The generator yields sets of [`FileChange`][watchfiles.main.FileChange]s.
@@ -205,7 +213,7 @@ async def awatch(  # noqa C901
                 stop_event_.set()
                 break
 
-    watcher = RustNotify([str(p) for p in paths], debug)
+    watcher = RustNotify([str(p) for p in paths], debug, force_polling, poll_delay_ms)
     timeout = _calc_async_timeout(rust_timeout)
     while True:
         async with anyio.create_task_group() as tg:

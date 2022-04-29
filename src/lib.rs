@@ -12,7 +12,7 @@ use pyo3::exceptions::{PyFileNotFoundError, PyRuntimeError, PyTypeError};
 use pyo3::prelude::*;
 
 use notify::event::{Event, EventKind, ModifyKind, RenameMode};
-use notify::{recommended_watcher, RecommendedWatcher, RecursiveMode, Result as NotifyResult, Watcher};
+use notify::{PollWatcher, RecommendedWatcher, RecursiveMode, Result as NotifyResult, Watcher};
 
 create_exception!(
     _rust_notify,
@@ -26,24 +26,44 @@ const CHANGE_ADDED: u8 = 1;
 const CHANGE_MODIFIED: u8 = 2;
 const CHANGE_DELETED: u8 = 3;
 
+#[derive(Debug)]
+enum WatcherEnum {
+    Poll(PollWatcher),
+    Recommended(RecommendedWatcher),
+}
+
 #[pyclass]
 struct RustNotify {
     changes: Arc<Mutex<HashSet<(u8, String)>>>,
     error: Arc<Mutex<Option<String>>>,
-    _watcher: RecommendedWatcher,
+    _watcher: WatcherEnum,
+}
+
+// macro to avoid duplicated code below
+macro_rules! watcher_paths {
+    ($watcher:ident, $paths:ident, $debug:ident) => {
+        for watch_path in $paths.into_iter() {
+            $watcher
+                .watch(Path::new(&watch_path), RecursiveMode::Recursive)
+                .map_err(|e| PyFileNotFoundError::new_err(format!("{}", e)))?;
+        }
+        if $debug {
+            eprintln!("watcher: {:?}", $watcher);
+        }
+    };
 }
 
 #[pymethods]
 impl RustNotify {
     #[new]
-    fn py_new(watch_paths: Vec<String>, debug: bool) -> PyResult<Self> {
+    fn py_new(watch_paths: Vec<String>, debug: bool, force_polling: bool, poll_delay_ms: u64) -> PyResult<Self> {
         let changes: Arc<Mutex<HashSet<(u8, String)>>> = Arc::new(Mutex::new(HashSet::<(u8, String)>::new()));
         let error: Arc<Mutex<Option<String>>> = Arc::new(Mutex::new(None));
 
         let changes_clone = changes.clone();
         let error_clone = error.clone();
 
-        let mut _watcher: RecommendedWatcher = recommended_watcher(move |res: NotifyResult<Event>| match res {
+        let event_handler = move |res: NotifyResult<Event>| match res {
             Ok(event) => {
                 if debug {
                     eprintln!("raw-event: {:?}", event);
@@ -97,17 +117,23 @@ impl RustNotify {
             Err(e) => {
                 *error_clone.lock().unwrap() = Some(format!("error in underlying watcher: {}", e));
             }
-        })
-        .map_err(|e| WatchfilesRustInternalError::new_err(format!("Error creating watcher: {}", e)))?;
+        };
 
-        for watch_path in watch_paths.into_iter() {
-            _watcher
-                .watch(Path::new(&watch_path), RecursiveMode::Recursive)
-                .map_err(|e| PyFileNotFoundError::new_err(format!("{}", e)))?;
-        }
-        if debug {
-            eprintln!("watcher: {:?}", _watcher);
-        }
+        let py_error = |e| WatchfilesRustInternalError::new_err(format!("Error creating watcher: {}", e));
+
+        let _watcher: WatcherEnum = match force_polling {
+            true => {
+                let delay = Duration::from_millis(poll_delay_ms);
+                let mut watcher = PollWatcher::with_delay(event_handler, delay).map_err(py_error)?;
+                watcher_paths!(watcher, watch_paths, debug);
+                WatcherEnum::Poll(watcher)
+            }
+            false => {
+                let mut watcher = RecommendedWatcher::new(event_handler).map_err(py_error)?;
+                watcher_paths!(watcher, watch_paths, debug);
+                WatcherEnum::Recommended(watcher)
+            }
+        };
 
         Ok(RustNotify {
             changes,
