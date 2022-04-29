@@ -36,7 +36,7 @@ enum WatcherEnum {
 struct RustNotify {
     changes: Arc<Mutex<HashSet<(u8, String)>>>,
     error: Arc<Mutex<Option<String>>>,
-    _watcher: WatcherEnum,
+    watcher: WatcherEnum,
 }
 
 // macro to avoid duplicated code below
@@ -121,7 +121,7 @@ impl RustNotify {
 
         let py_error = |e| WatchfilesRustInternalError::new_err(format!("Error creating watcher: {}", e));
 
-        let _watcher: WatcherEnum = match force_polling {
+        let watcher: WatcherEnum = match force_polling {
             true => {
                 let delay = Duration::from_millis(poll_delay_ms);
                 let mut watcher = PollWatcher::with_delay(event_handler, delay).map_err(py_error)?;
@@ -138,7 +138,7 @@ impl RustNotify {
         Ok(RustNotify {
             changes,
             error,
-            _watcher,
+            watcher,
         })
     }
 
@@ -216,6 +216,10 @@ impl RustNotify {
         let py_changes = self.changes.lock().unwrap().to_object(py);
         self.clear();
         Ok(py_changes)
+    }
+
+    pub fn __repr__(&self) -> PyResult<String> {
+        Ok(format!("RustNotify({:#?})", self.watcher))
     }
 
     fn clear(&self) {

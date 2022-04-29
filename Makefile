@@ -13,7 +13,11 @@ install:
 
 .PHONY: build-dev
 build-dev:
-	python setup.py develop
+	pip uninstall -y watchfiles
+	@rm -f watchfiles/*.so
+	cargo build
+	@rm -f target/debug/lib_rust_notify.d
+	@mv target/debug/lib_rust_notify.* watchfiles/_rust_notify.so
 
 .PHONY: format
 format:
