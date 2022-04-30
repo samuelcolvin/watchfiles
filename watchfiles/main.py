@@ -199,7 +199,7 @@ async def awatch(  # noqa C901
         async with anyio.create_task_group() as tg:
             try:
                 raw_changes = await anyio.to_thread.run_sync(watcher.watch, debounce, step, timeout, stop_event_)
-            except CancelledError:
+            except (CancelledError, KeyboardInterrupt):
                 stop_event_.set()
                 raise
             tg.cancel_scope.cancel()
