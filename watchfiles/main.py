@@ -129,7 +129,6 @@ async def awatch(  # noqa C901
     yield_on_timeout: bool = False,
     debug: bool = False,
     raise_interrupt: bool = True,
-    exit_on_signal: bool = True,
 ) -> AsyncGenerator[Set[FileChange], None]:
     """
     Asynchronous equivalent of [`watch`][watchfiles.watch] using threads to wait for changes.
@@ -149,7 +148,6 @@ async def awatch(  # noqa C901
         yield_on_timeout: matches the same argument of [`watch`][watchfiles.watch].
         debug: matches the same argument of [`watch`][watchfiles.watch].
         raise_interrupt: matches the same argument of [`watch`][watchfiles.watch].
-        exit_on_signal: whether to watch for, and exit upon `SIGINT`, ignored on Windows where signals don't work.
 
     Yields:
         The generator yields sets of [`FileChange`][watchfiles.main.FileChange]s.
