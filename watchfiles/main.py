@@ -193,23 +193,17 @@ async def awatch(  # noqa C901
         stop_event_ = stop_event
     interrupted = False
 
-    async def signal_handler() -> None:
-        nonlocal interrupted
-
-        with anyio.open_signal_receiver(signal.SIGINT) as signals:
-            async for _ in signals:
-                interrupted = True
-                stop_event_.set()
-                break
-
     watcher = RustNotify([str(p) for p in paths], debug)
     timeout = _calc_async_timeout(rust_timeout)
+    CancelledError = anyio.get_cancelled_exc_class()
+
     while True:
         async with anyio.create_task_group() as tg:
-            # add_signal_handler is not implemented on Windows repeat ctrl+c should still stops the watcher
-            if exit_on_signal and sys.platform != 'win32':
-                tg.start_soon(signal_handler)
-            raw_changes = await anyio.to_thread.run_sync(watcher.watch, debounce, step, timeout, stop_event_)
+            try:
+                raw_changes = await anyio.to_thread.run_sync(watcher.watch, debounce, step, timeout, stop_event_)
+            except CancelledError:
+                stop_event_.set()
+                raise
             tg.cancel_scope.cancel()
 
         if raw_changes == 'timeout':
