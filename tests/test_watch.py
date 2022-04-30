@@ -71,7 +71,6 @@ def mock_open_signal_receiver(signal):
 
 @pytest.mark.skipif(sys.platform == 'win32', reason='fails on windows')
 async def test_awatch_interrupt_raise(mocker, mock_rust_notify: 'MockRustType'):
-    mocker.patch('watchfiles.main.anyio.open_signal_receiver', side_effect=mock_open_signal_receiver)
     mock_rust_notify([{(1, 'foo.txt')}])
 
     count = 0
@@ -85,7 +84,6 @@ async def test_awatch_interrupt_raise(mocker, mock_rust_notify: 'MockRustType'):
 @pytest.mark.skipif(sys.platform == 'win32', reason='fails on windows')
 async def test_awatch_interrupt_warning(mocker, mock_rust_notify: 'MockRustType', caplog):
     caplog.set_level('INFO', 'watchfiles')
-    mocker.patch('watchfiles.main.anyio.open_signal_receiver', side_effect=mock_open_signal_receiver)
     mock_rust_notify([{(1, 'foo.txt')}])
 
     count = 0
@@ -106,7 +104,7 @@ def test_watch_no_yield(mock_rust_notify: 'MockRustType', caplog):
 
 
 async def test_awatch_no_yield(mock_rust_notify: 'MockRustType', caplog):
-    mock = mock_rust_notify([{(1, 'spam.pyc')}, {(1, 'spam.py')}])
+    mock = mock_rust_notify([{(1, 'spam.pyc')}, {(1, 'spam.py')}], exit_code='stop')
 
     caplog.set_level('DEBUG', 'watchfiles')
     changes = None
