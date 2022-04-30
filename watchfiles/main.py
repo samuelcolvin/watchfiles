@@ -208,10 +208,14 @@ async def awatch(  # noqa C901
                 yield set()
             else:
                 logger.debug('rust notify timeout, continuing')
-        elif raw_changes == 'stop' or raw_changes == 'signal':
-            # cover both cases here although in theory the watch thread should never get a signal
-            if raw_changes == 'signal' and raise_interrupt:
+        elif raw_changes == 'stop':
+            return
+        elif raw_changes == 'signal':
+            # in theory the watch thread should never get a signal
+            if raise_interrupt:
                 raise KeyboardInterrupt
+            else:
+                logger.warning('KeyboardInterrupt caught, stopping awatch')
             return
         else:
             changes = _prep_changes(raw_changes, watch_filter)
