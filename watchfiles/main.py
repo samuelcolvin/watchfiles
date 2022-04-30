@@ -189,7 +189,6 @@ async def awatch(  # noqa C901
         stop_event_: 'AnyEvent' = anyio.Event()
     else:
         stop_event_ = stop_event
-    interrupted = False
 
     watcher = RustNotify([str(p) for p in paths], debug)
     timeout = _calc_async_timeout(rust_timeout)
@@ -211,11 +210,8 @@ async def awatch(  # noqa C901
                 logger.debug('rust notify timeout, continuing')
         elif raw_changes == 'stop' or raw_changes == 'signal':
             # cover both cases here although in theory the watch thread should never get a signal
-            if interrupted:
-                if raise_interrupt:
-                    raise KeyboardInterrupt
-                else:
-                    logger.warning('KeyboardInterrupt caught, stopping awatch')
+            if raw_changes == 'signal' and raise_interrupt:
+                raise KeyboardInterrupt
             return
         else:
             changes = _prep_changes(raw_changes, watch_filter)
