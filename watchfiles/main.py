@@ -1,5 +1,4 @@
 import logging
-import signal
 import sys
 from enum import IntEnum
 from pathlib import Path
