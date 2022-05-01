@@ -18,6 +18,9 @@ build-dev:
 	cargo build
 	@rm -f target/debug/lib_rust_notify.d
 	@mv target/debug/lib_rust_notify.* watchfiles/_rust_notify.so
+	# this is a hack to make tests work without installing the package, it can't be permanent because it breaks
+	# tests in cibuildwheel
+	touch tests/__init__.py
 
 .PHONY: format
 format:
@@ -69,6 +72,7 @@ clean:
 	rm -f `find . -type f -name '*.py[co]' `
 	rm -f `find . -type f -name '*~' `
 	rm -f `find . -type f -name '.*~' `
+	rm -f tests/__init__.py
 	rm -rf .cache
 	rm -rf htmlcov
 	rm -rf .pytest_cache
