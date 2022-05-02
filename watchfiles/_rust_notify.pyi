@@ -11,7 +11,7 @@ class RustNotify:
     the heavy lifting of watching for file changes and grouping them into a single event.
     """
 
-    def __init__(self, watch_paths: List[str], debug: bool) -> None:
+    def __init__(self, watch_paths: List[str], debug: bool, force_polling: bool, poll_delay_ms: int) -> None:
         """
         Create a new RustNotify instance and start a thread to watch for changes.
 
@@ -20,6 +20,8 @@ class RustNotify:
         Args:
             watch_paths: file system paths to watch for changes, can be directories or files
             debug: if true, print details about all events to stderr
+            force_polling: if true, always use polling instead of file system notifications
+            poll_delay_ms: delay between polling for changes, only used if `force_polling=True`
         """
     def watch(
         self,

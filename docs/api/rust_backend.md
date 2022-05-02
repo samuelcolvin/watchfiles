@@ -10,7 +10,7 @@ The rust backend can be accessed directly as follows:
 title="Rust backend example"
 from watchfiles._rust_notify import RustNotify
 
-r = RustNotify(['first/path', 'second/path'], False)
+r = RustNotify(['first/path', 'second/path'], False, False, 0)
 
 changes = r.watch(1_600, 50, 100, None)
 print(changes)
