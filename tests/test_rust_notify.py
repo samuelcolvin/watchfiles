@@ -6,6 +6,10 @@ import pytest
 from watchfiles._rust_notify import RustNotify
 
 
+skip_unless_linux = pytest.mark.skipif('linux' not in sys.platform, reason='avoid time differences on other platforms')
+skip_windows = pytest.mark.skipif(sys.platform == 'win32', reason='fails on Windows')
+
+
 def test_add(test_dir: Path):
     watcher = RustNotify([str(test_dir)], True, False, 0)
     (test_dir / 'new_file.txt').write_text('foobar')
@@ -26,7 +30,7 @@ def test_modify_write(test_dir: Path):
     assert watcher.watch(200, 50, 500, None) == {(2, str(test_dir / 'a.txt'))}
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason='fails on Windows')
+@skip_windows
 def test_modify_chmod(test_dir: Path):
     watcher = RustNotify([str(test_dir)], True, False, 0)
 
@@ -156,9 +160,6 @@ def test_wrong_type_event_is_set(test_dir: Path, time_taken):
         watcher.watch(100, 1, 500, event)
 
 
-skip_unless_linux = pytest.mark.skipif('linux' not in sys.platform, reason='avoid time differences on other platforms')
-
-
 @skip_unless_linux
 def test_return_timeout(test_dir: Path, time_taken):
     watcher = RustNotify([str(test_dir)], False, False, 0)
@@ -232,12 +233,13 @@ def test_rename_multiple_inside(tmp_path: Path):
     }
 
 
+@skip_windows
 def test_polling(test_dir: Path):
     watcher = RustNotify([str(test_dir)], True, True, 100)
     (test_dir / 'test_polling.txt').write_text('foobar')
 
     changes = watcher.watch(200, 50, 500, None)
-    assert (1, str(test_dir / 'test_polling.txt')) in changes  # sometimes has a event modify too
+    assert (1, str(test_dir / 'test_polling.txt')) in changes  # sometimes has an event modify too
 
 
 def test_polling_repr(test_dir: Path):
