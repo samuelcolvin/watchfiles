@@ -5,7 +5,6 @@ import pytest
 
 from watchfiles._rust_notify import RustNotify
 
-
 skip_unless_linux = pytest.mark.skipif('linux' not in sys.platform, reason='avoid time differences on other platforms')
 skip_windows = pytest.mark.skipif(sys.platform == 'win32', reason='fails on Windows')
 
