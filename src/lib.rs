@@ -30,6 +30,7 @@ const CHANGE_DELETED: u8 = 3;
 struct RustNotify {
     changes: Arc<Mutex<HashSet<(u8, String)>>>,
     error: Arc<Mutex<Option<String>>>,
+    debug: bool,
     _watcher: RecommendedWatcher,
 }
 
@@ -112,6 +113,7 @@ impl RustNotify {
         Ok(RustNotify {
             changes,
             error,
+            debug,
             _watcher,
         })
     }
@@ -160,6 +162,9 @@ impl RustNotify {
 
             if let Some(is_set) = stop_event_is_set {
                 if is_set.call0()?.is_true()? {
+                    if self.debug {
+                        eprintln!("stop event set, stopping...");
+                    }
                     self.clear();
                     return Ok("stop".to_object(py));
                 }

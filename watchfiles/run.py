@@ -153,8 +153,8 @@ async def arun_process(
 
     Starting and stopping the process and watching for changes is done in a separate thread.
 
-    As with `run_process`, internally `arun_process` uses [`awatch`][watchfiles.awatch] with `raise_interrupt=False`
-    so the function exits cleanly upon `Ctrl+C`.
+    As with `run_process`, internally `arun_process` uses [`awatch`][watchfiles.awatch], however `KeyboardInterrupt`
+    cannot be caught and suppressed in `awatch` so these errors need to be caught separately, see below.
 
     ```py title="Example of arun_process usage"
     import asyncio
@@ -171,7 +171,10 @@ async def arun_process(
         await arun_process('.', target=foobar, args=(1, 2), callback=callback)
 
     if __name__ == '__main__':
-        asyncio.run(main())
+        try:
+            asyncio.run(main())
+        except KeyboardInterrupt:
+            print('stopped via KeyboardInterrupt')
     ```
     """
     import inspect
@@ -183,9 +186,7 @@ async def arun_process(
     process = await anyio.to_thread.run_sync(start_process, target, target_type, args, kwargs)
     reloads = 0
 
-    async for changes in awatch(
-        *paths, watch_filter=watch_filter, debounce=debounce, step=step, debug=debug, raise_interrupt=False
-    ):
+    async for changes in awatch(*paths, watch_filter=watch_filter, debounce=debounce, step=step, debug=debug):
         if callback is not None:
             r = callback(changes)
             if inspect.isawaitable(r):
