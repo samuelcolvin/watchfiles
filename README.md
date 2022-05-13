@@ -96,7 +96,11 @@ See [`arun_process` docs](https://watchfiles.helpmanual.io/api/run_process/#watc
 
 ## CLI
 
-**watchfiles** also comes with a CLI for running and reloading code.
+**watchfiles** also comes with a CLI for running and reloading code. To run `some command` when files in `src` change:
+
+```
+watchfiles "some command" src
+```
 
 For more information, see [the CLI docs](https://watchfiles.helpmanual.io/cli/).
 

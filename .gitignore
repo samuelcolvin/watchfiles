@@ -17,4 +17,8 @@ docs/_build/
 /watchfiles/*.so
 /target/
 /site/
+# i have a pet hate of the proliferation of files in the root directory
 .rustfmt.toml
+# this file is added by `make build-dev` as a hack to make tests work without installing the package,
+# it can't be permanent because it breaks tests in cibuildwheel
+tests/__init__.py
