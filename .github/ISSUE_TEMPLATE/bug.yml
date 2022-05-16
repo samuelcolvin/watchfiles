@@ -7,16 +7,13 @@ body:
       value: |
         Thanks for your interest in watchfiles! 😎
 
-        Please provide as much detail as possible to make understanding and solve your problem as quick as possible. 🙏
+        Please provide as much detail as possible to make understanding and solving your problem as quick as possible. 🙏
 
   - type: textarea
     id: description
     attributes:
       label: Description
-      placeholder: |
-        * Open the browser and call the endpoint `/`.
-        * It returns a JSON with `{"Hello": "World"}`.
-        * I would like it to have an extra parameter to teleport me to the moon and back.
+      description: Please explain what you're seeing and what you expect to see.
 
   - type: textarea
     id: example
@@ -25,44 +22,47 @@ body:
       description: |
         Please add a self-contained, [minimal, reproducible, example](https://stackoverflow.com/help/minimal-reproducible-example) with your use case.
 
-        **Note:** you might well want to run `watchfiles` with `debug=True` to get more information about what's going on
+        **Note:** you will probably want to run `watchfiles` with `debug=True` to get more information about what's going on.
 
       placeholder: |
         from watchfiles import watch
 
         for changes in watch('.', debug=True):
             print(changes)
-      render: Text
-    validations:
-      required: true
+      render: Python
 
   - type: textarea
     id: output
     attributes:
       label: Example Code Output
-      description: Output from the above example code
-      render: Code
+      description: Output from the above example code.
+      render: Text
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating System
+      description: What Operating System version are you using? Also are you using a specific environment like docker?
     validations:
       required: true
 
-  - type: textarea
-    id: os
+  - type: input
+    id: env
     attributes:
-      label: Operating System & Environment
-      description: |
-        What Operating System version are you using? Also are you using a specific environment like docker?
-    validations:
-      required: true
+      label: Environment
+      description: >
+        Are you using a specific environment like docker, WSL, etc.?
+        Also if you installed watchfiles or python in an unusual way.
 
   - type: input
     id: watchfiles-version
     attributes:
       label: Watchfiles Version
       description: |
-        What `watchfiles` version are you using?
+        Which `watchfiles` version are you using?
 
         ```bash
-        python -c "import watchfiles; print(watchfiles.__version__)"
+        python -c 'import watchfiles; print(watchfiles.__version__)'
         ```
     validations:
       required: true
@@ -72,7 +72,7 @@ body:
     attributes:
       label: Python Version
       description: |
-        What Python version are you using?
+        Which Python version are you using?
 
         ```bash
         python --version
