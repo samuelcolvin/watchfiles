@@ -61,12 +61,16 @@ def test_watch_raise_interrupt(mock_rust_notify: 'MockRustType'):
         next(w)
 
 
-def test_watch_dont_raise_interrupt(mock_rust_notify: 'MockRustType'):
-    mock_rust_notify([{(1, 'foo.txt')}])
+def test_watch_dont_raise_interrupt(mock_rust_notify: 'MockRustType', caplog):
+    caplog.set_level('WARNING', 'watchfiles')
+    mock_rust_notify([{(1, 'foo.txt')}], exit_code='signal')
 
-    w = watch('.')
+    w = watch('.', raise_interrupt=False)
     assert next(w) == {(Change.added, 'foo.txt')}
-    next(w)
+    with pytest.raises(StopIteration):
+        next(w)
+
+    assert caplog.text == 'watchfiles.main WARNING: KeyboardInterrupt caught, stopping watch\n'
 
 
 @contextmanager
