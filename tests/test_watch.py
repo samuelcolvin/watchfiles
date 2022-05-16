@@ -52,13 +52,21 @@ async def test_await_stop_event(tmp_path: Path, write_soon):
         stop_event.set()
 
 
-def test_watch_interrupt(mock_rust_notify: 'MockRustType'):
+def test_watch_raise_interrupt(mock_rust_notify: 'MockRustType'):
     mock_rust_notify([{(1, 'foo.txt')}], exit_code='signal')
 
     w = watch('.', raise_interrupt=True)
     assert next(w) == {(Change.added, 'foo.txt')}
     with pytest.raises(KeyboardInterrupt):
         next(w)
+
+
+def test_watch_dont_raise_interrupt(mock_rust_notify: 'MockRustType'):
+    mock_rust_notify([{(1, 'foo.txt')}])
+
+    w = watch('.')
+    assert next(w) == {(Change.added, 'foo.txt')}
+    next(w)
 
 
 @contextmanager
@@ -177,3 +185,28 @@ def test_calc_async_timeout_posix():
 def test_calc_async_timeout_win():
     assert _calc_async_timeout(123) == 123
     assert _calc_async_timeout(None) == 1_000
+
+
+class MockRustNotifyRaise:
+    def __init__(self):
+        self.i = 0
+
+    def watch(self, *args):
+        if self.i == 1:
+            raise KeyboardInterrupt('test error')
+        self.i += 1
+        return {(Change.added, 'spam.py')}
+
+
+async def test_awatch_interrupt_raise(mocker, caplog):
+    mocker.patch('watchfiles.main.RustNotify', return_value=MockRustNotifyRaise())
+
+    count = 0
+    stop_event = threading.Event()
+    with pytest.raises(KeyboardInterrupt, match='test error'):
+        async for _ in awatch('.', stop_event=stop_event):
+            count += 1
+
+    # event is set because it's set while handling the KeyboardInterrupt
+    assert stop_event.is_set()
+    assert count == 1
