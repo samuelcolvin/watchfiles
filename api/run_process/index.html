@@ -727,8 +727,8 @@ arun_process
       <p>Async equivalent of <a class="autorefs autorefs-internal" href="#watchfiles.run_process"><code>run_process</code></a>, all arguments match those of <code>run_process</code> except
 <code>callback</code> which can be a coroutine.</p>
 <p>Starting and stopping the process and watching for changes is done in a separate thread.</p>
-<p>As with <code>run_process</code>, internally <code>arun_process</code> uses <a class="autorefs autorefs-internal" href="../watch/#watchfiles.awatch"><code>awatch</code></a> with <code>raise_interrupt=False</code>
-so the function exits cleanly upon <code>Ctrl+C</code>.</p>
+<p>As with <code>run_process</code>, internally <code>arun_process</code> uses <a class="autorefs autorefs-internal" href="../watch/#watchfiles.awatch"><code>awatch</code></a>, however <code>KeyboardInterrupt</code>
+cannot be caught and suppressed in <code>awatch</code> so these errors need to be caught separately, see below.</p>
 <div class="highlight"><span class="filename">Example of arun_process usage</span><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span> <span class="nn">asyncio</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span> <span class="nn">watchfiles</span> <span class="kn">import</span> <span class="n">arun_process</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
@@ -743,7 +743,10 @@ so the function exits cleanly upon <code>Ctrl+C</code>.</p>
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="k">await</span> <span class="n">arun_process</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">foobar</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">)</span>
 <a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>        <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;stopped via KeyboardInterrupt&#39;</span><span class="p">)</span>
 </code></pre></div>
 
     </div>
