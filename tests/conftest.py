@@ -84,13 +84,13 @@ if TYPE_CHECKING:
     from typing import Literal, Protocol
 
     class MockRustType(Protocol):
-        def __call__(self, changes: ChangesType, *, exit_code: Literal['signal', 'stop', 'timeout'] = 'signal') -> Any:
+        def __call__(self, changes: ChangesType, *, exit_code: Literal['signal', 'stop', 'timeout'] = 'stop') -> Any:
             ...
 
 
 @pytest.fixture
 def mock_rust_notify(mocker):
-    def mock(changes: ChangesType, *, exit_code: str = 'signal'):
+    def mock(changes: ChangesType, *, exit_code: str = 'stop'):
         m = MockRustNotify(changes, exit_code)
         mocker.patch('watchfiles.main.RustNotify', return_value=m)
         return m

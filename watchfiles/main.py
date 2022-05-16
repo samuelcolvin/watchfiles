@@ -1,6 +1,6 @@
 import logging
-import signal
 import sys
+import warnings
 from enum import IntEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, AsyncGenerator, Callable, Generator, Optional, Set, Tuple, Union
@@ -132,8 +132,7 @@ async def awatch(  # noqa C901
     rust_timeout: Optional[int] = None,
     yield_on_timeout: bool = False,
     debug: bool = False,
-    raise_interrupt: bool = True,
-    exit_on_signal: bool = True,
+    raise_interrupt: Optional[bool] = None,
     force_polling: bool = False,
     poll_delay_ms: int = 30,
 ) -> AsyncGenerator[Set[FileChange], None]:
@@ -142,6 +141,9 @@ async def awatch(  # noqa C901
     Arguments match those of [`watch`][watchfiles.watch] except `stop_event`.
 
     All async methods use [anyio](https://anyio.readthedocs.io/en/latest/) to run the event loop.
+
+    Unlike [`watch`][watchfiles.watch] `KeyboardInterrupt` cannot be suppressed by `awatch` so they need to be caught
+    where `asyncio.run` or equivalent is called.
 
     Args:
         *paths: filesystem paths to watch.
@@ -154,8 +156,9 @@ async def awatch(  # noqa C901
             see [#110](https://github.com/samuelcolvin/watchfiles/issues/110).
         yield_on_timeout: matches the same argument of [`watch`][watchfiles.watch].
         debug: matches the same argument of [`watch`][watchfiles.watch].
-        raise_interrupt: matches the same argument of [`watch`][watchfiles.watch].
-        exit_on_signal: whether to watch for, and exit upon `SIGINT`, ignored on Windows where signals don't work.
+        raise_interrupt: This is deprecated, `KeyboardInterrupt` will cause this coroutine to be cancelled and then
+            be raised by the top level `asyncio.run` call or equivalent, and should be caught there.
+            See [#136](https://github.com/samuelcolvin/watchfiles/issues/136)
         force_polling: if true, always use polling instead of file system notifications.
         poll_delay_ms: delay between polling for changes, only used if `force_polling=True`.
 
@@ -170,7 +173,11 @@ async def awatch(  # noqa C901
         async for changes in awatch('./first/dir', './second/dir'):
             print(changes)
 
-    asyncio.run(main())
+    if __name__ == '__main__':
+        try:
+            asyncio.run(main())
+        except KeyboardInterrupt:
+            print('stopped via KeyboardInterrupt')
     ```
 
     ```py title="Example of awatch usage with a stop event"
@@ -195,29 +202,30 @@ async def awatch(  # noqa C901
     asyncio.run(main())
     ```
     """
+    if raise_interrupt is not None:
+        warnings.warn(
+            'raise_interrupt is deprecated, KeyboardInterrupt will cause this coroutine to be cancelled and then '
+            'be raised by the top level asyncio.run call or equivalent, and should be caught there. See #136.',
+            DeprecationWarning,
+        )
+
     if stop_event is None:
         stop_event_: 'AnyEvent' = anyio.Event()
     else:
         stop_event_ = stop_event
-    interrupted = False
-
-    async def signal_handler() -> None:
-        nonlocal interrupted
-
-        with anyio.open_signal_receiver(signal.SIGINT) as signals:
-            async for _ in signals:
-                interrupted = True
-                stop_event_.set()
-                break
 
     watcher = RustNotify([str(p) for p in paths], debug, force_polling, poll_delay_ms)
     timeout = _calc_async_timeout(rust_timeout)
+    CancelledError = anyio.get_cancelled_exc_class()
+
     while True:
         async with anyio.create_task_group() as tg:
-            # add_signal_handler is not implemented on Windows repeat ctrl+c should still stops the watcher
-            if exit_on_signal and sys.platform != 'win32':
-                tg.start_soon(signal_handler)
-            raw_changes = await anyio.to_thread.run_sync(watcher.watch, debounce, step, timeout, stop_event_)
+            try:
+                raw_changes = await anyio.to_thread.run_sync(watcher.watch, debounce, step, timeout, stop_event_)
+            except (CancelledError, KeyboardInterrupt):
+                stop_event_.set()
+                # suppressing KeyboardInterrupt wouldn't stop it getting raised by the top level asyncio.run call
+                raise
             tg.cancel_scope.cancel()
 
         if raw_changes == 'timeout':
@@ -225,14 +233,11 @@ async def awatch(  # noqa C901
                 yield set()
             else:
                 logger.debug('rust notify timeout, continuing')
-        elif raw_changes == 'stop' or raw_changes == 'signal':
-            # cover both cases here although in theory the watch thread should never get a signal
-            if interrupted:
-                if raise_interrupt:
-                    raise KeyboardInterrupt
-                else:
-                    logger.warning('KeyboardInterrupt caught, stopping awatch')
+        elif raw_changes == 'stop':
             return
+        elif raw_changes == 'signal':
+            # in theory the watch thread should never get a signal
+            raise RuntimeError('watch thread unexpectedly received a signal')
         else:
             changes = _prep_changes(raw_changes, watch_filter)
             if changes:

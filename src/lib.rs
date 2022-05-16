@@ -36,6 +36,7 @@ enum WatcherEnum {
 struct RustNotify {
     changes: Arc<Mutex<HashSet<(u8, String)>>>,
     error: Arc<Mutex<Option<String>>>,
+    debug: bool,
     watcher: WatcherEnum,
 }
 
@@ -138,6 +139,7 @@ impl RustNotify {
         Ok(RustNotify {
             changes,
             error,
+            debug,
             watcher,
         })
     }
@@ -186,6 +188,9 @@ impl RustNotify {
 
             if let Some(is_set) = stop_event_is_set {
                 if is_set.call0()?.is_true()? {
+                    if self.debug {
+                        eprintln!("stop event set, stopping...");
+                    }
                     self.clear();
                     return Ok("stop".to_object(py));
                 }
