@@ -1,0 +1,81 @@
+name: Bug
+description: Report a bug or unexpected behavior in watchfiles
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for your interest in watchfiles! 😎
+
+        Please provide as much detail as possible to make understanding and solve your problem as quick as possible. 🙏
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      placeholder: |
+        * Open the browser and call the endpoint `/`.
+        * It returns a JSON with `{"Hello": "World"}`.
+        * I would like it to have an extra parameter to teleport me to the moon and back.
+
+  - type: textarea
+    id: example
+    attributes:
+      label: Example Code
+      description: |
+        Please add a self-contained, [minimal, reproducible, example](https://stackoverflow.com/help/minimal-reproducible-example) with your use case.
+
+        **Note:** you might well want to run `watchfiles` with `debug=True` to get more information about what's going on
+
+      placeholder: |
+        from watchfiles import watch
+
+        for changes in watch('.', debug=True):
+            print(changes)
+      render: Text
+    validations:
+      required: true
+
+  - type: textarea
+    id: output
+    attributes:
+      label: Example Code Output
+      description: Output from the above example code
+      render: Code
+    validations:
+      required: true
+
+  - type: textarea
+    id: os
+    attributes:
+      label: Operating System & Environment
+      description: |
+        What Operating System version are you using? Also are you using a specific environment like docker?
+    validations:
+      required: true
+
+  - type: input
+    id: watchfiles-version
+    attributes:
+      label: Watchfiles Version
+      description: |
+        What `watchfiles` version are you using?
+
+        ```bash
+        python -c "import watchfiles; print(watchfiles.__version__)"
+        ```
+    validations:
+      required: true
+
+  - type: input
+    id: python-version
+    attributes:
+      label: Python Version
+      description: |
+        What Python version are you using?
+
+        ```bash
+        python --version
+        ```
+    validations:
+      required: true
