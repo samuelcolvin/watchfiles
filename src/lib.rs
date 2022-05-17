@@ -12,6 +12,7 @@ use pyo3::exceptions::{PyFileNotFoundError, PyRuntimeError, PyTypeError};
 use pyo3::prelude::*;
 
 use notify::event::{Event, EventKind, ModifyKind, RenameMode};
+use notify::poll::PollWatcherConfig;
 use notify::{PollWatcher, RecommendedWatcher, RecursiveMode, Result as NotifyResult, Watcher};
 
 create_exception!(
@@ -125,7 +126,11 @@ impl RustNotify {
         let watcher: WatcherEnum = match force_polling {
             true => {
                 let delay = Duration::from_millis(poll_delay_ms);
-                let mut watcher = PollWatcher::with_delay(event_handler, delay).map_err(py_error)?;
+                let config = PollWatcherConfig {
+                    poll_interval: delay,
+                    compare_contents: false,
+                };
+                let mut watcher = PollWatcher::with_config(event_handler, config).map_err(py_error)?;
                 watcher_paths!(watcher, watch_paths, debug);
                 WatcherEnum::Poll(watcher)
             }
