@@ -16,7 +16,7 @@ jobs:
       matrix:
         os: [ubuntu, macos, windows]
         python-version: ['3.7', '3.8', '3.9', '3.10', '3.11.0-alpha - 3.11']
-        rust-version: [stable, '1.44.1']
+        rust-version: [stable, '1.56.0']
 
     runs-on: ${{ matrix.os }}-latest
 
