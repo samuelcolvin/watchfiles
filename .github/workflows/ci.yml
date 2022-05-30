@@ -210,7 +210,7 @@ jobs:
 
       - name: Set up QEMU
         if: matrix.os == 'ubuntu'
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v2
         with:
           platforms: all
 
@@ -220,7 +220,7 @@ jobs:
           CIBW_BUILD: 'cp3${{ matrix.python-version }}-*'
           # rust doesn't seem to be available for musl linux on i686
           CIBW_SKIP: '*-musllinux_i686'
-          # we build for "alt_arch_name" if it exists, else 'auto
+          # we build for "alt_arch_name" if it exists, else 'auto'
           CIBW_ARCHS: ${{ matrix.alt_arch_name || 'auto' }}
           # see https://cibuildwheel.readthedocs.io/en/stable/faq/#universal2, tests can run on cross-compiled binaries
           CIBW_TEST_SKIP: '*-macosx_arm64'
