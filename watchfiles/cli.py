@@ -104,7 +104,7 @@ def cli(*args_: str) -> None:
         '--sigkill_timeout',
         nargs='?',
         type=int,
-        default=5,
+        default=1,
         help='How long to wait for the sigkill timeout before issuing a timeout exception.',
     )
     parser.add_argument('--version', '-V', action='version', version=f'%(prog)s v{VERSION}')
