@@ -39,6 +39,8 @@ def run_process(
     debounce: int = 1_600,
     step: int = 50,
     debug: bool = False,
+    sigint_timeout: int = 5,
+    sigkill_timeout: int = 1,
 ) -> int:
     """
     Run a process and restart it upon file changes.
@@ -127,7 +129,7 @@ def run_process(
             *paths, watch_filter=watch_filter, debounce=debounce, step=step, debug=debug, raise_interrupt=False
         ):
             callback and callback(changes)
-            process.stop()
+            process.stop(sigint_timeout=sigint_timeout, sigkill_timeout=sigkill_timeout)
             process = start_process(target, target_type, args, kwargs, changes)
             reloads += 1
     finally:
@@ -277,17 +279,24 @@ class CombinedProcess:
         self._p = p
         assert self.pid is not None, 'process not yet spawned'
 
-    def stop(self) -> None:
+    def stop(self, sigint_timeout: int = 5, sigkill_timeout: int = 1) -> None:
         os.environ.pop('WATCHFILES_CHANGES', None)
         if self.is_alive():
             logger.debug('stopping process...')
 
             os.kill(self.pid, signal.SIGINT)
-            self.join(5)
+
+            try:
+                self.join(sigint_timeout)
+            except subprocess.TimeoutExpired:
+                # Capture this exception to allow the self.exitcode to be reached.
+                # This will allow the SIGKILL to be sent, otherwise it is swallowed up.
+                pass
+
             if self.exitcode is None:
                 logger.warning('process has not terminated, sending SIGKILL')
                 os.kill(self.pid, signal.SIGKILL)
-                self.join(1)
+                self.join(sigkill_timeout)
             else:
                 logger.debug('process stopped')
         else:
