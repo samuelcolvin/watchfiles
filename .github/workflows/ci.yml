@@ -15,8 +15,14 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu, macos, windows]
-        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11.0-alpha - 3.11']
-        rust-version: [stable, '1.56.0']
+
+       rust-version: [stable, '1.56.0']
+        python-version:
+          - '3.7'
+          - '3.8'
+          - '3.9'
+          - '3.10'
+#          - '3.11.0-alpha - 3.11'
 
     runs-on: ${{ matrix.os }}-latest
 
@@ -139,7 +145,6 @@ jobs:
       build py3.${{ matrix.python-version }} on ${{ matrix.platform || matrix.os }}
       (${{ matrix.alt_arch_name || matrix.arch }})
     needs: [test, lint]
-#    if: "success() && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main')"
     strategy:
       fail-fast: false
       matrix:
@@ -211,7 +216,7 @@ jobs:
 
       - name: Set up QEMU
         if: matrix.os == 'ubuntu'
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v2
         with:
           platforms: all
 
@@ -221,7 +226,7 @@ jobs:
           CIBW_BUILD: 'cp3${{ matrix.python-version }}-*'
           # rust doesn't seem to be available for musl linux on i686
           CIBW_SKIP: '*-musllinux_i686'
-          # we build for "alt_arch_name" if it exists, else 'auto
+          # we build for "alt_arch_name" if it exists, else 'auto'
           CIBW_ARCHS: ${{ matrix.alt_arch_name || 'auto' }}
           # see https://cibuildwheel.readthedocs.io/en/stable/faq/#universal2, tests can run on cross-compiled binaries
           CIBW_TEST_SKIP: '*-macosx_arm64'
@@ -235,6 +240,7 @@ jobs:
           CIBW_MANYLINUX_AARCH64_IMAGE: manylinux2014
           CIBW_MUSLLINUX_AARCH64_IMAGE: musllinux_1_1
           CIBW_BEFORE_BUILD: rustup show
+          CIBW_ENVIRONMENT_LINUX: 'PATH="$HOME/.cargo/bin:$PATH" CARGO_NET_GIT_FETCH_WITH_CLI="true"'
           CIBW_BEFORE_BUILD_LINUX: >
             curl https://sh.rustup.rs -sSf | sh -s -- --profile=minimal -y &&
             rustup show
