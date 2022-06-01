@@ -15,8 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu, macos, windows]
-
-       rust-version: [stable, '1.56.0']
+        rust-version: [stable, '1.56.0']
         python-version:
           - '3.7'
           - '3.8'
