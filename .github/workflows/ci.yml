@@ -239,7 +239,10 @@ jobs:
           CIBW_MUSLLINUX_AARCH64_IMAGE: musllinux_1_1
           CIBW_BEFORE_BUILD: rustup show
           CIBW_ENVIRONMENT_LINUX: 'CIBW_ENVIRONMENT_LINUX=true'
-          CIBW_BEFORE_BUILD_LINUX: curl https://sh.rustup.rs -sSf | sh -s -- --profile=minimal -y
+          CIBW_BEFORE_BUILD_LINUX: >
+            curl https://sh.rustup.rs -sSf | sh -s -- --profile=minimal -y &&
+            source $HOME/.cargo/env &&
+            rustup show
 
       - run: ${{ matrix.ls || 'ls -lh' }} dist/
 
