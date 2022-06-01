@@ -137,7 +137,7 @@ jobs:
     name: >
       build py3.${{ matrix.python-version }} on ${{ matrix.platform || matrix.os }}
       (${{ matrix.alt_arch_name || matrix.arch }})
-    needs: [test, lint]
+#    needs: [test, lint]
 #    if: "success() && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main')"
     strategy:
       fail-fast: false
@@ -235,7 +235,7 @@ jobs:
           CIBW_MUSLLINUX_AARCH64_IMAGE: musllinux_1_1
           CIBW_BEFORE_BUILD: rustup show
           CIBW_BEFORE_BUILD_LINUX: >
-            curl https://sh.rustup.rs -sSf | sh -s -- --profile=minimal -y &&
+            curl https://sh.rustup.rs -sSf | sh -s -- --profile=minimal -y --default-toolchain 1.60 &&
             rustup show
 
       - run: ${{ matrix.ls || 'ls -lh' }} dist/
