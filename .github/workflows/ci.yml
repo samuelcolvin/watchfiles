@@ -16,7 +16,12 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu, macos, windows]
-        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11.0-alpha - 3.11']
+        python-version:
+          - '3.7'
+          - '3.8'
+          - '3.9'
+          - '3.10'
+#          - '3.11.0-alpha - 3.11'
 
     runs-on: ${{ matrix.os }}-latest
 
@@ -235,9 +240,9 @@ jobs:
           CIBW_MUSLLINUX_AARCH64_IMAGE: musllinux_1_1
           CIBW_BEFORE_BUILD: rustup show
           CIBW_BEFORE_BUILD_LINUX: >
-            curl https://sh.rustup.rs -sSf | sh -s -- --profile=minimal -y --default-toolchain 1.60 &&
+            curl https://sh.rustup.rs -sSf | sh -s -- --profile=minimal -y &&
             rustup show &&
-            cargo metadata --manifest-path Cargo.toml --format-version 1 --no-deps
+            cargo metadata --manifest-path Cargo.toml --format-version 1
 
       - run: ${{ matrix.ls || 'ls -lh' }} dist/
 
