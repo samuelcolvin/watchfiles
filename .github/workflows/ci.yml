@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - try-154
     tags:
       - '**'
   pull_request: {}
@@ -138,7 +139,6 @@ jobs:
       build py3.${{ matrix.python-version }} on ${{ matrix.platform || matrix.os }}
       (${{ matrix.alt_arch_name || matrix.arch }})
 #    needs: [test, lint]
-#    if: "success() && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main')"
     strategy:
       fail-fast: false
       matrix:
@@ -236,7 +236,8 @@ jobs:
           CIBW_BEFORE_BUILD: rustup show
           CIBW_BEFORE_BUILD_LINUX: >
             curl https://sh.rustup.rs -sSf | sh -s -- --profile=minimal -y --default-toolchain 1.60 &&
-            rustup show
+            rustup show &&
+            cargo metadata --manifest-path Cargo.toml --format-version 1 --no-deps
 
       - run: ${{ matrix.ls || 'ls -lh' }} dist/
 
