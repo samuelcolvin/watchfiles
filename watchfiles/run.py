@@ -70,6 +70,8 @@ def run_process(
         debounce: matches the same argument of [`watch`][watchfiles.watch]
         step: matches the same argument of [`watch`][watchfiles.watch]
         debug: matches the same argument of [`watch`][watchfiles.watch]
+        sigint_timeout: the number of seconds to wait after sending sigint before sending sigkill
+        sigkill_timeout: the number of seconds to wait after sending sigkill before raising an exception
 
     Returns:
         number of times the function was reloaded.
