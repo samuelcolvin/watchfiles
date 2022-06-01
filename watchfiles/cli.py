@@ -94,14 +94,14 @@ def cli(*args_: str) -> None:
         help='Log level, defaults to "info"',
     )
     parser.add_argument(
-        '--sigint_timeout',
+        '--sigint-timeout',
         nargs='?',
         type=int,
         default=5,
         help='How long to wait for the sigint timeout before sending sigkill.',
     )
     parser.add_argument(
-        '--sigkill_timeout',
+        '--sigkill-timeout',
         nargs='?',
         type=int,
         default=1,
