@@ -11,3 +11,6 @@ pyo3 = {version = "0.16.4", features = ["extension-module"]}
 [lib]
 name = "_rust_notify"
 crate-type = ["cdylib"]
+
+[package.metadata.maturin]
+name = "watchfiles._rust_notify"
