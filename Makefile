@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := all
-isort = isort watchfiles tests setup.py
-black = black watchfiles tests setup.py
+isort = isort watchfiles tests
+black = black watchfiles tests
 
 .PHONY: install
 install:
@@ -31,7 +31,7 @@ format:
 
 .PHONY: lint-python
 lint-python:
-	flake8 --max-complexity 10 --max-line-length 120 --ignore E203,W503 watchfiles tests setup.py
+	flake8 --max-complexity 10 --max-line-length 120 --ignore E203,W503 watchfiles tests
 	$(isort) --check-only --df
 	$(black) --check --diff
 
@@ -70,6 +70,7 @@ all: lint mypy testcov docs
 clean:
 	rm -rf `find . -name __pycache__`
 	rm -f `find . -type f -name '*.py[co]' `
+	rm -f `find . -type f -name '*.so' `
 	rm -f `find . -type f -name '*~' `
 	rm -f `find . -type f -name '.*~' `
 	rm -f tests/__init__.py
@@ -81,4 +82,3 @@ clean:
 	rm -f .coverage
 	rm -f .coverage.*
 	rm -rf build
-	python setup.py clean

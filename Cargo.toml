@@ -1,6 +1,6 @@
 [package]
 name = "watchfiles_rust_notify"
-version = "1.0.0"
+version = "0.14.1"
 edition = "2021"
 
 [dependencies]

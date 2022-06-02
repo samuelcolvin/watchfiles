@@ -1,4 +1,5 @@
+from ._rust_notify import __version__
+
 __all__ = ('VERSION',)
 
-# version is automatically set in the "build" CI job before release
-VERSION = '0.0.dev0'
+VERSION = __version__
