@@ -293,6 +293,7 @@ class CombinedProcess:
             except subprocess.TimeoutExpired:
                 # Capture this exception to allow the self.exitcode to be reached.
                 # This will allow the SIGKILL to be sent, otherwise it is swallowed up.
+                logger.warning('SIGINT timed out after %r seconds', sigint_timeout)
                 pass
 
             if self.exitcode is None:

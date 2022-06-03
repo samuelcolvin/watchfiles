@@ -1,4 +1,5 @@
 import os
+import subprocess
 import sys
 from multiprocessing.context import SpawnProcess
 from pathlib import Path
@@ -76,6 +77,26 @@ def test_alive_doesnt_terminate(mocker, mock_rust_notify: 'MockRustType'):
     assert run_process('/x/y/z', target=object(), debounce=5, step=1) == 1
     assert mock_spawn_process.call_count == 2
     assert mock_kill.call_count == 4  # 2 kills in loop (graceful and termination) + 2 final kills
+
+
+class FakeProcessTimeout(FakeProcess):
+    def join(self, wait):
+        if wait == 'sigint_timeout':
+            raise subprocess.TimeoutExpired('/x/y/z', wait)
+
+
+@pytest.mark.skipif(sys.platform == 'win32', reason='fails on windows')
+def test_sigint_timeout(mocker, mock_rust_notify: 'MockRustType', caplog):
+    caplog.set_level('WARNING', 'watchfiles')
+    mock_spawn_process = mocker.patch('watchfiles.run.spawn_context.Process', return_value=FakeProcessTimeout())
+
+    mock_kill = mocker.patch('watchfiles.run.os.kill')
+    mock_rust_notify([{(1, '/path/to/foobar.py')}])
+
+    assert run_process('/x/y/z', target=object(), debounce=5, step=1, sigint_timeout='sigint_timeout') == 1
+    assert mock_spawn_process.call_count == 2
+    assert mock_kill.call_count == 2
+    assert "SIGINT timed out after 'sigint_timeout' seconds" in caplog.text
 
 
 def test_start_process(mocker):
