@@ -5,14 +5,11 @@ import sys
 from pathlib import Path
 
 
-def main(version_path_env_var='VERSION_PATH', version_env_vars=('VERSION', 'GITHUB_REF')) -> int:
-    version_path = os.getenv(version_path_env_var, 'Cargo.toml')
-    if not version_path:
-        print(f'✖ "{version_path_env_var}" env variable not found')
-        return 1
-    version_path = Path(version_path)
-    if not version_path.parent.is_dir():
-        print(f'✖ path "{version_path.parent}" does not exist')
+def main(cargo_path_env_var='CARGO_PATH', version_env_vars=('VERSION', 'GITHUB_REF')) -> int:
+    cargo_path = os.getenv(cargo_path_env_var, 'Cargo.toml')
+    cargo_path = Path(cargo_path)
+    if not cargo_path.is_file():
+        print(f'✖ path "{cargo_path}" does not exist')
         return 1
 
     version = None
@@ -25,12 +22,16 @@ def main(version_path_env_var='VERSION_PATH', version_env_vars=('VERSION', 'GITH
         print(f'✖ "{version_env_vars}" env variables not found')
         return 1
 
-    print(f'writing version "{version}", to {version_path}')
-    with open(version_path) as f:
-        origin_content = f.read()
-    
-    new_content = origin_content.replace('version = "0.0.0"', f'version = "{version}"')
-    version_path.write_text(new_content)
+    print(f'writing version "{version}", to {cargo_path}')
+
+    version_regex = re.compile('^version ?= ?".*"', re.M)
+    cargo_content = cargo_path.read_text()
+    if not version_regex.search(cargo_content):
+        print(f'✖ {version_regex!r} not found in {cargo_path}')
+        return 1
+
+    new_content = version_regex.sub(f'version = "{version}"', cargo_content)
+    cargo_path.write_text(new_content)
     return 0
 
 
