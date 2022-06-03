@@ -18,9 +18,6 @@ build-dev:
 	cargo build
 	@rm -f target/debug/lib_rust_notify.d
 	@mv target/debug/lib_rust_notify.* watchfiles/_rust_notify.so
-	# this is a hack to make tests work without installing the package, it can't be permanent because it breaks
-	# tests in cibuildwheel
-	touch tests/__init__.py
 
 .PHONY: format
 format:
