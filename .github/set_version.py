@@ -22,6 +22,9 @@ def main(cargo_path_env_var='CARGO_PATH', version_env_vars=('VERSION', 'GITHUB_R
         print(f'✖ "{version_env_vars}" env variables not found')
         return 1
 
+    # convert from python pre-release version to rust pre-release version
+    # this is the reverse of what's done in lib.rs::_rust_notify
+    version = version.replace('a', '-alpha').replace('b', '-beta')
     print(f'writing version "{version}", to {cargo_path}')
 
     version_regex = re.compile('^version ?= ?".*"', re.M)
