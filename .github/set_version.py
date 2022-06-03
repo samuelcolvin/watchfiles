@@ -16,8 +16,10 @@ def main(cargo_path_env_var='CARGO_PATH', version_env_vars=('VERSION', 'GITHUB_R
     for var in version_env_vars:
         version_ref = os.getenv(var)
         if version_ref:
-            version = re.sub('^refs/tags/v*', '', version_ref.lower())
+            version = re.sub('^refs/tags/', '', version_ref.lower())
+            version = re.sub('^v', '', version)
             break
+
     if not version:
         print(f'✖ "{version_env_vars}" env variables not found')
         return 1
