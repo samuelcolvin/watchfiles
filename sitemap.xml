@@ -2,37 +2,37 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://watchfiles.helpmanual.io/</loc>
-         <lastmod>2022-05-17</lastmod>
+         <lastmod>2022-06-03</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://watchfiles.helpmanual.io/cli/</loc>
-         <lastmod>2022-05-17</lastmod>
+         <lastmod>2022-06-03</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://watchfiles.helpmanual.io/migrating/</loc>
-         <lastmod>2022-05-17</lastmod>
+         <lastmod>2022-06-03</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://watchfiles.helpmanual.io/api/filters/</loc>
-         <lastmod>2022-05-17</lastmod>
+         <lastmod>2022-06-03</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://watchfiles.helpmanual.io/api/run_process/</loc>
-         <lastmod>2022-05-17</lastmod>
+         <lastmod>2022-06-03</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://watchfiles.helpmanual.io/api/rust_backend/</loc>
-         <lastmod>2022-05-17</lastmod>
+         <lastmod>2022-06-03</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://watchfiles.helpmanual.io/api/watch/</loc>
-         <lastmod>2022-05-17</lastmod>
+         <lastmod>2022-06-03</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>
