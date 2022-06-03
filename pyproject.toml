@@ -39,9 +39,12 @@ dynamic = [
     "readme",
     "version"
 ]
+
 [project.scripts]
 watchfiles = 'watchfiles.cli:cli'
+
 [project.urls]
+Homepage = 'https://github.com/samuelcolvin/watchfiles'
 Documentation = 'https://watchfiles.helpmanual.io'
 Funding = 'https://github.com/sponsors/samuelcolvin'
 Source = 'https://github.com/samuelcolvin/watchfiles'
