@@ -93,6 +93,20 @@ def cli(*args_: str) -> None:
         choices=['warning', 'info', 'debug'],
         help='Log level, defaults to "info"',
     )
+    parser.add_argument(
+        '--sigint-timeout',
+        nargs='?',
+        type=int,
+        default=5,
+        help='How long to wait for the sigint timeout before sending sigkill.',
+    )
+    parser.add_argument(
+        '--sigkill-timeout',
+        nargs='?',
+        type=int,
+        default=1,
+        help='How long to wait for the sigkill timeout before issuing a timeout exception.',
+    )
     parser.add_argument('--version', '-V', action='version', version=f'%(prog)s v{VERSION}')
     arg_namespace = parser.parse_args(args)
 
@@ -139,6 +153,8 @@ def cli(*args_: str) -> None:
         target_type=target_type,
         watch_filter=watch_filter,
         debug=arg_namespace.verbosity == 'debug',
+        sigint_timeout=arg_namespace.sigint_timeout,
+        sigkill_timeout=arg_namespace.sigkill_timeout,
     )
 
 

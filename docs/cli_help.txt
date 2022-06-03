@@ -1,7 +1,9 @@
 usage: watchfiles [-h] [--ignore-paths [IGNORE_PATHS]]
                   [--target-type [{command,function,auto}]]
                   [--filter [FILTER]] [--args [ARGS]]
-                  [--verbosity [{warning,info,debug}]] [--version]
+                  [--verbosity [{warning,info,debug}]]
+                  [--sigint-timeout [SIGINT_TIMEOUT]]
+                  [--sigkill-timeout [SIGKILL_TIMEOUT]] [--version]
                   target [paths ...]
 
 Watch one or more directories and execute either a shell command or a python function on file changes.
@@ -30,4 +32,8 @@ options:
   --args [ARGS]         Arguments to set on sys.argv before calling target function, used only if the target is a function
   --verbosity [{warning,info,debug}]
                         Log level, defaults to "info"
+  --sigint-timeout [SIGINT_TIMEOUT]
+                        How long to wait for the sigint timeout before sending sigkill.
+  --sigkill-timeout [SIGKILL_TIMEOUT]
+                        How long to wait for the sigkill timeout before issuing a timeout exception.
   --version, -V         show program's version number and exit
