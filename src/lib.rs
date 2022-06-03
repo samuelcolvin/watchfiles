@@ -239,6 +239,7 @@ impl RustNotify {
 
 #[pymodule]
 fn _rust_notify(py: Python, m: &PyModule) -> PyResult<()> {
+    m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     m.add(
         "WatchfilesRustInternalError",
         py.get_type::<WatchfilesRustInternalError>(),

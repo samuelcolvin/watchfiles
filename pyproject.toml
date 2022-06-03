@@ -1,5 +1,51 @@
 [build-system]
-requires = ['setuptools', 'setuptools-rust']
+requires = ['maturin>=0.12,<0.13']
+build-backend = 'maturin'
+
+[project]
+name = 'watchfiles'
+requires-python = '>=3.7'
+description = 'Simple, modern and high performance file watching and code reload in python.'
+authors = [
+    {name ='Samuel Colvin', email = 's@muelcolvin.com'},
+]
+dependencies = [
+    'anyio>=3.0.0,<4',
+]
+classifiers = [
+    'Development Status :: 5 - Production/Stable',
+    'Environment :: Console',
+    'Programming Language :: Python',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3 :: Only',
+    'Programming Language :: Python :: 3.7',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+    'Intended Audience :: Developers',
+    'Intended Audience :: Information Technology',
+    'Intended Audience :: System Administrators',
+    'License :: OSI Approved :: MIT License',
+    'Operating System :: POSIX :: Linux',
+    'Operating System :: Microsoft :: Windows',
+    'Operating System :: MacOS',
+    'Environment :: MacOS X',
+    'Topic :: Software Development :: Libraries :: Python Modules',
+    'Topic :: System :: Filesystems',
+    'Framework :: AnyIO',
+]
+dynamic = [
+    "license",
+    "readme",
+    "version"
+]
+[project.scripts]
+watchfiles = 'watchfiles.cli:cli'
+[project.urls]
+Documentation = 'https://watchfiles.helpmanual.io'
+Funding = 'https://github.com/sponsors/samuelcolvin'
+Source = 'https://github.com/samuelcolvin/watchfiles'
+Changelog = 'https://github.com/samuelcolvin/watchfiles/releases'
 
 [tool.pytest.ini_options]
 testpaths = 'tests'

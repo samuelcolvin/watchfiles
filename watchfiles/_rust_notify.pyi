@@ -2,6 +2,8 @@ from typing import List, Literal, Optional, Protocol, Set, Tuple, Union
 
 __all__ = 'RustNotify', 'WatchfilesRustInternalError'
 
+__version__: str
+
 class AbstractEvent(Protocol):
     def is_set(self) -> bool: ...
 
