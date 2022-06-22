@@ -1,4 +1,4 @@
-from typing import List, Literal, Optional, Protocol, Set, Tuple, Union
+from typing import Any, List, Literal, Optional, Protocol, Set, Tuple, Union
 
 __all__ = 'RustNotify', 'WatchfilesRustInternalError'
 
@@ -55,6 +55,18 @@ class RustNotify:
             (the event types are ints which match [`Change`][watchfiles.Change]),
             `'signal'` if a signal was received, `'stop'` if the `stop_event` was set,
             or `'timeout'` if `timeout_ms` was exceeded.
+        """
+    def __enter__(self) -> 'RustNotify':
+        """
+        Does nothing, but allows `RustNotify` to be used as a context manager.
+        """
+    def __exit__(self, *args: Any) -> None:
+        """
+        Calls close.
+        """
+    def close(self) -> None:
+        """
+        Stop the watching thread.
         """
 
 class WatchfilesRustInternalError(RuntimeError):

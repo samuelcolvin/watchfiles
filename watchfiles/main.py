@@ -100,27 +100,27 @@ def watch(
         print(changes)
     ```
     """
-    watcher = RustNotify([str(p) for p in paths], debug, force_polling, poll_delay_ms)
-    while True:
-        raw_changes = watcher.watch(debounce, step, rust_timeout, stop_event)
-        if raw_changes == 'timeout':
-            if yield_on_timeout:
-                yield set()
-            else:
-                logger.debug('rust notify timeout, continuing')
-        elif raw_changes == 'signal':
-            if raise_interrupt:
-                raise KeyboardInterrupt
-            else:
-                logger.warning('KeyboardInterrupt caught, stopping watch')
+    with RustNotify([str(p) for p in paths], debug, force_polling, poll_delay_ms) as watcher:
+        while True:
+            raw_changes = watcher.watch(debounce, step, rust_timeout, stop_event)
+            if raw_changes == 'timeout':
+                if yield_on_timeout:
+                    yield set()
+                else:
+                    logger.debug('rust notify timeout, continuing')
+            elif raw_changes == 'signal':
+                if raise_interrupt:
+                    raise KeyboardInterrupt
+                else:
+                    logger.warning('KeyboardInterrupt caught, stopping watch')
+                    return
+            elif raw_changes == 'stop':
                 return
-        elif raw_changes == 'stop':
-            return
-        else:
-            changes = _prep_changes(raw_changes, watch_filter)
-            if changes:
-                _log_changes(changes)
-                yield changes
+            else:
+                changes = _prep_changes(raw_changes, watch_filter)
+                if changes:
+                    _log_changes(changes)
+                    yield changes
 
 
 async def awatch(  # noqa C901
@@ -214,35 +214,35 @@ async def awatch(  # noqa C901
     else:
         stop_event_ = stop_event
 
-    watcher = RustNotify([str(p) for p in paths], debug, force_polling, poll_delay_ms)
-    timeout = _calc_async_timeout(rust_timeout)
-    CancelledError = anyio.get_cancelled_exc_class()
+    with RustNotify([str(p) for p in paths], debug, force_polling, poll_delay_ms) as watcher:
+        timeout = _calc_async_timeout(rust_timeout)
+        CancelledError = anyio.get_cancelled_exc_class()
 
-    while True:
-        async with anyio.create_task_group() as tg:
-            try:
-                raw_changes = await anyio.to_thread.run_sync(watcher.watch, debounce, step, timeout, stop_event_)
-            except (CancelledError, KeyboardInterrupt):
-                stop_event_.set()
-                # suppressing KeyboardInterrupt wouldn't stop it getting raised by the top level asyncio.run call
-                raise
-            tg.cancel_scope.cancel()
+        while True:
+            async with anyio.create_task_group() as tg:
+                try:
+                    raw_changes = await anyio.to_thread.run_sync(watcher.watch, debounce, step, timeout, stop_event_)
+                except (CancelledError, KeyboardInterrupt):
+                    stop_event_.set()
+                    # suppressing KeyboardInterrupt wouldn't stop it getting raised by the top level asyncio.run call
+                    raise
+                tg.cancel_scope.cancel()
 
-        if raw_changes == 'timeout':
-            if yield_on_timeout:
-                yield set()
+            if raw_changes == 'timeout':
+                if yield_on_timeout:
+                    yield set()
+                else:
+                    logger.debug('rust notify timeout, continuing')
+            elif raw_changes == 'stop':
+                return
+            elif raw_changes == 'signal':
+                # in theory the watch thread should never get a signal
+                raise RuntimeError('watch thread unexpectedly received a signal')
             else:
-                logger.debug('rust notify timeout, continuing')
-        elif raw_changes == 'stop':
-            return
-        elif raw_changes == 'signal':
-            # in theory the watch thread should never get a signal
-            raise RuntimeError('watch thread unexpectedly received a signal')
-        else:
-            changes = _prep_changes(raw_changes, watch_filter)
-            if changes:
-                _log_changes(changes)
-                yield changes
+                changes = _prep_changes(raw_changes, watch_filter)
+                if changes:
+                    _log_changes(changes)
+                    yield changes
 
 
 def _prep_changes(
