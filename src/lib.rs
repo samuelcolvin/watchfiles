@@ -159,7 +159,7 @@ impl RustNotify {
         stop_event: PyObject,
     ) -> PyResult<PyObject> {
         if matches!(self.watcher, WatcherEnum::None) {
-            return Err(PyRuntimeError::new_err("Watcher already closed"));
+            return Err(PyRuntimeError::new_err("RustNotify watcher closed"));
         }
         let stop_event_is_set: Option<&PyAny> = match stop_event.is_none(py) {
             true => None,
