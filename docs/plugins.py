@@ -26,9 +26,15 @@ def test_examples():
         logger.info('pytest not installed, skipping examples tests')
     else:
         logger.info('running examples tests...')
-        return_code = pytest.main(['-q', '-p', 'no:sugar', 'tests/test_docs.py'])
-        if return_code != 0:
-            logger.warning('examples tests failed')
+        try:
+            pytest.main(['--version'])
+        except AttributeError:
+            # happens if pytest is not properly installed
+            logger.info('pytest not installed correctly, skipping examples tests')
+        else:
+            return_code = pytest.main(['-q', '-p', 'no:sugar', 'tests/test_docs.py'])
+            if return_code != 0:
+                logger.warning('examples tests failed')
 
 
 def on_files(files: Files, config: Config) -> Files:

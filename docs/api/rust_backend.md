@@ -1,10 +1,10 @@
 ::: watchfiles._rust_notify.RustNotify
 
-The `_rust_notify.pyi` file defines the interface to rust:
+::: watchfiles._rust_notify.WatchfilesRustInternalError
 
-```{.py title="_rust_notify.pyi" test="skip"}
-{! watchfiles/_rust_notify.pyi !}
-```
+::: watchfiles._rust_notify.__version__
+
+# Rust backend direct usage
 
 The rust backend can be accessed directly as follows:
 
