@@ -233,7 +233,7 @@ impl RustNotify {
     }
 
     // https://github.com/PyO3/pyo3/issues/1205#issuecomment-778529199
-    pub fn __enter__(slf: PyRef<Self>) -> PyRef<Self> {
+    pub fn __enter__(slf: Py<Self>) -> Py<Self> {
         slf
     }
 
