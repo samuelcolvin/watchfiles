@@ -232,7 +232,7 @@ impl RustNotify {
         Ok(py_changes)
     }
 
-    // https://github.com/PyO3/pyo3/issues/1205#issuecomment-778529199
+    /// https://github.com/PyO3/pyo3/issues/1205#issuecomment-1164096251 for advice on `__enter__`
     pub fn __enter__(slf: Py<Self>) -> Py<Self> {
         slf
     }

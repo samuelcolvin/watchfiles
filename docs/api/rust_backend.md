@@ -15,3 +15,16 @@ r = RustNotify(['first/path', 'second/path'], False, False, 0)
 changes = r.watch(1_600, 50, 100, None)
 print(changes)
 ```
+
+Or using `RustNotify` as a context manager:
+
+```py
+title="Rust backend context manager example"
+from watchfiles._rust_notify import RustNotify
+
+with RustNotify(['first/path', 'second/path'], False, False, 0) as r:
+    changes = r.watch(1_600, 50, 100, None)
+    print(changes)
+```
+
+(See the documentation on `close` above for when the context manager or `close` method are required.)
