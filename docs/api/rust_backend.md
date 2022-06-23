@@ -1,3 +1,5 @@
+::: watchfiles._rust_notify.RustNotify
+
 The `_rust_notify.pyi` file defines the interface to rust:
 
 ```{.py title="_rust_notify.pyi" test="skip"}
