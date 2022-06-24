@@ -3,6 +3,7 @@ from typing import List, Literal, Optional, Protocol, Set, Tuple, Union
 __all__ = 'RustNotify', 'WatchfilesRustInternalError'
 
 __version__: str
+"""Gets the package version as defined in `Cargo.toml`, modified to match python's versioning semantics."""
 
 class AbstractEvent(Protocol):
     def is_set(self) -> bool: ...
