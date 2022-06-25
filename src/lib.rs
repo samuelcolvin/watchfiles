@@ -248,7 +248,9 @@ impl RustNotify {
     pub fn __repr__(&self) -> PyResult<String> {
         Ok(format!("RustNotify({:#?})", self.watcher))
     }
+}
 
+impl RustNotify {
     fn clear(&self) {
         self.changes.lock().unwrap().clear();
     }
