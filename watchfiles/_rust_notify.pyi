@@ -1,4 +1,4 @@
-from typing import List, Literal, Optional, Protocol, Set, Tuple, Union
+from typing import Any, List, Literal, Optional, Protocol, Set, Tuple, Union
 
 __all__ = 'RustNotify', 'WatchfilesRustInternalError'
 
@@ -11,7 +11,7 @@ class AbstractEvent(Protocol):
 class RustNotify:
     """
     Interface to the Rust [notify](https://crates.io/crates/notify) crate which does
-    the heavy lifting of watching for file changes and grouping them into a single event.
+    the heavy lifting of watching for file changes and grouping them into events.
     """
 
     def __init__(self, watch_paths: List[str], debug: bool, force_polling: bool, poll_delay_ms: int) -> None:
@@ -56,6 +56,30 @@ class RustNotify:
             (the event types are ints which match [`Change`][watchfiles.Change]),
             `'signal'` if a signal was received, `'stop'` if the `stop_event` was set,
             or `'timeout'` if `timeout_ms` was exceeded.
+        """
+    def __enter__(self) -> 'RustNotify':
+        """
+        Does nothing, but allows `RustNotify` to be used as a context manager.
+
+        Note: the watching thead is created when an instance is initiated, not on
+        `__enter__`.
+        """
+    def __exit__(self, *args: Any) -> None:
+        """
+        Calls close.
+        """
+    def close(self) -> None:
+        """
+        Stops the watching thread. After `close` is called, the RustNotify instance can no
+        longer be used, calls to [`watch`][watchfiles.RustNotify.watch] will raise a `RuntimeError`.
+
+        Note: `close` is not required, just deleting the `RustNotify` instance will kill the thread
+        implicitly.
+
+        As per samuelcolvin/watchfiles#163 `close()` is only required because in the
+        event of an error, the traceback in `sys.exc_info` keeps a reference to `watchfiles.watch`'s
+        frame, so you can't rely on the `RustNotify` object being deleted, and thereby stopping
+        the watching thread.
         """
 
 class WatchfilesRustInternalError(RuntimeError):

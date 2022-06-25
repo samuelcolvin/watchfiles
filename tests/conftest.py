@@ -79,6 +79,15 @@ class MockRustNotify:
             self.watch_count += 1
             return change
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.close()
+
+    def close(self):
+        pass
+
 
 if TYPE_CHECKING:
     from typing import Literal, Protocol

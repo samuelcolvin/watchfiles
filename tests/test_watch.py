@@ -201,6 +201,15 @@ class MockRustNotifyRaise:
         self.i += 1
         return {(Change.added, 'spam.py')}
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.close()
+
+    def close(self):
+        pass
+
 
 async def test_awatch_interrupt_raise(mocker, caplog):
     mocker.patch('watchfiles.main.RustNotify', return_value=MockRustNotifyRaise())

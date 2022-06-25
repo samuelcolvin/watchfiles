@@ -29,6 +29,7 @@ const CHANGE_DELETED: u8 = 3;
 
 #[derive(Debug)]
 enum WatcherEnum {
+    None,
     Poll(PollWatcher),
     Recommended(RecommendedWatcher),
 }
@@ -157,13 +158,16 @@ impl RustNotify {
         timeout_ms: u64,
         stop_event: PyObject,
     ) -> PyResult<PyObject> {
+        if matches!(self.watcher, WatcherEnum::None) {
+            return Err(PyRuntimeError::new_err("RustNotify watcher closed"));
+        }
         let stop_event_is_set: Option<&PyAny> = match stop_event.is_none(py) {
             true => None,
             false => {
                 let event: &PyAny = stop_event.extract(py)?;
                 let func: &PyAny = event.getattr("is_set")?.extract()?;
                 if !func.is_callable() {
-                    return Err(PyTypeError::new_err("'stop_event.is_set' must be callable".to_string()));
+                    return Err(PyTypeError::new_err("'stop_event.is_set' must be callable"));
                 }
                 Some(func)
             }
@@ -228,10 +232,25 @@ impl RustNotify {
         Ok(py_changes)
     }
 
+    /// https://github.com/PyO3/pyo3/issues/1205#issuecomment-1164096251 for advice on `__enter__`
+    pub fn __enter__(slf: Py<Self>) -> Py<Self> {
+        slf
+    }
+
+    pub fn close(&mut self) {
+        self.watcher = WatcherEnum::None;
+    }
+
+    pub fn __exit__(&mut self, _exc_type: PyObject, _exc_value: PyObject, _traceback: PyObject) {
+        self.close();
+    }
+
     pub fn __repr__(&self) -> PyResult<String> {
         Ok(format!("RustNotify({:#?})", self.watcher))
     }
+}
 
+impl RustNotify {
     fn clear(&self) {
         self.changes.lock().unwrap().clear();
     }

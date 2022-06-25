@@ -16,9 +16,15 @@ def test_add(test_dir: Path):
     assert watcher.watch(200, 50, 500, None) == {(1, str(test_dir / 'new_file.txt'))}
 
 
-def test_recommended_repr(test_dir: Path):
+def test_close(test_dir: Path):
     watcher = RustNotify([str(test_dir)], True, False, 0)
     assert repr(watcher).startswith('RustNotify(Recommended(\n')
+
+    watcher.close()
+
+    assert repr(watcher) == 'RustNotify(None)'
+    with pytest.raises(RuntimeError, match='RustNotify watcher closed'):
+        watcher.watch(200, 50, 500, None)
 
 
 def test_modify_write(test_dir: Path):
