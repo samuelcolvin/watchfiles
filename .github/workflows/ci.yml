@@ -145,7 +145,7 @@ jobs:
   build:
     name: >
       build on ${{ matrix.platform || matrix.os }} (${{ matrix.target }} - ${{ matrix.manylinux || 'auto' }})
-    needs: [test, lint]
+#    needs: [test, lint]
     strategy:
       fail-fast: false
       matrix:
