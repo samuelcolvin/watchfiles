@@ -44,6 +44,7 @@ async def test_awatch(tmp_path: Path, write_soon):
         break
 
 
+@pytest.mark.filterwarnings('ignore::DeprecationWarning')
 async def test_await_stop_event(tmp_path: Path, write_soon):
     sleep(0.05)
     write_soon(tmp_path / 'foo.txt')
