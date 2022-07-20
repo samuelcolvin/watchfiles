@@ -10,7 +10,7 @@ import anyio
 import pytest
 
 from watchfiles import Change, awatch, watch
-from watchfiles.main import _calc_async_timeout
+from watchfiles.main import _calc_async_timeout, _default_force_pulling
 
 if TYPE_CHECKING:
     from conftest import MockRustType
@@ -255,5 +255,18 @@ def test_watch_polling_env(mocker):
             pass
 
         m.assert_called_once_with(['.'], False, True, 30)
+    finally:
+        del os.environ['WATCHFILES_FORCE_POLLING']
+
+
+def test_default_force_pulling():
+    try:
+        assert _default_force_pulling(True) is True
+        assert _default_force_pulling(False) is False
+        assert _default_force_pulling(None) is False
+        os.environ['WATCHFILES_FORCE_POLLING'] = '1'
+        assert _default_force_pulling(True) is True
+        assert _default_force_pulling(False) is False
+        assert _default_force_pulling(None) is True
     finally:
         del os.environ['WATCHFILES_FORCE_POLLING']
