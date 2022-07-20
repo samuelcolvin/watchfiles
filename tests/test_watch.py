@@ -1,3 +1,4 @@
+import os
 import sys
 import threading
 from contextlib import contextmanager
@@ -9,7 +10,7 @@ import anyio
 import pytest
 
 from watchfiles import Change, awatch, watch
-from watchfiles.main import _calc_async_timeout
+from watchfiles.main import _calc_async_timeout, _default_force_pulling
 
 if TYPE_CHECKING:
     from conftest import MockRustType
@@ -43,6 +44,7 @@ async def test_awatch(tmp_path: Path, write_soon):
         break
 
 
+@pytest.mark.filterwarnings('ignore::DeprecationWarning')
 async def test_await_stop_event(tmp_path: Path, write_soon):
     sleep(0.05)
     write_soon(tmp_path / 'foo.txt')
@@ -211,7 +213,7 @@ class MockRustNotifyRaise:
         pass
 
 
-async def test_awatch_interrupt_raise(mocker, caplog):
+async def test_awatch_interrupt_raise(mocker):
     mocker.patch('watchfiles.main.RustNotify', return_value=MockRustNotifyRaise())
 
     count = 0
@@ -223,3 +225,49 @@ async def test_awatch_interrupt_raise(mocker, caplog):
     # event is set because it's set while handling the KeyboardInterrupt
     assert stop_event.is_set()
     assert count == 1
+
+
+class MockRustNotify:
+    def watch(self, *args):
+        return 'stop'
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        pass
+
+
+def test_watch_polling_not_env(mocker):
+    m = mocker.patch('watchfiles.main.RustNotify', return_value=MockRustNotify())
+
+    for _ in watch('.'):
+        pass
+
+    m.assert_called_once_with(['.'], False, False, 30)
+
+
+def test_watch_polling_env(mocker):
+    os.environ['WATCHFILES_FORCE_POLLING'] = '1'
+    try:
+        m = mocker.patch('watchfiles.main.RustNotify', return_value=MockRustNotify())
+
+        for _ in watch('.'):
+            pass
+
+        m.assert_called_once_with(['.'], False, True, 30)
+    finally:
+        del os.environ['WATCHFILES_FORCE_POLLING']
+
+
+def test_default_force_pulling():
+    try:
+        assert _default_force_pulling(True) is True
+        assert _default_force_pulling(False) is False
+        assert _default_force_pulling(None) is False
+        os.environ['WATCHFILES_FORCE_POLLING'] = '1'
+        assert _default_force_pulling(True) is True
+        assert _default_force_pulling(False) is False
+        assert _default_force_pulling(None) is True
+    finally:
+        del os.environ['WATCHFILES_FORCE_POLLING']

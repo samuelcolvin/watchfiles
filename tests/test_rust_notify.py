@@ -247,6 +247,12 @@ def test_polling(test_dir: Path):
     assert (1, str(test_dir / 'test_polling.txt')) in changes  # sometimes has an event modify too
 
 
+def test_not_polling_repr(test_dir: Path):
+    watcher = RustNotify([str(test_dir)], True, False, 123)
+    r = repr(watcher)
+    assert r.startswith('RustNotify(Recommended(\n')
+
+
 def test_polling_repr(test_dir: Path):
     watcher = RustNotify([str(test_dir)], True, True, 123)
     r = repr(watcher)
