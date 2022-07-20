@@ -237,7 +237,7 @@ class MockRustNotify:
         pass
 
 
-async def test_watch_polling_not_env(mocker):
+def test_watch_polling_not_env(mocker):
     m = mocker.patch('watchfiles.main.RustNotify', return_value=MockRustNotify())
 
     for _ in watch('.'):
@@ -246,7 +246,7 @@ async def test_watch_polling_not_env(mocker):
     m.assert_called_once_with(['.'], False, False, 30)
 
 
-async def test_watch_polling_env(mocker):
+def test_watch_polling_env(mocker):
     os.environ['WATCHFILES_FORCE_POLLING'] = '1'
     try:
         m = mocker.patch('watchfiles.main.RustNotify', return_value=MockRustNotify())
