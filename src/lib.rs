@@ -122,7 +122,7 @@ impl RustNotify {
             }
         };
 
-        let py_error = |e| WatchfilesRustInternalError::new_err(format!("Error creating watcher: {}", e));
+        let py_error = |e| WatchfilesRustInternalError::new_err(format!("Error creating watcher: {} - {:?}", e, e));
 
         let watcher: WatcherEnum = match force_polling {
             true => {
