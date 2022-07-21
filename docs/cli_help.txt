@@ -1,6 +1,6 @@
 usage: watchfiles [-h] [--ignore-paths [IGNORE_PATHS]]
                   [--target-type [{command,function,auto}]]
-                  [--filter [FILTER]] [--args [ARGS]]
+                  [--filter [FILTER]] [--args [ARGS]] [--verbose]
                   [--verbosity [{warning,info,debug}]]
                   [--sigint-timeout [SIGINT_TIMEOUT]]
                   [--sigkill-timeout [SIGKILL_TIMEOUT]] [--version]
@@ -30,6 +30,7 @@ options:
                         Whether the target should be intercepted as a shell command or a python function, defaults to "auto" which infers the target type from the target string
   --filter [FILTER]     Which files to watch, defaults to "default" which uses the "DefaultFilter", "python" uses the "PythonFilter", "all" uses no filter, any other value is interpreted as a python function/class path which is imported
   --args [ARGS]         Arguments to set on sys.argv before calling target function, used only if the target is a function
+  --verbose             Set log level to "debug", wins over `--verbosity`
   --verbosity [{warning,info,debug}]
                         Log level, defaults to "info"
   --sigint-timeout [SIGINT_TIMEOUT]

@@ -105,11 +105,27 @@ def test_command(mocker, tmp_work_path):
     )
 
 
-def test_verbose(mocker, tmp_path):
+def test_verbosity(mocker, tmp_path):
     mocker.patch('watchfiles.cli.sys.stdin.fileno')
     mocker.patch('os.ttyname', return_value='/path/to/tty')
     mock_run_process = mocker.patch('watchfiles.cli.run_process')
     cli('--verbosity', 'debug', 'os.getcwd', str(tmp_path))
+    mock_run_process.assert_called_once_with(
+        tmp_path,
+        target='os.getcwd',
+        target_type='function',
+        watch_filter=IsInstance(DefaultFilter, only_direct_instance=True),
+        debug=True,
+        sigint_timeout=5,
+        sigkill_timeout=1,
+    )
+
+
+def test_verbose(mocker, tmp_path):
+    mocker.patch('watchfiles.cli.sys.stdin.fileno')
+    mocker.patch('os.ttyname', return_value='/path/to/tty')
+    mock_run_process = mocker.patch('watchfiles.cli.run_process')
+    cli('--verbose', 'os.getcwd', str(tmp_path))
     mock_run_process.assert_called_once_with(
         tmp_path,
         target='os.getcwd',
