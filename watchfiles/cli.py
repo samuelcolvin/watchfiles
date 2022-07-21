@@ -85,6 +85,7 @@ def cli(*args_: str) -> None:
         type=str,
         help='Arguments to set on sys.argv before calling target function, used only if the target is a function',
     )
+    parser.add_argument('--verbose', action='store_true', help='Set log level to "debug"')
     parser.add_argument(
         '--verbosity',
         nargs='?',
@@ -110,7 +111,11 @@ def cli(*args_: str) -> None:
     parser.add_argument('--version', '-V', action='version', version=f'%(prog)s v{VERSION}')
     arg_namespace = parser.parse_args(args)
 
-    log_level = getattr(logging, arg_namespace.verbosity.upper())
+    if arg_namespace.verbose:
+        log_level = logging.DEBUG
+    else:
+        log_level = getattr(logging, arg_namespace.verbosity.upper())
+
     hdlr = logging.StreamHandler()
     hdlr.setLevel(log_level)
     hdlr.setFormatter(logging.Formatter(fmt='[%(asctime)s] %(message)s', datefmt='%H:%M:%S'))
@@ -140,7 +145,8 @@ def cli(*args_: str) -> None:
     watch_filter, watch_filter_str = build_filter(arg_namespace.filter, arg_namespace.ignore_paths)
 
     logger.info(
-        'watchfiles 👀  path=%s target="%s" (%s) filter=%s...',
+        'watchfiles v%s 👀  path=%s target="%s" (%s) filter=%s...',
+        VERSION,
         ', '.join(f'"{p}"' for p in paths),
         arg_namespace.target,
         target_type,
@@ -152,7 +158,7 @@ def cli(*args_: str) -> None:
         target=arg_namespace.target,
         target_type=target_type,
         watch_filter=watch_filter,
-        debug=arg_namespace.verbosity == 'debug',
+        debug=log_level == logging.DEBUG,
         sigint_timeout=arg_namespace.sigint_timeout,
         sigkill_timeout=arg_namespace.sigkill_timeout,
     )

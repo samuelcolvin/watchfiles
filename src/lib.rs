@@ -162,6 +162,12 @@ impl RustNotify {
                                 if io_error.raw_os_error() == Some(38) {
                                     // see https://github.com/samuelcolvin/watchfiles/issues/167
                                     // we callback to PollWatcher
+                                    if debug {
+                                        eprintln!(
+                                            "IO error using recommend watcher: {:?}, falling back to PollWatcher",
+                                            io_error
+                                        );
+                                    }
                                     create_poll_watcher!("Error creating fallback poll watcher: {}")
                                 } else {
                                     wf_error!("Error creating recommended watcher: {}", error)

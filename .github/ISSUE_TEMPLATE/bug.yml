@@ -22,27 +22,34 @@ body:
       description: |
         Please add a self-contained, [minimal, reproducible, example](https://stackoverflow.com/help/minimal-reproducible-example) with your use case.
 
-        **Note:** you will probably want to run `watchfiles` with `debug=True` to get more information about what's going on.
+        **Alternatively**, you might find it useful to run
+
+        ```bash
+        watchfiles 'echo reloaded' . --verbose
+        ```
+
+        and copy the output below.
 
       placeholder: |
-        from watchfiles import watch
+        import watchfiles
 
-        for changes in watch('.', debug=True):
+        print(f'Watchfiles v{watchfiles.__version__}')
+        for changes in watchfiles.watch('.', debug=True):
             print(changes)
       render: Python
 
   - type: textarea
     id: output
     attributes:
-      label: Example Code Output
-      description: Output from the above example code.
+      label: Watchfiles Output
+      description: Output from the above example code or `watchfiles 'echo reloaded' . --verbose`
       render: Text
 
   - type: input
     id: os
     attributes:
-      label: Operating System
-      description: What Operating System version are you using? Also are you using a specific environment like docker?
+      label: Operating System & Architecture
+      description: What operating system version and system architecture are you using?
     validations:
       required: true
 
@@ -55,27 +62,14 @@ body:
         Also if you installed watchfiles or python in an unusual way.
 
   - type: input
-    id: watchfiles-version
+    id: python-watchfiles-version
     attributes:
-      label: Watchfiles Version
+      label: Python & Watchfiles Version
       description: |
-        Which `watchfiles` version are you using?
+        Which version Python and Watchfiles are you using?
 
         ```bash
-        python -c 'import watchfiles; print(watchfiles.__version__)'
-        ```
-    validations:
-      required: true
-
-  - type: input
-    id: python-version
-    attributes:
-      label: Python Version
-      description: |
-        Which Python version are you using?
-
-        ```bash
-        python --version
+        python -c 'import sys, watchfiles; print(f"python: {sys.version}, watchfiles: {watchfiles.__version__}")'
         ```
     validations:
       required: true
