@@ -13,7 +13,7 @@ use pyo3::prelude::*;
 
 use notify::event::{Event, EventKind, ModifyKind, RenameMode};
 use notify::poll::PollWatcherConfig;
-use notify::{PollWatcher, RecommendedWatcher, RecursiveMode, Result as NotifyResult, Watcher};
+use notify::{ErrorKind, PollWatcher, RecommendedWatcher, RecursiveMode, Result as NotifyResult, Watcher};
 
 create_exception!(
     _rust_notify,
@@ -53,6 +53,16 @@ macro_rules! watcher_paths {
         if $debug {
             eprintln!("watcher: {:?}", $watcher);
         }
+    };
+}
+
+macro_rules! wf_error {
+    ($msg:expr) => {
+        Err(WatchfilesRustInternalError::new_err($msg))
+    };
+
+    ($msg:literal, $( $msg_args:expr ),+ ) => {
+        Err(WatchfilesRustInternalError::new_err(format!($msg, $( $msg_args ),+)))
     };
 }
 
@@ -121,26 +131,50 @@ impl RustNotify {
                 *error_clone.lock().unwrap() = Some(format!("error in underlying watcher: {}", e));
             }
         };
-
-        let py_error = |e| WatchfilesRustInternalError::new_err(format!("Error creating watcher: {}", e));
-
-        let watcher: WatcherEnum = match force_polling {
-            true => {
+        macro_rules! create_poll_watcher {
+            ($msg_template:literal) => {{
                 let delay = Duration::from_millis(poll_delay_ms);
                 let config = PollWatcherConfig {
                     poll_interval: delay,
                     compare_contents: false,
                 };
-                let mut watcher = PollWatcher::with_config(event_handler, config).map_err(py_error)?;
+                let mut watcher = match PollWatcher::with_config(event_handler, config) {
+                    Ok(watcher) => watcher,
+                    Err(e) => return wf_error!($msg_template, e),
+                };
                 watcher_paths!(watcher, watch_paths, debug);
-                WatcherEnum::Poll(watcher)
-            }
+                Ok(WatcherEnum::Poll(watcher))
+            }};
+        }
+
+        let watcher: WatcherEnum = match force_polling {
+            true => create_poll_watcher!("Error creating poll watcher: {}"),
             false => {
-                let mut watcher = RecommendedWatcher::new(event_handler).map_err(py_error)?;
-                watcher_paths!(watcher, watch_paths, debug);
-                WatcherEnum::Recommended(watcher)
+                match RecommendedWatcher::new(event_handler.clone()) {
+                    Ok(watcher) => {
+                        let mut watcher = watcher;
+                        watcher_paths!(watcher, watch_paths, debug);
+                        Ok(WatcherEnum::Recommended(watcher))
+                    }
+                    Err(error) => {
+                        match &error.kind {
+                            ErrorKind::Io(io_error) => {
+                                if io_error.raw_os_error() == Some(38) {
+                                    // see https://github.com/samuelcolvin/watchfiles/issues/167
+                                    // we callback to PollWatcher
+                                    create_poll_watcher!("Error creating fallback poll watcher: {}")
+                                } else {
+                                    wf_error!("Error creating recommended watcher: {}", error)
+                                }
+                            }
+                            _ => {
+                                wf_error!("Error creating recommended watcher: {}", error)
+                            }
+                        }
+                    }
+                }
             }
-        };
+        }?;
 
         Ok(RustNotify {
             changes,
@@ -192,7 +226,7 @@ impl RustNotify {
 
             if let Some(error) = self.error.lock().unwrap().as_ref() {
                 self.clear();
-                return Err(WatchfilesRustInternalError::new_err(error.clone()));
+                return wf_error!(error.clone());
             }
 
             if let Some(is_set) = stop_event_is_set {
