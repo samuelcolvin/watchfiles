@@ -85,7 +85,7 @@ def cli(*args_: str) -> None:
         type=str,
         help='Arguments to set on sys.argv before calling target function, used only if the target is a function',
     )
-    parser.add_argument('--verbose', action='store_true', help='Set log level to "debug"')
+    parser.add_argument('--verbose', action='store_true', help='Set log level to "debug", wins over `--verbosity`')
     parser.add_argument(
         '--verbosity',
         nargs='?',
