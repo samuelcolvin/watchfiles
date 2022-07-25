@@ -216,6 +216,13 @@ jobs:
           manylinux: ${{ matrix.manylinux || 'auto' }}
           args: --release --out dist --interpreter pypy3.8 pypy3.9
 
+      - name: build sdist
+        if: ${{ matrix.os == 'ubuntu' && matrix.target == 'x86_64' && matrix.manylinux == 'auto' }}
+        uses: messense/maturin-action@v1
+        with:
+          command: sdist
+          args: --out dist
+
       - run: ${{ matrix.ls || 'ls -lh' }} dist/
 
       - run: twine check dist/*
