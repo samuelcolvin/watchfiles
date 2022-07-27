@@ -45,11 +45,11 @@ body:
       description: Output from the above example code or `watchfiles 'echo reloaded' . --verbose`
       render: Text
 
-  - type: input
+  - type: textarea
     id: os
     attributes:
       label: Operating System & Architecture
-      description: What operating system version and system architecture are you using?
+      description: Easiest to run `python -c 'import platform; print(platform.platform()); print(platform.version())'` and copy the output
     validations:
       required: true
 
