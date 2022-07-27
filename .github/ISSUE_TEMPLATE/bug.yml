@@ -49,7 +49,12 @@ body:
     id: os
     attributes:
       label: Operating System & Architecture
-      description: Easiest to run `python -c 'import platform; print(platform.platform()); print(platform.version())'` and copy the output
+      description: |
+        What operating system version and system architecture are you using?
+        
+        ```bash
+        python -c 'import platform; print(platform.platform()); print(platform.version())'
+        ```
     validations:
       required: true
 
