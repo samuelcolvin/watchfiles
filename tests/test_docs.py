@@ -76,6 +76,9 @@ def generate_code_chunks(*directories: str):
                 yield from extract_code_chunks(path, code, 0)
 
 
+# with pypy we sometimes (???) get a "The loop argument is deprecated since Python 3.8" warning, see
+# https://github.com/samuelcolvin/watchfiles/runs/7764187741
+@pytest.mark.filterwarnings('ignore:The loop argument is deprecated:DeprecationWarning')
 @pytest.mark.parametrize('module_name,source_code', generate_code_chunks('watchfiles', 'docs'))
 def test_docs_examples(module_name, source_code, import_execute, mocker, mock_rust_notify: 'MockRustType'):
     mock_rust_notify([{(1, 'foo.txt'), (2, 'bar.py')}])
