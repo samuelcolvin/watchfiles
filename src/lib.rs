@@ -12,8 +12,9 @@ use pyo3::exceptions::{PyFileNotFoundError, PyRuntimeError, PyTypeError};
 use pyo3::prelude::*;
 
 use notify::event::{Event, EventKind, ModifyKind, RenameMode};
-use notify::poll::PollWatcherConfig;
-use notify::{ErrorKind, PollWatcher, RecommendedWatcher, RecursiveMode, Result as NotifyResult, Watcher};
+use notify::{
+    Config as NotifyConfig, ErrorKind, PollWatcher, RecommendedWatcher, RecursiveMode, Result as NotifyResult, Watcher,
+};
 
 create_exception!(
     _rust_notify,
@@ -134,11 +135,8 @@ impl RustNotify {
         macro_rules! create_poll_watcher {
             ($msg_template:literal) => {{
                 let delay = Duration::from_millis(poll_delay_ms);
-                let config = PollWatcherConfig {
-                    poll_interval: delay,
-                    compare_contents: false,
-                };
-                let mut watcher = match PollWatcher::with_config(event_handler, config) {
+                let config = NotifyConfig::default().with_poll_interval(delay);
+                let mut watcher = match PollWatcher::new(event_handler, config) {
                     Ok(watcher) => watcher,
                     Err(e) => return wf_error!($msg_template, e),
                 };
@@ -150,7 +148,7 @@ impl RustNotify {
         let watcher: WatcherEnum = match force_polling {
             true => create_poll_watcher!("Error creating poll watcher: {}"),
             false => {
-                match RecommendedWatcher::new(event_handler.clone()) {
+                match RecommendedWatcher::new(event_handler.clone(), NotifyConfig::default()) {
                     Ok(watcher) => {
                         let mut watcher = watcher;
                         watcher_paths!(watcher, watch_paths, debug);
