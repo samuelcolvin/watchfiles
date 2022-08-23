@@ -86,7 +86,7 @@ def cli(*args_: str) -> None:
         help='Arguments to set on sys.argv before calling target function, used only if the target is a function',
     )
     parser.add_argument('--verbose', action='store_true', help='Set log level to "debug", wins over `--verbosity`')
-    parser.add_argument('--non-recursive', action='store_true', help='No not recurse folders')
+    parser.add_argument('--non-recursive', action='store_true', help='Do not watch for changes in sub-directories recursively')
     parser.add_argument(
         '--verbosity',
         nargs='?',
