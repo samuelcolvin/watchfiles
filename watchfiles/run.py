@@ -136,7 +136,7 @@ def run_process(
             step=step,
             debug=debug,
             raise_interrupt=False,
-            recursive=recursive
+            recursive=recursive,
         ):
             callback and callback(changes)
             process.stop(sigint_timeout=sigint_timeout, sigkill_timeout=sigkill_timeout)
