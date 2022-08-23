@@ -27,6 +27,8 @@ class RustNotify:
             debug: if true, print details about all events to stderr
             force_polling: if true, always use polling instead of file system notifications
             poll_delay_ms: delay between polling for changes, only used if `force_polling=True`
+            recursive: if `True`, watch for changes in sub-directories recursively, otherwise watch only for changes in
+                the top-level directory, default is `True`.
         """
     def watch(
         self,
