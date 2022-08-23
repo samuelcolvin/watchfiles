@@ -92,7 +92,8 @@ def watch(
         force_polling: if `True`, always use polling instead of file system notifications, default is `None` where
             `force_polling` is set to `True` if the `WATCHFILES_FORCE_POLLING` environment variable exists.
         poll_delay_ms: delay between polling for changes, only used if `force_polling=True`.
-        recursive: if true, watch for changes in sub-directories recursively, otherwise watch only for changes in the top-level directory, default is `True`.
+        recursive: if true, watch for changes in sub-directories recursively, otherwise watch only for changes in the
+            top-level directory, default is `True`.
 
     Yields:
         The generator yields sets of [`FileChange`][watchfiles.main.FileChange]s.
@@ -168,7 +169,8 @@ async def awatch(  # noqa C901
         force_polling: if true, always use polling instead of file system notifications, default is `None` where
             `force_polling` is set to `True` if the `WATCHFILES_FORCE_POLLING` environment variable exists.
         poll_delay_ms: delay between polling for changes, only used if `force_polling=True`.
-        recursive: if true, always look recursively inside folders, default is True.
+        recursive: if true, watch for changes in sub-directories recursively, otherwise watch only for changes in the
+            top-level directory, default is `True`.
 
     Yields:
         The generator yields sets of [`FileChange`][watchfiles.main.FileChange]s.
