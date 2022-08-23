@@ -1,4 +1,4 @@
-This package was significantly written and renamed from `watchgod` to `watchfiles`, these docs refer to the new
+This package was significantly rewritten and renamed from `watchgod` to `watchfiles`, these docs refer to the new
 `watchfiles` package.
 
 The main reason for this change was to avoid confusion with the similarly named "watchdog" package, 
