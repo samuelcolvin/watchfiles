@@ -52,8 +52,6 @@ def test_modify_write_non_recursive(test_dir: Path):
 
     assert watcher.watch(200, 50, 500, None) == {
         (2, str(test_dir / 'a_non_recursive.txt')),
-        # todo: figure out why this notification is triggered for modify, but not for write
-        (2, str(test_dir / 'dir_a')),
     }
 
 

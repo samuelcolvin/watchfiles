@@ -46,7 +46,11 @@ struct RustNotify {
 // macro to avoid duplicated code below
 macro_rules! watcher_paths {
     ($watcher:ident, $paths:ident, $debug:ident, $recursive:ident) => {
-        let mode = if $recursive { RecursiveMode::Recursive } else { RecursiveMode::NonRecursive };
+        let mode = if $recursive {
+            RecursiveMode::Recursive
+        } else {
+            RecursiveMode::NonRecursive
+        };
         for watch_path in $paths.into_iter() {
             $watcher
                 .watch(Path::new(&watch_path), mode)
@@ -72,7 +76,11 @@ macro_rules! wf_error {
 impl RustNotify {
     #[new]
     fn py_new(
-      watch_paths: Vec<String>, debug: bool, force_polling: bool, poll_delay_ms: u64, recursive: bool
+        watch_paths: Vec<String>,
+        debug: bool,
+        force_polling: bool,
+        poll_delay_ms: u64,
+        recursive: bool,
     ) -> PyResult<Self> {
         let changes: Arc<Mutex<HashSet<(u8, String)>>> = Arc::new(Mutex::new(HashSet::<(u8, String)>::new()));
         let error: Arc<Mutex<Option<String>>> = Arc::new(Mutex::new(None));
