@@ -244,7 +244,7 @@ def test_watch_polling_not_env(mocker):
     for _ in watch('.'):
         pass
 
-    m.assert_called_once_with(['.'], False, False, 30)
+    m.assert_called_once_with(['.'], False, False, 30, True)
 
 
 def test_watch_polling_env(mocker):
@@ -255,7 +255,7 @@ def test_watch_polling_env(mocker):
         for _ in watch('.'):
             pass
 
-        m.assert_called_once_with(['.'], False, True, 30)
+        m.assert_called_once_with(['.'], False, True, 30, True)
     finally:
         del os.environ['WATCHFILES_FORCE_POLLING']
 

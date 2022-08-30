@@ -87,6 +87,9 @@ def cli(*args_: str) -> None:
     )
     parser.add_argument('--verbose', action='store_true', help='Set log level to "debug", wins over `--verbosity`')
     parser.add_argument(
+        '--non-recursive', action='store_true', help='Do not watch for changes in sub-directories recursively'
+    )
+    parser.add_argument(
         '--verbosity',
         nargs='?',
         type=str,
@@ -161,6 +164,7 @@ def cli(*args_: str) -> None:
         debug=log_level == logging.DEBUG,
         sigint_timeout=arg_namespace.sigint_timeout,
         sigkill_timeout=arg_namespace.sigkill_timeout,
+        recursive=not arg_namespace.non_recursive,
     )
 
 

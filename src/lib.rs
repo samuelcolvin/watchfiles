@@ -45,10 +45,15 @@ struct RustNotify {
 
 // macro to avoid duplicated code below
 macro_rules! watcher_paths {
-    ($watcher:ident, $paths:ident, $debug:ident) => {
+    ($watcher:ident, $paths:ident, $debug:ident, $recursive:ident) => {
+        let mode = if $recursive {
+            RecursiveMode::Recursive
+        } else {
+            RecursiveMode::NonRecursive
+        };
         for watch_path in $paths.into_iter() {
             $watcher
-                .watch(Path::new(&watch_path), RecursiveMode::Recursive)
+                .watch(Path::new(&watch_path), mode)
                 .map_err(|e| PyFileNotFoundError::new_err(format!("{}", e)))?;
         }
         if $debug {
@@ -70,7 +75,13 @@ macro_rules! wf_error {
 #[pymethods]
 impl RustNotify {
     #[new]
-    fn py_new(watch_paths: Vec<String>, debug: bool, force_polling: bool, poll_delay_ms: u64) -> PyResult<Self> {
+    fn py_new(
+        watch_paths: Vec<String>,
+        debug: bool,
+        force_polling: bool,
+        poll_delay_ms: u64,
+        recursive: bool,
+    ) -> PyResult<Self> {
         let changes: Arc<Mutex<HashSet<(u8, String)>>> = Arc::new(Mutex::new(HashSet::<(u8, String)>::new()));
         let error: Arc<Mutex<Option<String>>> = Arc::new(Mutex::new(None));
 
@@ -140,7 +151,7 @@ impl RustNotify {
                     Ok(watcher) => watcher,
                     Err(e) => return wf_error!($msg_template, e),
                 };
-                watcher_paths!(watcher, watch_paths, debug);
+                watcher_paths!(watcher, watch_paths, debug, recursive);
                 Ok(WatcherEnum::Poll(watcher))
             }};
         }
@@ -151,7 +162,7 @@ impl RustNotify {
                 match RecommendedWatcher::new(event_handler.clone(), NotifyConfig::default()) {
                     Ok(watcher) => {
                         let mut watcher = watcher;
-                        watcher_paths!(watcher, watch_paths, debug);
+                        watcher_paths!(watcher, watch_paths, debug, recursive);
                         Ok(WatcherEnum::Recommended(watcher))
                     }
                     Err(error) => {

@@ -41,6 +41,7 @@ def run_process(
     debug: bool = False,
     sigint_timeout: int = 5,
     sigkill_timeout: int = 1,
+    recursive: bool = True,
 ) -> int:
     """
     Run a process and restart it upon file changes.
@@ -72,6 +73,7 @@ def run_process(
         debug: matches the same argument of [`watch`][watchfiles.watch]
         sigint_timeout: the number of seconds to wait after sending sigint before sending sigkill
         sigkill_timeout: the number of seconds to wait after sending sigkill before raising an exception
+        recursive: matches the same argument of [`watch`][watchfiles.watch]
 
     Returns:
         number of times the function was reloaded.
@@ -128,7 +130,13 @@ def run_process(
 
     try:
         for changes in watch(
-            *paths, watch_filter=watch_filter, debounce=debounce, step=step, debug=debug, raise_interrupt=False
+            *paths,
+            watch_filter=watch_filter,
+            debounce=debounce,
+            step=step,
+            debug=debug,
+            raise_interrupt=False,
+            recursive=recursive,
         ):
             callback and callback(changes)
             process.stop(sigint_timeout=sigint_timeout, sigkill_timeout=sigkill_timeout)
@@ -150,6 +158,7 @@ async def arun_process(
     debounce: int = 1_600,
     step: int = 50,
     debug: bool = False,
+    recursive: bool = True,
 ) -> int:
     """
     Async equivalent of [`run_process`][watchfiles.run_process], all arguments match those of `run_process` except
@@ -190,7 +199,9 @@ async def arun_process(
     process = await anyio.to_thread.run_sync(start_process, target, target_type, args, kwargs)
     reloads = 0
 
-    async for changes in awatch(*paths, watch_filter=watch_filter, debounce=debounce, step=step, debug=debug):
+    async for changes in awatch(
+        *paths, watch_filter=watch_filter, debounce=debounce, step=step, debug=debug, recursive=recursive
+    ):
         if callback is not None:
             r = callback(changes)
             if inspect.isawaitable(r):
