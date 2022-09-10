@@ -35,9 +35,9 @@ classifiers = [
     'Framework :: AnyIO',
 ]
 dynamic = [
-    "license",
-    "readme",
-    "version"
+    'license',
+    'readme',
+    'version'
 ]
 
 [project.scripts]

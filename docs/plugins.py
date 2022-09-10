@@ -44,7 +44,7 @@ def on_files(files: Files, config: Config) -> Files:
 def remove_files(files: Files) -> Files:
     to_remove = []
     for file in files:
-        if file.src_path in {'plugins.py', 'requirements.txt', 'cli_help.txt'}:
+        if file.src_path in {'plugins.py', 'cli_help.txt'}:
             to_remove.append(file)
         elif file.src_path.startswith('__pycache__/'):
             to_remove.append(file)
