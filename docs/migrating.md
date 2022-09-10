@@ -1,11 +1,11 @@
 This package was significantly rewritten and renamed from `watchgod` to `watchfiles`, these docs refer to the new
 `watchfiles` package.
 
-The main reason for this change was to avoid confusion with the similarly named "watchdog" package, 
+The main reason for this change was to avoid confusion with the similarly named "watchdog" package,
 see [#102](https://github.com/samuelcolvin/watchfiles/issues/102) for more details.
 
-The most significant code change was to switch from file scanning/polling to OS file system notifications 
-using the [Notify](https://github.com/notify-rs/notify) rust library. 
+The most significant code change was to switch from file scanning/polling to OS file system notifications
+using the [Notify](https://github.com/notify-rs/notify) rust library.
 This is much more performant than the old approach.
 
 As a result, the external interface to the library has been changed somewhat.
@@ -19,7 +19,7 @@ The main methods:
 
 All remain, the following changes affect them all:
 
-* `watcher_cls` is removed and replaced by `watch_filter` which should be a simple callable, 
+* `watcher_cls` is removed and replaced by `watch_filter` which should be a simple callable,
   see [filter docs](./api/filters.md)
 * all these methods allow multiple paths to be watched, as result, the `target` argument to `run_process`
   & `arun_process` is now keyword-only
