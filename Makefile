@@ -4,7 +4,7 @@ black = black watchfiles tests
 
 .PHONY: install
 install:
-	pip install -U pip
+	pip install -U pip pre-commit
 	pip install -r requirements/all.txt
 	pip install -e .
 	pre-commit install
