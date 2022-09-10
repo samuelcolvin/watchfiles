@@ -1,11 +1,11 @@
-All classes described here are designed to be used for the `watch_filter` argument 
+All classes described here are designed to be used for the `watch_filter` argument
 to the [`watch`][watchfiles.watch] function and similar.
 
-This argument requires a simple callable which takes two arguments 
+This argument requires a simple callable which takes two arguments
 (the [`Change`][watchfiles.Change] type and the path as a string) and returns a boolean indicating if the change
 should be included (`True`) or ignored (`False`).
 
-As shown below in [Custom Filters](#custom-filters), you can either a `BaseFilter` subclass instance or 
+As shown below in [Custom Filters](#custom-filters), you can either a `BaseFilter` subclass instance or
 your own callable.
 
 ::: watchfiles.BaseFilter
@@ -29,7 +29,7 @@ class WebFilter(DefaultFilter):
 
     def __call__(self, change: Change, path: str) -> bool:
         return (
-            super().__call__(change, path) and 
+            super().__call__(change, path) and
             path.endswith(self.allowed_extensions)
         )
 

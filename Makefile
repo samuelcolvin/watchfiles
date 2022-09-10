@@ -5,9 +5,7 @@ black = black watchfiles tests
 .PHONY: install
 install:
 	pip install -U pip pre-commit
-	pip install -r tests/requirements.txt
-	pip install -r tests/requirements-linting.txt
-	pip install -r docs/requirements.txt
+	pip install -r requirements/all.txt
 	pip install -e .
 	pre-commit install
 

@@ -1,0 +1,6 @@
+black
+mkdocs
+mkdocs-material
+mkdocs-simple-hooks
+mkdocstrings[python]
+mdx-include
