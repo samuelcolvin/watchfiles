@@ -92,7 +92,7 @@ def test_customising_filters():
     assert f._ignore_paths == ('/a/b',)
 
     # unchanged
-    assert DefaultFilter.ignore_dirs == IsTuple('__pycache__', length=11)
+    assert DefaultFilter.ignore_dirs == IsTuple('__pycache__', length=12)
 
 
 def test_repr():

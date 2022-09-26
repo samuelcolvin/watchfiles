@@ -84,6 +84,7 @@ class DefaultFilter(BaseFilter):
         'node_modules',
         '.mypy_cache',
         '.pytest_cache',
+        '.hypothesis',
     )
     """Directory names to ignore."""
 
