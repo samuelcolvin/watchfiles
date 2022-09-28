@@ -82,6 +82,9 @@ class DefaultFilter(BaseFilter):
         'site-packages',
         '.idea',
         'node_modules',
+        '.mypy_cache',
+        '.pytest_cache',
+        '.hypothesis',
     )
     """Directory names to ignore."""
 
