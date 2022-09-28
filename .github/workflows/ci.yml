@@ -40,19 +40,6 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - id: cache-py
-      name: cache python
-      uses: actions/cache@v3
-      with:
-        path: ${{ env.pythonLocation }}
-        key: >
-          py
-          ${{ runner.os }}
-          ${{ env.pythonLocation }}
-          ${{ hashFiles('requirements/pyproject.txt') }}
-          ${{ hashFiles('requirements/testing.txt') }}
-          ${{ hashFiles('pyproject.toml') }}
-
     - name: install rust
       uses: actions-rs/toolchain@v1
       with:
@@ -64,7 +51,6 @@ jobs:
       uses: Swatinem/rust-cache@v1
 
     - run: pip install -r requirements/pyproject.txt -r requirements/testing.txt
-      if: steps.cache-py.outputs.cache-hit != 'true'
 
     - run: pip install -e .
     - run: pip freeze
@@ -99,23 +85,9 @@ jobs:
     - name: cache rust
       uses: Swatinem/rust-cache@v1
 
-    - uses: actions/cache@v3
-      id: cache-py
-      name: cache python
-      with:
-        path: ${{ env.pythonLocation }}
-        key: >
-          py
-          ${{ env.pythonLocation }}
-          ${{ hashFiles('requirements/pyproject.txt') }}
-          ${{ hashFiles('requirements/linting.txt') }}
-          ${{ hashFiles('pyproject.toml') }}
-
     - run: pip install -r requirements/pyproject.txt -r requirements/linting.txt
-      if: steps.cache-py.outputs.cache-hit != 'true'
 
     - run: pip install .
-      if: steps.cache-py.outputs.cache-hit != 'true'
 
     - uses: pre-commit/action@v3.0.0
       with:
