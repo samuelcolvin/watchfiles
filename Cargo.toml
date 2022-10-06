@@ -2,6 +2,25 @@
 name = "watchfiles_rust_notify"
 version = "0.0.0"
 edition = "2021"
+license = "MIT"
+homepage = "https://github.com/samuelcolvin/watchfiles/watchfiles"
+repository = "https://github.com/samuelcolvin/watchfiles/watchfiles.git"
+readme = "README.md"
+include = [
+    "/pyproject.toml",
+    "/README.md",
+    "/LICENSE",
+    "/Makefile",
+    "/src",
+    "/watchfiles",
+    "/tests",
+    "/requirements",
+    "/.cargo",
+    "!__pycache__",
+    "!tests/.mypy_cache",
+    "!tests/.pytest_cache",
+    "!*.so",
+]
 
 [dependencies]
 crossbeam-channel = "0.5.4"

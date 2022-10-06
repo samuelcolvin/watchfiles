@@ -218,7 +218,21 @@ jobs:
           name: pypi_files
           path: dist
 
-      - run: ls -lh dist/
+      - name: list dist files
+        run: |
+         ls -lh dist/
+         echo "`ls dist | wc -l` files"
+
+      - name: extract and list sdist file
+        run: |
+         mkdir sdist-files
+         tar -xvf dist/*.tar.gz -C sdist-files
+         tree -a sdist-files
+
+      - name: extract and list wheel file
+        run: |
+         ls dist/*cp37-abi3-manylinux*x86_64.whl | head -n 1
+         python -m zipfile --list `ls dist/*cp37-abi3-manylinux*x86_64.whl | head -n 1`
 
   release:
     needs: [build, docs]

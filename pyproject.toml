@@ -50,6 +50,10 @@ Funding = 'https://github.com/sponsors/samuelcolvin'
 Source = 'https://github.com/samuelcolvin/watchfiles'
 Changelog = 'https://github.com/samuelcolvin/watchfiles/releases'
 
+[tool.maturin]
+bindings = 'pyo3'
+sdist-include = ['Cargo.lock']
+
 [tool.pytest.ini_options]
 testpaths = 'tests'
 log_format = '%(name)s %(levelname)s: %(message)s'
