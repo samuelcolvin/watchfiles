@@ -75,6 +75,17 @@ def watch(
     The paths watched can be directories or files, directories are watched recursively - changes in subdirectories
     are also detected.
 
+    #### Force polling
+
+    Notify will fall back to file polling if it can't use file system notifications, but we also force notify
+    to us polling if the `force_polling` argument is `True`; if `force_polling` is unset (or `None`), we enable
+    force polling thus:
+
+    * if the `WATCHFILES_FORCE_POLLING` environment variable exists and is not empty:
+       * if the value is `false`, `disable` or `disabled`, force polling is disabled
+       * otherwise, force polling is enabled
+    * otherwise, we enable force polling only if we detect we're running on WSL (Windows Subsystem for Linux)
+
     Args:
         *paths: filesystem paths to watch.
         watch_filter: callable used to filter out changes which are not important, you can either use a raw callable
@@ -89,8 +100,7 @@ def watch(
         yield_on_timeout: if `True`, the generator will yield upon timeout in rust even if no changes are detected.
         debug: whether to print information about all filesystem changes in rust to stdout.
         raise_interrupt: whether to re-raise `KeyboardInterrupt`s, or suppress the error and just stop iterating.
-        force_polling: if `True`, always use polling instead of file system notifications, default is `None` where
-            `force_polling` is set to `True` if the `WATCHFILES_FORCE_POLLING` environment variable exists.
+        force_polling: See [Force polling](#force-polling) above.
         poll_delay_ms: delay between polling for changes, only used if `force_polling=True`.
         recursive: if `True`, watch for changes in sub-directories recursively, otherwise watch only for changes in the
             top-level directory, default is `True`.
@@ -105,7 +115,7 @@ def watch(
         print(changes)
     ```
     """
-    force_polling = _default_force_pulling(force_polling)
+    force_polling = _default_force_polling(force_polling)
     with RustNotify([str(p) for p in paths], debug, force_polling, poll_delay_ms, recursive) as watcher:
         while True:
             raw_changes = watcher.watch(debounce, step, rust_timeout, stop_event)
@@ -224,7 +234,7 @@ async def awatch(  # noqa C901
     else:
         stop_event_ = stop_event
 
-    force_polling = _default_force_pulling(force_polling)
+    force_polling = _default_force_polling(force_polling)
     with RustNotify([str(p) for p in paths], debug, force_polling, poll_delay_ms, recursive) as watcher:
         timeout = _calc_async_timeout(rust_timeout)
         CancelledError = anyio.get_cancelled_exc_class()
@@ -289,11 +299,28 @@ def _calc_async_timeout(timeout: Optional[int]) -> int:
         return timeout
 
 
-def _default_force_pulling(force_polling: Optional[bool]) -> bool:
+def _default_force_polling(force_polling: Optional[bool]) -> bool:
     """
-    https://github.com/samuelcolvin/watchfiles/issues/167#issuecomment-1189309354 for rationale.
+    See docstring for `watch` above for details.
+
+    See samuelcolvin/watchfiles#167 and samuelcolvin/watchfiles#187 for discussion and rationale.
     """
-    if force_polling is None:
-        return 'WATCHFILES_FORCE_POLLING' in os.environ
-    else:
+    if force_polling is not None:
         return force_polling
+    env_var = os.getenv('WATCHFILES_FORCE_POLLING')
+    if env_var:
+        return env_var.lower() not in {'false', 'disable', 'disabled'}
+    else:
+        return _auto_force_polling()
+
+
+def _auto_force_polling() -> bool:
+    """
+    Whether to auto-enable force polling, it should be enabled automatically only on WSL.
+
+    See samuelcolvin/watchfiles#187 for discussion.
+    """
+    import platform
+
+    uname = platform.uname()
+    return 'microsoft-standard' in uname.release.lower() and uname.system.lower() == 'linux'
