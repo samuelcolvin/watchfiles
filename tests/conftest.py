@@ -179,3 +179,25 @@ def time_taken(request):
         return TimeTaken(request.node.name, min_time, max_time)
 
     return time_taken
+
+
+class SetEnv:
+    def __init__(self):
+        self.envars = set()
+
+    def __call__(self, name, value):
+        self.envars.add(name)
+        os.environ[name] = value
+
+    def clear(self):
+        for n in self.envars:
+            os.environ.pop(n)
+
+
+@pytest.fixture
+def env():
+    setenv = SetEnv()
+
+    yield setenv
+
+    setenv.clear()
