@@ -66,7 +66,7 @@ def watch(
     debug: bool = False,
     raise_interrupt: bool = True,
     force_polling: Optional[bool] = None,
-    poll_delay_ms: int = 30,
+    poll_delay_ms: int = 300,
     recursive: bool = True,
 ) -> Generator[Set[FileChange], None, None]:
     """
@@ -150,7 +150,7 @@ async def awatch(  # noqa C901
     debug: bool = False,
     raise_interrupt: Optional[bool] = None,
     force_polling: Optional[bool] = None,
-    poll_delay_ms: int = 30,
+    poll_delay_ms: int = 300,
     recursive: bool = True,
 ) -> AsyncGenerator[Set[FileChange], None]:
     """
