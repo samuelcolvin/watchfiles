@@ -344,6 +344,19 @@
     watch()
   </a>
   
+    <nav class="md-nav" aria-label="watch()">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#watchfiles.watch--force-polling" class="md-nav__link">
+    Force polling
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -480,6 +493,19 @@
     watch()
   </a>
   
+    <nav class="md-nav" aria-label="watch()">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#watchfiles.watch--force-polling" class="md-nav__link">
+    Force polling
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -568,7 +594,7 @@
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="n">raise_interrupt</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 <a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    <span class="n">force_polling</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    <span class="n">poll_delay_ms</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    <span class="n">poll_delay_ms</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">300</span><span class="p">,</span>
 <a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    <span class="n">recursive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">Set</span><span class="p">[</span><span class="n">FileChange</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
 </code></pre></div>
@@ -578,6 +604,16 @@
       <p>Watch one or more paths and yield a set of changes whenever files change.</p>
 <p>The paths watched can be directories or files, directories are watched recursively - changes in subdirectories
 are also detected.</p>
+<h6 id="watchfiles.watch--force-polling">Force polling<a class="headerlink" href="#watchfiles.watch--force-polling" title="Permanent link">&para;</a></h6>
+<p>Notify will fall back to file polling if it can't use file system notifications, but we also force notify
+to us polling if the <code>force_polling</code> argument is <code>True</code>; if <code>force_polling</code> is unset (or <code>None</code>), we enable
+force polling thus:</p>
+<ul>
+<li>if the <code>WATCHFILES_FORCE_POLLING</code> environment variable exists and is not empty:</li>
+<li>if the value is <code>false</code>, <code>disable</code> or <code>disabled</code>, force polling is disabled</li>
+<li>otherwise, force polling is enabled</li>
+<li>otherwise, we enable force polling only if we detect we're running on WSL (Windows Subsystem for Linux)</li>
+</ul>
 
   <p><strong>Parameters:</strong></p>
   <table>
@@ -689,8 +725,7 @@ this can be anything with an <code>is_set()</code> method which returns a bool, 
           <td>
                 <code><span title="typing.Optional">Optional</span>[bool]</code>
           </td>
-          <td><p>if <code>True</code>, always use polling instead of file system notifications, default is <code>None</code> where
-<code>force_polling</code> is set to <code>True</code> if the <code>WATCHFILES_FORCE_POLLING</code> environment variable exists.</p></td>
+          <td><p>See <a href="#watchfiles.watch--force-polling">Force polling</a> above.</p></td>
           <td>
                 <code>None</code>
           </td>
@@ -702,7 +737,7 @@ this can be anything with an <code>is_set()</code> method which returns a bool, 
           </td>
           <td><p>delay between polling for changes, only used if <code>force_polling=True</code>.</p></td>
           <td>
-                <code>30</code>
+                <code>300</code>
           </td>
         </tr>
         <tr>
@@ -772,7 +807,7 @@ top-level directory, default is <code>True</code>.</p></td>
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="n">raise_interrupt</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    <span class="n">force_polling</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    <span class="n">poll_delay_ms</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    <span class="n">poll_delay_ms</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">300</span><span class="p">,</span>
 <a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    <span class="n">recursive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncGenerator</span><span class="p">[</span><span class="n">Set</span><span class="p">[</span><span class="n">FileChange</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span>
 </code></pre></div>
@@ -908,7 +943,7 @@ See <a href="https://github.com/samuelcolvin/watchfiles/issues/136">#136</a></p>
           </td>
           <td><p>delay between polling for changes, only used if <code>force_polling=True</code>.</p></td>
           <td>
-                <code>30</code>
+                <code>300</code>
           </td>
         </tr>
         <tr>
