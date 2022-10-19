@@ -118,7 +118,7 @@ jobs:
   build:
     name: >
       build on ${{ matrix.platform || matrix.os }} (${{ matrix.target }} - ${{ matrix.manylinux || 'auto' }})
-    needs: [test, lint]
+
     strategy:
       fail-fast: false
       matrix:
@@ -155,6 +155,7 @@ jobs:
             manylinux: musllinux_1_1
 
     runs-on: ${{ matrix.os }}-latest
+
     steps:
       - uses: actions/checkout@v3
 
@@ -233,6 +234,17 @@ jobs:
         run: |
          ls dist/*cp37-abi3-manylinux*x86_64.whl | head -n 1
          python -m zipfile --list `ls dist/*cp37-abi3-manylinux*x86_64.whl | head -n 1`
+
+  # Used for branch protection checks, see https://github.com/marketplace/actions/alls-green#why
+  check:
+    if: always()
+    needs: [test, lint, docs, build, list-pypi-files]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Decide whether the needed jobs succeeded or failed
+        uses: re-actors/alls-green@release/v1
+        with:
+          jobs: ${{ toJSON(needs) }}
 
   release:
     needs: [build, docs]
