@@ -68,7 +68,7 @@ def test_dead_callback(mocker, mock_rust_notify: 'MockRustType'):
     c.assert_called_with({(Change.added, '/path/to/foobar.py')})
 
 
-@pytest.mark.skipif(sys.platform in ['linux', 'darwin'], reason='no need to test this on linux or mac osx')
+@pytest.mark.skipif(sys.platform != 'win32', reason='no need to test this except on windows')
 def test_split_cmd_non_posix():
     assert split_cmd('C:\\Users\\default\\AppData\\Local\\Programs\\Python\\Python311\\python.exe -V') == [
         'C:\\Users\\default\\AppData\\Local\\Programs\\Python\\Python311\\python.exe',
