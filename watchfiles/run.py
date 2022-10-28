@@ -11,7 +11,7 @@ from importlib import import_module
 from multiprocessing import get_context
 from multiprocessing.context import SpawnProcess
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Dict, Generator, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, Generator, List, Optional, Set, Tuple, Union
 
 import anyio
 
@@ -219,6 +219,13 @@ async def arun_process(
 spawn_context = get_context('spawn')
 
 
+def split_cmd(cmd: str) -> List[str]:
+    import platform
+
+    posix = platform.uname().system.lower() != 'windows'
+    return shlex.split(cmd, posix=posix)
+
+
 def start_process(
     target: Union[str, Callable[..., Any]],
     target_type: "Literal['function', 'command']",
@@ -250,7 +257,7 @@ def start_process(
             logger.warning('ignoring args and kwargs for "command" target')
 
         assert isinstance(target, str), 'target must be a string to run as a command'
-        popen_args = shlex.split(target)
+        popen_args = split_cmd(target)
         process = subprocess.Popen(popen_args)
     return CombinedProcess(process)
 

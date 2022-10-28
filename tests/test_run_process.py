@@ -10,7 +10,7 @@ from dirty_equals import IsStr
 
 from watchfiles import arun_process, run_process
 from watchfiles.main import Change
-from watchfiles.run import detect_target_type, import_string, run_function, set_tty, start_process
+from watchfiles.run import detect_target_type, import_string, run_function, set_tty, split_cmd, start_process
 
 if TYPE_CHECKING:
     from conftest import MockRustType
@@ -66,6 +66,19 @@ def test_dead_callback(mocker, mock_rust_notify: 'MockRustType'):
     assert mock_kill.call_count == 0
     assert c.call_count == 2
     c.assert_called_with({(Change.added, '/path/to/foobar.py')})
+
+
+@pytest.mark.skipif(sys.platform != 'win32', reason='no need to test this except on windows')
+def test_split_cmd_non_posix():
+    assert split_cmd('C:\\Users\\default\\AppData\\Local\\Programs\\Python\\Python311\\python.exe -V') == [
+        'C:\\Users\\default\\AppData\\Local\\Programs\\Python\\Python311\\python.exe',
+        '-V',
+    ]
+
+
+@pytest.mark.skipif(sys.platform == 'win32', reason='no need to test this on windows')
+def test_split_cmd_posix():
+    assert split_cmd('/usr/bin/python3 -v') == ['/usr/bin/python3', '-v']
 
 
 @pytest.mark.skipif(sys.platform == 'win32', reason='fails on windows')
