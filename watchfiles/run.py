@@ -236,7 +236,7 @@ def start_process(
     if changes is None:
         changes_env_var = '[]'
     else:
-        changes_env_var = json.dumps([[c.raw_str(), p] for c, p in changes])
+        changes_env_var = json.dumps([[c.raw_str(), p, p2] for c, p, p2 in changes])
 
     os.environ['WATCHFILES_CHANGES'] = changes_env_var
 

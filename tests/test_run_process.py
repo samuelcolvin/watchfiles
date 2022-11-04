@@ -45,7 +45,7 @@ def test_alive_terminates(mocker, mock_rust_notify: 'MockRustType', caplog):
     mock_spawn_process = mocker.patch('watchfiles.run.spawn_context.Process', return_value=FakeProcess())
     mock_popen = mocker.patch('watchfiles.run.subprocess.Popen', return_value=FakePopen())
     mock_kill = mocker.patch('watchfiles.run.os.kill')
-    mock_rust_notify([{(1, '/path/to/foobar.py')}])
+    mock_rust_notify([{(1, '/path/to/foobar.py', '')}])
 
     assert run_process('/x/y/z', target=os.getcwd, debounce=5, step=1) == 1
     assert mock_spawn_process.call_count == 2
@@ -57,7 +57,7 @@ def test_alive_terminates(mocker, mock_rust_notify: 'MockRustType', caplog):
 def test_dead_callback(mocker, mock_rust_notify: 'MockRustType'):
     mock_spawn_process = mocker.patch('watchfiles.run.spawn_context.Process', return_value=FakeProcess(is_alive=False))
     mock_kill = mocker.patch('watchfiles.run.os.kill')
-    mock_rust_notify([{(1, '/path/to/foobar.py')}, {(1, '/path/to/foobar.py')}])
+    mock_rust_notify([{(1, '/path/to/foobar.py', '')}, {(1, '/path/to/foobar.py', '')}])
 
     c = mocker.MagicMock()
 
@@ -65,7 +65,7 @@ def test_dead_callback(mocker, mock_rust_notify: 'MockRustType'):
     assert mock_spawn_process.call_count == 3
     assert mock_kill.call_count == 0
     assert c.call_count == 2
-    c.assert_called_with({(Change.added, '/path/to/foobar.py')})
+    c.assert_called_with({(Change.added, '/path/to/foobar.py', '')})
 
 
 @pytest.mark.skipif(sys.platform != 'win32', reason='no need to test this except on windows')
@@ -85,7 +85,7 @@ def test_split_cmd_posix():
 def test_alive_doesnt_terminate(mocker, mock_rust_notify: 'MockRustType'):
     mock_spawn_process = mocker.patch('watchfiles.run.spawn_context.Process', return_value=FakeProcess(exitcode=None))
     mock_kill = mocker.patch('watchfiles.run.os.kill')
-    mock_rust_notify([{(1, '/path/to/foobar.py')}])
+    mock_rust_notify([{(1, '/path/to/foobar.py', '')}])
 
     assert run_process('/x/y/z', target=object(), debounce=5, step=1) == 1
     assert mock_spawn_process.call_count == 2
@@ -104,7 +104,7 @@ def test_sigint_timeout(mocker, mock_rust_notify: 'MockRustType', caplog):
     mock_spawn_process = mocker.patch('watchfiles.run.spawn_context.Process', return_value=FakeProcessTimeout())
 
     mock_kill = mocker.patch('watchfiles.run.os.kill')
-    mock_rust_notify([{(1, '/path/to/foobar.py')}])
+    mock_rust_notify([{(1, '/path/to/foobar.py', '')}])
 
     assert run_process('/x/y/z', target=object(), debounce=5, step=1, sigint_timeout='sigint_timeout') == 1
     assert mock_spawn_process.call_count == 2
@@ -124,18 +124,18 @@ def test_start_process(mocker):
 def test_start_process_env(mocker):
     mock_process = mocker.patch('watchfiles.run.spawn_context.Process')
     v = object()
-    changes = [(Change.added, 'a.py'), (Change.modified, 'b.py'), (Change.deleted, 'c.py')]  # use a list to keep order
+    changes = [(Change.added, 'a.py', ''), (Change.modified, 'b.py', ''), (Change.deleted, 'c.py', '')]  # use a list to keep order
     start_process(v, 'function', (1, 2, 3), {}, changes)
     assert mock_process.call_count == 1
     mock_process.assert_called_with(target=v, args=(1, 2, 3), kwargs={})
-    assert os.getenv('WATCHFILES_CHANGES') == '[["added", "a.py"], ["modified", "b.py"], ["deleted", "c.py"]]'
+    assert os.getenv('WATCHFILES_CHANGES') == '[["added", "a.py", ""], ["modified", "b.py", ""], ["deleted", "c.py", ""]]'
 
 
 def test_function_string_not_win(mocker, mock_rust_notify: 'MockRustType', caplog):
     caplog.set_level('DEBUG', 'watchfiles')
     mock_spawn_process = mocker.patch('watchfiles.run.spawn_context.Process', return_value=FakeProcess())
     mocker.patch('watchfiles.run.os.kill')
-    mock_rust_notify([{(1, '/path/to/foobar.py')}])
+    mock_rust_notify([{(1, '/path/to/foobar.py', '')}])
 
     assert run_process('/x/y/z', target='os.getcwd', debounce=5, step=1) == 1
     assert mock_spawn_process.call_count == 2
@@ -150,7 +150,7 @@ def test_function_string_not_win(mocker, mock_rust_notify: 'MockRustType', caplo
 def test_function_list(mocker, mock_rust_notify: 'MockRustType'):
     mock_spawn_process = mocker.patch('watchfiles.run.spawn_context.Process', return_value=FakeProcess())
     mock_kill = mocker.patch('watchfiles.run.os.kill')
-    mock_rust_notify([{(1, '/path/to/foobar.py')}])
+    mock_rust_notify([{(1, '/path/to/foobar.py', '')}])
 
     assert run_process('/x/y/z', target=['os.getcwd'], debounce=5, step=1) == 1
     assert mock_spawn_process.call_count == 2
@@ -160,7 +160,7 @@ def test_function_list(mocker, mock_rust_notify: 'MockRustType'):
 async def test_async_alive_terminates(mocker, mock_rust_notify: 'MockRustType'):
     mock_spawn_process = mocker.patch('watchfiles.run.spawn_context.Process', return_value=FakeProcess())
     mock_kill = mocker.patch('watchfiles.run.os.kill')
-    mock_rust_notify([{(1, '/path/to/foobar.py')}])
+    mock_rust_notify([{(1, '/path/to/foobar.py', '')}])
 
     callback_calls = []
 
@@ -170,13 +170,13 @@ async def test_async_alive_terminates(mocker, mock_rust_notify: 'MockRustType'):
     assert await arun_process('/x/y/async', target=object(), callback=c, debounce=5, step=1) == 1
     assert mock_spawn_process.call_count == 2
     assert mock_kill.call_count == 2  # kill in loop + final kill
-    assert callback_calls == [{(Change.added, '/path/to/foobar.py')}]
+    assert callback_calls == [{(Change.added, '/path/to/foobar.py', '')}]
 
 
 async def test_async_sync_callback(mocker, mock_rust_notify: 'MockRustType'):
     mock_spawn_process = mocker.patch('watchfiles.run.spawn_context.Process', return_value=FakeProcess())
     mock_kill = mocker.patch('watchfiles.run.os.kill')
-    mock_rust_notify([{(1, '/path/to/foo.py')}, {(2, '/path/to/bar.py')}])
+    mock_rust_notify([{(1, '/path/to/foo.py', '')}, {(2, '/path/to/bar.py', '')}])
 
     callback_calls = []
 
@@ -188,7 +188,7 @@ async def test_async_sync_callback(mocker, mock_rust_notify: 'MockRustType'):
     )
     assert mock_spawn_process.call_count == 3
     assert mock_kill.call_count == 3
-    assert callback_calls == [{(Change.added, '/path/to/foo.py')}, {(Change.modified, '/path/to/bar.py')}]
+    assert callback_calls == [{(Change.added, '/path/to/foo.py', '')}, {(Change.modified, '/path/to/bar.py', '')}]
 
 
 def test_run_function(tmp_work_path: Path, create_test_function):
@@ -227,7 +227,7 @@ def test_command(mocker, mock_rust_notify: 'MockRustType', caplog):
     mock_spawn_process = mocker.patch('watchfiles.run.spawn_context.Process', return_value=FakeProcess())
     mock_popen = mocker.patch('watchfiles.run.subprocess.Popen', return_value=FakePopen())
     mock_kill = mocker.patch('watchfiles.run.os.kill')
-    mock_rust_notify([{(1, '/path/to/foobar.py')}])
+    mock_rust_notify([{(1, '/path/to/foobar.py', '')}])
 
     assert run_process('/x/y/z', target='echo foobar', debounce=5, step=1) == 1
     assert mock_spawn_process.call_count == 0
@@ -242,7 +242,7 @@ def test_command_with_args(mocker, mock_rust_notify: 'MockRustType', caplog):
     mock_spawn_process = mocker.patch('watchfiles.run.spawn_context.Process', return_value=FakeProcess())
     mock_popen = mocker.patch('watchfiles.run.subprocess.Popen', return_value=FakePopen())
     mock_kill = mocker.patch('watchfiles.run.os.kill')
-    mock_rust_notify([{(1, '/path/to/foobar.py')}])
+    mock_rust_notify([{(1, '/path/to/foobar.py', '')}])
 
     assert run_process('/x/y/z', target='echo foobar', args=(1, 2), target_type='command', debounce=5, step=1) == 1
     assert mock_spawn_process.call_count == 0

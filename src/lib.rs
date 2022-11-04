@@ -122,7 +122,12 @@ impl RustNotify {
                                 CHANGE_MODIFIED
                             }
                         }
-                        EventKind::Modify(ModifyKind::Name(RenameMode::Both)) => CHANGE_MOVED,
+                        EventKind::Modify(ModifyKind::Name(RenameMode::From)) => CHANGE_DELETED,
+                        EventKind::Modify(ModifyKind::Name(RenameMode::Both)) => {
+                            let mut changes = changes_clone.lock().unwrap();
+                            changes.remove(&(CHANGE_DELETED, path.clone(), EMPTY_STRING));
+                            CHANGE_MOVED
+                        }
                         EventKind::Remove(_) => CHANGE_DELETED,
                         _ => return,
                     };

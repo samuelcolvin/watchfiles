@@ -22,7 +22,7 @@ def test_watch(tmp_path: Path, write_soon):
     for changes in watch(tmp_path, debounce=50, step=10, watch_filter=None):
         break
 
-    assert changes == {(Change.added, str((tmp_path / 'foo.txt')))}
+    assert changes == {(Change.added, str((tmp_path / 'foo.txt')), '')}
 
 
 def test_wait_stop_event(tmp_path: Path, write_soon):
@@ -31,7 +31,7 @@ def test_wait_stop_event(tmp_path: Path, write_soon):
 
     stop_event = threading.Event()
     for changes in watch(tmp_path, debounce=50, step=10, watch_filter=None, stop_event=stop_event):
-        assert changes == {(Change.added, str((tmp_path / 'foo.txt')))}
+        assert changes == {(Change.added, str((tmp_path / 'foo.txt')), '')}
         stop_event.set()
 
 
@@ -39,7 +39,7 @@ async def test_awatch(tmp_path: Path, write_soon):
     sleep(0.05)
     write_soon(tmp_path / 'foo.txt')
     async for changes in awatch(tmp_path, debounce=50, step=10, watch_filter=None):
-        assert changes == {(Change.added, str((tmp_path / 'foo.txt')))}
+        assert changes == {(Change.added, str((tmp_path / 'foo.txt')), '')}
         break
 
 
@@ -49,25 +49,25 @@ async def test_await_stop_event(tmp_path: Path, write_soon):
     write_soon(tmp_path / 'foo.txt')
     stop_event = anyio.Event()
     async for changes in awatch(tmp_path, debounce=50, step=10, watch_filter=None, stop_event=stop_event):
-        assert changes == {(Change.added, str((tmp_path / 'foo.txt')))}
+        assert changes == {(Change.added, str((tmp_path / 'foo.txt')), '')}
         stop_event.set()
 
 
 def test_watch_raise_interrupt(mock_rust_notify: 'MockRustType'):
-    mock_rust_notify([{(1, 'foo.txt')}], exit_code='signal')
+    mock_rust_notify([{(1, 'foo.txt', '')}], exit_code='signal')
 
     w = watch('.', raise_interrupt=True)
-    assert next(w) == {(Change.added, 'foo.txt')}
+    assert next(w) == {(Change.added, 'foo.txt', '')}
     with pytest.raises(KeyboardInterrupt):
         next(w)
 
 
 def test_watch_dont_raise_interrupt(mock_rust_notify: 'MockRustType', caplog):
     caplog.set_level('WARNING', 'watchfiles')
-    mock_rust_notify([{(1, 'foo.txt')}], exit_code='signal')
+    mock_rust_notify([{(1, 'foo.txt', '')}], exit_code='signal')
 
     w = watch('.', raise_interrupt=False)
-    assert next(w) == {(Change.added, 'foo.txt')}
+    assert next(w) == {(Change.added, 'foo.txt', '')}
     with pytest.raises(StopIteration):
         next(w)
 
@@ -83,7 +83,7 @@ def mock_open_signal_receiver(signal):
 
 
 async def test_awatch_unexpected_signal(mock_rust_notify: 'MockRustType'):
-    mock_rust_notify([{(1, 'foo.txt')}], exit_code='signal')
+    mock_rust_notify([{(1, 'foo.txt', '')}], exit_code='signal')
 
     count = 0
     with pytest.raises(RuntimeError, match='watch thread unexpectedly received a signal'):
@@ -94,7 +94,7 @@ async def test_awatch_unexpected_signal(mock_rust_notify: 'MockRustType'):
 
 
 async def test_awatch_interrupt_warning(mock_rust_notify: 'MockRustType', caplog):
-    mock_rust_notify([{(1, 'foo.txt')}])
+    mock_rust_notify([{(1, 'foo.txt', '')}])
 
     count = 0
     with pytest.warns(DeprecationWarning, match='raise_interrupt is deprecated, KeyboardInterrupt will cause this'):
@@ -105,78 +105,78 @@ async def test_awatch_interrupt_warning(mock_rust_notify: 'MockRustType', caplog
 
 
 def test_watch_no_yield(mock_rust_notify: 'MockRustType', caplog):
-    mock = mock_rust_notify([{(1, 'spam.pyc')}, {(1, 'spam.py'), (2, 'ham.txt')}])
+    mock = mock_rust_notify([{(1, 'spam.pyc', '')}, {(1, 'spam.py', ''), (2, 'ham.txt', '')}])
 
     caplog.set_level('INFO', 'watchfiles')
-    assert next(watch('.')) == {(Change.added, 'spam.py'), (Change.modified, 'ham.txt')}
+    assert next(watch('.')) == {(Change.added, 'spam.py', ''), (Change.modified, 'ham.txt', '')}
     assert mock.watch_count == 2
     assert caplog.text == 'watchfiles.main INFO: 2 changes detected\n'
 
 
 async def test_awatch_no_yield(mock_rust_notify: 'MockRustType', caplog):
-    mock = mock_rust_notify([{(1, 'spam.pyc')}, {(1, 'spam.py')}])
+    mock = mock_rust_notify([{(1, 'spam.pyc', '')}, {(1, 'spam.py', '')}])
 
     caplog.set_level('DEBUG', 'watchfiles')
     changes = None
     async for changes in awatch('.'):
         pass
 
-    assert changes == {(Change.added, 'spam.py')}
+    assert changes == {(Change.added, 'spam.py', '')}
     assert mock.watch_count == 2
-    assert caplog.text == "watchfiles.main DEBUG: 1 change detected: {(<Change.added: 1>, 'spam.py')}\n"
+    assert caplog.text == "watchfiles.main DEBUG: 1 change detected: {(<Change.added: 1>, 'spam.py', '')}\n"
 
 
 def test_watch_timeout(mock_rust_notify: 'MockRustType', caplog):
-    mock = mock_rust_notify(['timeout', {(1, 'spam.py')}])
+    mock = mock_rust_notify(['timeout', {(1, 'spam.py', '')}])
 
     caplog.set_level('DEBUG', 'watchfiles')
     change_list = []
     for changes in watch('.'):
         change_list.append(changes)
 
-    assert change_list == [{(Change.added, 'spam.py')}]
+    assert change_list == [{(Change.added, 'spam.py', '')}]
     assert mock.watch_count == 2
     assert caplog.text == (
         "watchfiles.main DEBUG: rust notify timeout, continuing\n"  # noqa: Q000
-        "watchfiles.main DEBUG: 1 change detected: {(<Change.added: 1>, 'spam.py')}\n"
+        "watchfiles.main DEBUG: 1 change detected: {(<Change.added: 1>, 'spam.py', '')}\n"
     )
 
 
 def test_watch_yield_on_timeout(mock_rust_notify: 'MockRustType'):
-    mock = mock_rust_notify(['timeout', {(1, 'spam.py')}])
+    mock = mock_rust_notify(['timeout', {(1, 'spam.py', '')}])
 
     change_list = []
     for changes in watch('.', yield_on_timeout=True):
         change_list.append(changes)
 
-    assert change_list == [set(), {(Change.added, 'spam.py')}]
+    assert change_list == [set(), {(Change.added, 'spam.py', '')}]
     assert mock.watch_count == 2
 
 
 async def test_awatch_timeout(mock_rust_notify: 'MockRustType', caplog):
-    mock = mock_rust_notify(['timeout', {(1, 'spam.py')}])
+    mock = mock_rust_notify(['timeout', {(1, 'spam.py', '')}])
 
     caplog.set_level('DEBUG', 'watchfiles')
     change_list = []
     async for changes in awatch('.'):
         change_list.append(changes)
 
-    assert change_list == [{(Change.added, 'spam.py')}]
+    assert change_list == [{(Change.added, 'spam.py', '')}]
     assert mock.watch_count == 2
     assert caplog.text == (
         "watchfiles.main DEBUG: rust notify timeout, continuing\n"  # noqa: Q000
-        "watchfiles.main DEBUG: 1 change detected: {(<Change.added: 1>, 'spam.py')}\n"
+        "watchfiles.main DEBUG: 1 change detected: {(<Change.added: 1>, 'spam.py', '')}\n"
     )
 
 
 async def test_awatch_yield_on_timeout(mock_rust_notify: 'MockRustType'):
-    mock = mock_rust_notify(['timeout', {(1, 'spam.py')}])
+    mock = mock_rust_notify(['timeout', {(1, 'spam.py', '')}])
 
     change_list = []
     async for changes in awatch('.', yield_on_timeout=True):
         change_list.append(changes)
 
-    assert change_list == [set(), {(Change.added, 'spam.py')}]
+    assert change_list == [set(), {(Change.added, 'spam.py', '')}]
     assert mock.watch_count == 2
 
 
@@ -200,7 +200,7 @@ class MockRustNotifyRaise:
         if self.i == 1:
             raise KeyboardInterrupt('test error')
         self.i += 1
-        return {(Change.added, 'spam.py')}
+        return {(Change.added, 'spam.py', '')}
 
     def __enter__(self):
         return self

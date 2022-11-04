@@ -13,7 +13,7 @@ def test_add(test_dir: Path):
     watcher = RustNotify([str(test_dir)], True, False, 0, True)
     (test_dir / 'new_file.txt').write_text('foobar')
 
-    assert watcher.watch(200, 50, 500, None) == {(1, str(test_dir / 'new_file.txt'))}
+    assert watcher.watch(200, 50, 500, None) == {(1, str(test_dir / 'new_file.txt'), '')}
 
 
 def test_add_non_recursive(test_dir: Path):
@@ -22,7 +22,7 @@ def test_add_non_recursive(test_dir: Path):
     (test_dir / 'new_file_non_recursive.txt').write_text('foobar')
     (test_dir / 'dir_a' / 'new_file_non_recursive.txt').write_text('foobar')
 
-    assert watcher.watch(200, 50, 500, None) == {(1, str(test_dir / 'new_file_non_recursive.txt'))}
+    assert watcher.watch(200, 50, 500, None) == {(1, str(test_dir / 'new_file_non_recursive.txt'), '')}
 
 
 def test_close(test_dir: Path):
@@ -41,7 +41,7 @@ def test_modify_write(test_dir: Path):
 
     (test_dir / 'a.txt').write_text('this is new')
 
-    assert watcher.watch(200, 50, 500, None) == {(2, str(test_dir / 'a.txt'))}
+    assert watcher.watch(200, 50, 500, None) == {(2, str(test_dir / 'a.txt'), '')}
 
 
 def test_modify_write_non_recursive(test_dir: Path):
@@ -51,7 +51,7 @@ def test_modify_write_non_recursive(test_dir: Path):
     (test_dir / 'dir_a' / 'a_non_recursive.txt').write_text('this is new')
 
     assert watcher.watch(200, 50, 500, None) == {
-        (2, str(test_dir / 'a_non_recursive.txt')),
+        (2, str(test_dir / 'a_non_recursive.txt'), ''),
     }
 
 
@@ -61,7 +61,7 @@ def test_modify_chmod(test_dir: Path):
 
     (test_dir / 'b.txt').chmod(0o444)
 
-    assert watcher.watch(200, 50, 500, None) == {(2, str(test_dir / 'b.txt'))}
+    assert watcher.watch(200, 50, 500, None) == {(2, str(test_dir / 'b.txt'), '')}
 
 
 def test_delete(test_dir: Path):
@@ -70,7 +70,7 @@ def test_delete(test_dir: Path):
     (test_dir / 'c.txt').unlink()
 
     assert watcher.watch(200, 50, 500, None) == {
-        (3, str(test_dir / 'c.txt')),
+        (3, str(test_dir / 'c.txt'), ''),
     }
 
 
@@ -81,7 +81,7 @@ def test_delete_non_recursive(test_dir: Path):
     (test_dir / 'dir_a' / 'c_non_recursive.txt').unlink()
 
     assert watcher.watch(200, 50, 500, None) == {
-        (3, str(test_dir / 'c_non_recursive.txt')),
+        (3, str(test_dir / 'c_non_recursive.txt'), ''),
     }
 
 
@@ -99,8 +99,8 @@ def test_move_in(test_dir: Path):
         (src / f).rename(dst / f)
 
     assert watcher.watch(200, 50, 500, None) == {
-        (1, str(dst / 'a.txt')),
-        (1, str(dst / 'b.txt')),
+        (1, str(dst / 'a.txt'), ''),
+        (1, str(dst / 'b.txt'), ''),
     }
 
 
@@ -116,8 +116,8 @@ def test_move_out(test_dir: Path):
         (src / f).rename(dst / f)
 
     assert watcher.watch(200, 50, 500, None) == {
-        (3, str(src / 'c.txt')),
-        (3, str(src / 'd.txt')),
+        (3, str(src / 'c.txt'), ''),
+        (3, str(src / 'd.txt'), ''),
     }
 
 
@@ -133,14 +133,12 @@ def test_move_internal(test_dir: Path):
         (src / f).rename(dst / f)
 
     expected_changes = {
-        (3, str(src / 'e.txt')),
-        (3, str(src / 'f.txt')),
-        (1, str(dst / 'e.txt')),
-        (1, str(dst / 'f.txt')),
+        (4, str(src / 'e.txt'), str(dst / 'e.txt')),
+        (4, str(src / 'f.txt'), str(dst / 'f.txt')),
     }
     if sys.platform == 'win32':
         # Windows adds a "modified" event for the dst directory
-        expected_changes.add((2, str(dst)))
+        expected_changes.add((2, str(dst), ''))
 
     assert watcher.watch(200, 50, 500, None) == expected_changes
 
@@ -158,8 +156,7 @@ def test_rename(test_dir: Path):
     f.rename(f.with_suffix('.new'))
 
     assert watcher.watch(200, 50, 500, None) == {
-        (3, str(f)),
-        (1, str(test_dir / 'a.new')),
+        (4, str(f), str(test_dir / 'a.new')),
     }
 
 
@@ -176,9 +173,9 @@ def test_watch_multiple(tmp_path: Path):
 
     changes = watcher.watch(200, 50, 500, None)
     # can compare directly since on macos creating the foo and bar directories is included in changes
-    assert (1, str(foo / 'foo.txt')) in changes
-    assert (1, str(bar / 'foo.txt')) in changes
-    assert not any('not_included.txt' in p for c, p in changes)
+    assert (1, str(foo / 'foo.txt'), '') in changes
+    assert (1, str(bar / 'foo.txt'), '') in changes
+    assert not any('not_included.txt' in p for c, p, p2 in changes)
 
 
 def test_wrong_type_event(test_dir: Path, time_taken):
@@ -235,7 +232,7 @@ def test_return_debounce_no_timeout(test_dir: Path, time_taken):
     (test_dir / 'debounce.txt').write_text('foobar')
 
     with time_taken(50, 130):
-        assert watcher.watch(100, 50, 20, None) == {(1, str(test_dir / 'debounce.txt'))}
+        assert watcher.watch(100, 50, 20, None) == {(1, str(test_dir / 'debounce.txt'), '')}
 
 
 @skip_unless_linux
@@ -260,12 +257,9 @@ def test_rename_multiple_inside(tmp_path: Path):
     f3.rename(d2 / '3.txt')
 
     assert watcher_all.watch(200, 50, 500, None) == {
-        (3, str(f1)),
-        (3, str(f2)),
-        (3, str(f3)),
-        (1, str(d2 / '1.txt')),
-        (1, str(d2 / '2.txt')),
-        (1, str(d2 / '3.txt')),
+        (4, str(f1), str(d2 / '1.txt')),
+        (4, str(f2), str(d2 / '2.txt')),
+        (4, str(f3), str(d2 / '3.txt')),
     }
 
 
@@ -275,7 +269,7 @@ def test_polling(test_dir: Path):
     (test_dir / 'test_polling.txt').write_text('foobar')
 
     changes = watcher.watch(200, 50, 500, None)
-    assert (1, str(test_dir / 'test_polling.txt')) in changes  # sometimes has an event modify too
+    assert (1, str(test_dir / 'test_polling.txt'), '') in changes  # sometimes has an event modify too
 
 
 def test_not_polling_repr(test_dir: Path):

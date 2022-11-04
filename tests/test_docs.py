@@ -81,7 +81,7 @@ def generate_code_chunks(*directories: str):
 @pytest.mark.filterwarnings('ignore:The loop argument is deprecated:DeprecationWarning')
 @pytest.mark.parametrize('module_name,source_code', generate_code_chunks('watchfiles', 'docs'))
 def test_docs_examples(module_name, source_code, import_execute, mocker, mock_rust_notify: 'MockRustType'):
-    mock_rust_notify([{(1, 'foo.txt'), (2, 'bar.py')}])
+    mock_rust_notify([{(1, 'foo.txt', ''), (2, 'bar.py', '')}])
     mocker.patch('watchfiles.run.spawn_context.Process')
     mocker.patch('watchfiles.run.os.kill')
 
