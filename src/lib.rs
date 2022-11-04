@@ -23,10 +23,13 @@ create_exception!(
     "Internal or filesystem error."
 );
 
+const EMPTY_STRING: String = String::new();
+
 // these need to match `watchfiles/main.py::Change`
 const CHANGE_ADDED: u8 = 1;
 const CHANGE_MODIFIED: u8 = 2;
 const CHANGE_DELETED: u8 = 3;
+const CHANGE_MOVED: u8 = 4;
 
 #[derive(Debug)]
 enum WatcherEnum {
@@ -37,7 +40,7 @@ enum WatcherEnum {
 
 #[pyclass]
 struct RustNotify {
-    changes: Arc<Mutex<HashSet<(u8, String)>>>,
+    changes: Arc<Mutex<HashSet<(u8, String, String)>>>,
     error: Arc<Mutex<Option<String>>>,
     debug: bool,
     watcher: WatcherEnum,
@@ -82,7 +85,7 @@ impl RustNotify {
         poll_delay_ms: u64,
         recursive: bool,
     ) -> PyResult<Self> {
-        let changes: Arc<Mutex<HashSet<(u8, String)>>> = Arc::new(Mutex::new(HashSet::<(u8, String)>::new()));
+        let changes: Arc<Mutex<HashSet<(u8, String, String)>>> = Arc::new(Mutex::new(HashSet::<(u8, String, String)>::new()));
         let error: Arc<Mutex<Option<String>>> = Arc::new(Mutex::new(None));
 
         let changes_clone = changes.clone();
@@ -110,8 +113,8 @@ impl RustNotify {
                         | EventKind::Modify(ModifyKind::Any) => {
                             // these events sometimes happen when creating files and deleting them, hence these checks
                             let changes = changes_clone.lock().unwrap();
-                            if changes.contains(&(CHANGE_DELETED, path.clone()))
-                                || changes.contains(&(CHANGE_ADDED, path.clone()))
+                            if changes.contains(&(CHANGE_DELETED, path.clone(), EMPTY_STRING))
+                                || changes.contains(&(CHANGE_ADDED, path.clone(), EMPTY_STRING))
                             {
                                 // file was already deleted or file was added in this batch, ignore this event
                                 return;
@@ -119,24 +122,26 @@ impl RustNotify {
                                 CHANGE_MODIFIED
                             }
                         }
-                        EventKind::Modify(ModifyKind::Name(RenameMode::From)) => CHANGE_DELETED,
-                        EventKind::Modify(ModifyKind::Name(RenameMode::To)) => CHANGE_ADDED,
-                        // RenameMode::Both duplicates RenameMode::From & RenameMode::To
-                        EventKind::Modify(ModifyKind::Name(RenameMode::Both)) => return,
-                        EventKind::Modify(ModifyKind::Name(_)) => {
-                            // On macOS the modify name event is triggered when a file is renamed,
-                            // but no information about whether it's the src or dst path is available.
-                            // Hence we have to check if the file exists instead.
-                            if Path::new(&path).exists() {
-                                CHANGE_ADDED
-                            } else {
-                                CHANGE_DELETED
-                            }
-                        }
+                        EventKind::Modify(ModifyKind::Name(RenameMode::Both)) => CHANGE_MOVED,
                         EventKind::Remove(_) => CHANGE_DELETED,
                         _ => return,
                     };
-                    changes_clone.lock().unwrap().insert((change, path));
+                    let path2: String;
+                    if change == CHANGE_MOVED {
+                        let path_buf2 = event.paths[1].clone();
+                        path2 = match path_buf2.to_str() {
+                            Some(s) => s.to_string(),
+                            None => {
+                                let msg = format!("Unable to decode path {:?} to string", path_buf2);
+                                *error_clone.lock().unwrap() = Some(msg);
+                                return;
+                            }
+                        };
+                    }
+                    else {
+                        path2 = EMPTY_STRING;
+                    }
+                    changes_clone.lock().unwrap().insert((change, path, path2));
                 }
             }
             Err(e) => {

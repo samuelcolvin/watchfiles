@@ -26,12 +26,16 @@ class Change(IntEnum):
     """A file or directory was modified, can be either a metadata or data change."""
     deleted = 3
     """A file or directory was deleted."""
+    moved = 4
+    """A file or directory was moved."""
 
     def raw_str(self) -> str:
         if self == Change.added:
             return 'added'
         elif self == Change.modified:
             return 'modified'
+        elif self == Change.moved:
+            return 'moved'
         else:
             return 'deleted'
 
@@ -270,7 +274,7 @@ def _prep_changes(
     raw_changes: Set[Tuple[int, str]], watch_filter: Optional[Callable[[Change, str], bool]]
 ) -> Set[FileChange]:
     # if we wanted to be really snazzy, we could move this into rust
-    changes = {(Change(change), path) for change, path in raw_changes}
+    changes = {(Change(change), path, path2) for change, path, path2 in raw_changes}
     if watch_filter:
         changes = {c for c in changes if watch_filter(c[0], c[1])}
     return changes
