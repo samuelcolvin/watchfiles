@@ -10,7 +10,7 @@ authors = [
     {name ='Samuel Colvin', email = 's@muelcolvin.com'},
 ]
 dependencies = [
-    'anyio>=3.0.0,<4',
+    'anyio>=3.0.0',
 ]
 classifiers = [
     'Development Status :: 5 - Production/Stable',
