@@ -24,6 +24,11 @@ jobs:
           - '3.11'
           - 'pypy3.8'
           - 'pypy3.9'
+        exclude:
+          - rust-version: '1.56.0'
+            os: macos
+          - rust-version: '1.56.0'
+            os: windows
 
     runs-on: ${{ matrix.os }}-latest
 
