@@ -52,9 +52,9 @@ fn map_watch_error(error: notify::Error) -> PyErr {
         NotifyErrorKind::Io(ref io_error) => match io_error.kind() {
             IOErrorKind::NotFound => PyFileNotFoundError::new_err(err_string),
             IOErrorKind::PermissionDenied => PyPermissionError::new_err(err_string),
-            _ => PyOSError::new_err(format!("{err_string} (error details: {error:?})")),
+            _ => PyOSError::new_err(format!("{} ({:?})", err_string, error)),
         },
-        _ => PyOSError::new_err(format!("{err_string} (error details: {error:?})")),
+        _ => PyOSError::new_err(format!("{} ({:?})", err_string, error)),
     }
 }
 

@@ -6,35 +6,14 @@ from mkdocs.config import Config
 from mkdocs.structure.files import Files
 from mkdocs.structure.pages import Page
 
-try:
-    import pytest
-except ImportError:
-    pytest = None
-
-logger = logging.getLogger('mkdocs.test_examples')
+logger = logging.getLogger('mkdocs.plugin')
 
 
 def on_pre_build(config: Config):
-    test_examples()
-
-
-def test_examples():
     """
-    Run the examples tests.
+    Not doing anything here anymore.
     """
-    if not pytest:
-        logger.info('pytest not installed, skipping examples tests')
-    else:
-        logger.info('running examples tests...')
-        try:
-            pytest.main(['--version'])
-        except AttributeError:
-            # happens if pytest is not properly installed
-            logger.info('pytest not installed correctly, skipping examples tests')
-        else:
-            return_code = pytest.main(['-q', '-p', 'no:sugar', 'tests/test_docs.py'])
-            if return_code != 0:
-                logger.warning('examples tests failed')
+    pass
 
 
 def on_files(files: Files, config: Config) -> Files:
