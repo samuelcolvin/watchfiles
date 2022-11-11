@@ -147,7 +147,7 @@ def test_move_internal(test_dir: Path):
 
 def test_does_not_exist(tmp_path: Path):
     p = tmp_path / 'missing'
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises(FileNotFoundError, match='No such file or directory'):
         RustNotify([str(p)], False, False, 0, True)
 
 
