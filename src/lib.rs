@@ -14,7 +14,7 @@ use pyo3::prelude::*;
 
 use notify::event::{Event, EventKind, ModifyKind, RenameMode};
 use notify::{
-    Config as NotifyConfig, ErrorKind as NotifyErrorKind, ErrorKind, PollWatcher, RecommendedWatcher, RecursiveMode,
+    Config as NotifyConfig, ErrorKind as NotifyErrorKind, PollWatcher, RecommendedWatcher, RecursiveMode,
     Result as NotifyResult, Watcher,
 };
 
