@@ -21,7 +21,7 @@ jobs:
           - '3.8'
           - '3.9'
           - '3.10'
-          - '3.11-dev'
+          - '3.11'
           - 'pypy3.8'
           - 'pypy3.9'
 
@@ -87,7 +87,7 @@ jobs:
 
     - run: pip install -r requirements/pyproject.txt -r requirements/linting.txt
 
-    - run: pip install .
+    - run: pip install -e .
 
     - uses: pre-commit/action@v3.0.0
       with:

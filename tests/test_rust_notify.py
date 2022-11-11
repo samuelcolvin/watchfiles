@@ -158,6 +158,12 @@ def test_does_not_exist_message(tmp_path: Path):
         RustNotify([str(p)], False, False, 0, True)
 
 
+def test_does_not_exist_polling(tmp_path: Path):
+    p = tmp_path / 'missing'
+    with pytest.raises(FileNotFoundError, match='No such file or directory'):
+        RustNotify([str(p)], False, True, 0, True)
+
+
 def test_rename(test_dir: Path):
     watcher = RustNotify([str(test_dir)], False, False, 0, True)
 

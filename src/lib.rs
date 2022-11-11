@@ -48,14 +48,21 @@ struct RustNotify {
 fn map_watch_error(error: notify::Error) -> PyErr {
     let err_string = error.to_string();
     match error.kind {
-        NotifyErrorKind::PathNotFound => PyFileNotFoundError::new_err(err_string),
+        NotifyErrorKind::PathNotFound => return PyFileNotFoundError::new_err(err_string),
+        NotifyErrorKind::Generic(ref err) => {
+            // on Windows, we get a Generic with this message when the path does not exist
+            if err.as_str() == "Input watch path is neither a file nor a directory." {
+                return PyPermissionError::new_err(err_string);
+            }
+        }
         NotifyErrorKind::Io(ref io_error) => match io_error.kind() {
-            IOErrorKind::NotFound => PyFileNotFoundError::new_err(err_string),
-            IOErrorKind::PermissionDenied => PyPermissionError::new_err(err_string),
-            _ => PyOSError::new_err(format!("{} ({:?})", err_string, error)),
+            IOErrorKind::NotFound => return PyFileNotFoundError::new_err(err_string),
+            IOErrorKind::PermissionDenied => return PyPermissionError::new_err(err_string),
+            _ => (),
         },
-        _ => PyOSError::new_err(format!("{} ({:?})", err_string, error)),
-    }
+        _ => (),
+    };
+    PyOSError::new_err(format!("{} ({:?})", err_string, error))
 }
 
 // macro to avoid duplicated code below
@@ -158,6 +165,9 @@ impl RustNotify {
         };
         macro_rules! create_poll_watcher {
             ($msg_template:literal) => {{
+                if watch_paths.iter().any(|p| !Path::new(p).exists()) {
+                    return Err(PyFileNotFoundError::new_err("No such file or directory"));
+                }
                 let delay = Duration::from_millis(poll_delay_ms);
                 let config = NotifyConfig::default().with_poll_interval(delay);
                 let mut watcher = match PollWatcher::new(event_handler, config) {
