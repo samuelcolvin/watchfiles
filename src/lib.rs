@@ -52,7 +52,7 @@ fn map_watch_error(error: notify::Error) -> PyErr {
         NotifyErrorKind::Generic(ref err) => {
             // on Windows, we get a Generic with this message when the path does not exist
             if err.as_str() == "Input watch path is neither a file nor a directory." {
-                return PyPermissionError::new_err(err_string);
+                return PyFileNotFoundError::new_err(err_string);
             }
         }
         NotifyErrorKind::Io(ref io_error) => match io_error.kind() {
