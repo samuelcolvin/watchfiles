@@ -5,7 +5,7 @@ import pytest
 
 from watchfiles._rust_notify import RustNotify
 
-skip_unless_linux = pytest.mark.skipif('linux' not in sys.platform, reason='avoid time differences on other platforms')
+skip_unless_linux = pytest.mark.skipif('linux' not in sys.platform, reason='avoid differences on other systems')
 skip_windows = pytest.mark.skipif(sys.platform == 'win32', reason='fails on Windows')
 
 
@@ -146,6 +146,13 @@ def test_move_internal(test_dir: Path):
 
 
 def test_does_not_exist(tmp_path: Path):
+    p = tmp_path / 'missing'
+    with pytest.raises(FileNotFoundError):
+        RustNotify([str(p)], False, False, 0, True)
+
+
+@skip_unless_linux
+def test_does_not_exist_message(tmp_path: Path):
     p = tmp_path / 'missing'
     with pytest.raises(FileNotFoundError, match='No such file or directory'):
         RustNotify([str(p)], False, False, 0, True)
