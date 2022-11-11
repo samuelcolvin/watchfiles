@@ -49,12 +49,12 @@ fn map_watch_error(error: notify::Error) -> PyErr {
     let err_string = error.to_string();
     match error.kind {
         NotifyErrorKind::PathNotFound => PyFileNotFoundError::new_err(err_string),
-        NotifyErrorKind::Io(io_error) => match io_error.kind() {
+        NotifyErrorKind::Io(ref io_error) => match io_error.kind() {
             IOErrorKind::NotFound => PyFileNotFoundError::new_err(err_string),
             IOErrorKind::PermissionDenied => PyPermissionError::new_err(err_string),
-            _ => PyOSError::new_err(err_string),
+            _ => PyOSError::new_err(format!("{err_string} (error details: {error:?})")),
         },
-        _ => PyOSError::new_err(err_string),
+        _ => PyOSError::new_err(format!("{err_string} (error details: {error:?})")),
     }
 }
 
