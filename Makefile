@@ -56,6 +56,7 @@ testcov: test
 
 .PHONY: docs
 docs:
+	rm -f watchfiles/*.so
 	mkdocs build
 
 .PHONY: all

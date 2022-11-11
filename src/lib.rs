@@ -2,18 +2,20 @@ extern crate notify;
 extern crate pyo3;
 
 use std::collections::HashSet;
+use std::io::ErrorKind as IOErrorKind;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 use std::thread::sleep;
 use std::time::{Duration, SystemTime};
 
 use pyo3::create_exception;
-use pyo3::exceptions::{PyFileNotFoundError, PyRuntimeError, PyTypeError};
+use pyo3::exceptions::{PyFileNotFoundError, PyOSError, PyPermissionError, PyRuntimeError, PyTypeError};
 use pyo3::prelude::*;
 
 use notify::event::{Event, EventKind, ModifyKind, RenameMode};
 use notify::{
-    Config as NotifyConfig, ErrorKind, PollWatcher, RecommendedWatcher, RecursiveMode, Result as NotifyResult, Watcher,
+    Config as NotifyConfig, ErrorKind as NotifyErrorKind, PollWatcher, RecommendedWatcher, RecursiveMode,
+    Result as NotifyResult, Watcher,
 };
 
 create_exception!(
@@ -43,6 +45,26 @@ struct RustNotify {
     watcher: WatcherEnum,
 }
 
+fn map_watch_error(error: notify::Error) -> PyErr {
+    let err_string = error.to_string();
+    match error.kind {
+        NotifyErrorKind::PathNotFound => return PyFileNotFoundError::new_err(err_string),
+        NotifyErrorKind::Generic(ref err) => {
+            // on Windows, we get a Generic with this message when the path does not exist
+            if err.as_str() == "Input watch path is neither a file nor a directory." {
+                return PyFileNotFoundError::new_err(err_string);
+            }
+        }
+        NotifyErrorKind::Io(ref io_error) => match io_error.kind() {
+            IOErrorKind::NotFound => return PyFileNotFoundError::new_err(err_string),
+            IOErrorKind::PermissionDenied => return PyPermissionError::new_err(err_string),
+            _ => (),
+        },
+        _ => (),
+    };
+    PyOSError::new_err(format!("{} ({:?})", err_string, error))
+}
+
 // macro to avoid duplicated code below
 macro_rules! watcher_paths {
     ($watcher:ident, $paths:ident, $debug:ident, $recursive:ident) => {
@@ -52,9 +74,7 @@ macro_rules! watcher_paths {
             RecursiveMode::NonRecursive
         };
         for watch_path in $paths.into_iter() {
-            $watcher
-                .watch(Path::new(&watch_path), mode)
-                .map_err(|e| PyFileNotFoundError::new_err(format!("{}", e)))?;
+            $watcher.watch(Path::new(&watch_path), mode).map_err(map_watch_error)?;
         }
         if $debug {
             eprintln!("watcher: {:?}", $watcher);
@@ -145,6 +165,9 @@ impl RustNotify {
         };
         macro_rules! create_poll_watcher {
             ($msg_template:literal) => {{
+                if watch_paths.iter().any(|p| !Path::new(p).exists()) {
+                    return Err(PyFileNotFoundError::new_err("No such file or directory"));
+                }
                 let delay = Duration::from_millis(poll_delay_ms);
                 let config = NotifyConfig::default().with_poll_interval(delay);
                 let mut watcher = match PollWatcher::new(event_handler, config) {
@@ -167,7 +190,7 @@ impl RustNotify {
                     }
                     Err(error) => {
                         match &error.kind {
-                            ErrorKind::Io(io_error) => {
+                            NotifyErrorKind::Io(io_error) => {
                                 if io_error.raw_os_error() == Some(38) {
                                     // see https://github.com/samuelcolvin/watchfiles/issues/167
                                     // we callback to PollWatcher
