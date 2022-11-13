@@ -150,6 +150,12 @@ jobs:
           - os: ubuntu
             platform: linux
             target: armv7
+          - os: ubuntu
+            platform: linux
+            target: ppc64le
+          - os: ubuntu
+            platform: linux
+            target: s390x
           # musllinux
           - os: ubuntu
             platform: linux
