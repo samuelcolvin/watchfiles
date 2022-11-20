@@ -28,12 +28,7 @@ class Change(IntEnum):
     """A file or directory was deleted."""
 
     def raw_str(self) -> str:
-        if self == Change.added:
-            return 'added'
-        elif self == Change.modified:
-            return 'modified'
-        else:
-            return 'deleted'
+        return self.name
 
 
 FileChange = Tuple[Change, str]
