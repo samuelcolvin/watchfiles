@@ -36,6 +36,10 @@ sniffio==1.3.0
     # via trio
 sortedcontainers==2.4.0
     # via trio
+tomli==2.0.1
+    # via
+    #   black
+    #   mypy
 trio==0.21.0
     # via -r requirements/linting.in
 typing-extensions==4.3.0
