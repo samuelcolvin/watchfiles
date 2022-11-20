@@ -1,6 +1,7 @@
 .DEFAULT_GOAL := all
 isort = isort watchfiles tests
 black = black watchfiles tests
+ruff = ruff watchfiles tests
 
 .PHONY: install
 install:
@@ -19,6 +20,7 @@ build-dev:
 
 .PHONY: format
 format:
+	$(ruff) --fix
 	$(isort)
 	$(black)
 	@echo 'max_width = 120' > .rustfmt.toml
@@ -26,7 +28,7 @@ format:
 
 .PHONY: lint-python
 lint-python:
-	flake8 --max-complexity 10 --max-line-length 120 --ignore E203,W503 watchfiles tests
+	$(ruff)
 	$(isort) --check-only --df
 	$(black) --check --diff
 

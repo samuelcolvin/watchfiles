@@ -90,6 +90,11 @@ force_grid_wrap = 0
 combine_as_imports = true
 color_output = true
 
+[tool.ruff]
+line-length = 120
+extend-select = ['Q']
+flake8-quotes = {inline-quotes = 'single', multiline-quotes = 'double'}
+
 [tool.mypy]
 strict = true
 warn_return_any = false
