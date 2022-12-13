@@ -138,6 +138,9 @@ jobs:
           - os: macos
             target: x86_64
             pypy: true
+          - os: macos
+            target: aarch64
+            pypy: true
           - os: windows
             ls: dir
           - os: windows
