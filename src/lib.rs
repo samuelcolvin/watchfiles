@@ -223,14 +223,14 @@ impl RustNotify {
     }
 
     pub fn watch(
-        &self,
+        slf: &PyCell<Self>,
         py: Python,
         debounce_ms: u64,
         step_ms: u64,
         timeout_ms: u64,
         stop_event: PyObject,
     ) -> PyResult<PyObject> {
-        if matches!(self.watcher, WatcherEnum::None) {
+        if matches!(slf.borrow().watcher, WatcherEnum::None) {
             return Err(PyRuntimeError::new_err("RustNotify watcher closed"));
         }
         let stop_event_is_set: Option<&PyAny> = match stop_event.is_none(py) {
@@ -257,27 +257,27 @@ impl RustNotify {
             match py.check_signals() {
                 Ok(_) => (),
                 Err(_) => {
-                    self.clear();
+                    slf.borrow().clear();
                     return Ok("signal".to_object(py));
                 }
             };
 
-            if let Some(error) = self.error.lock().unwrap().as_ref() {
-                self.clear();
+            if let Some(error) = slf.borrow().error.lock().unwrap().as_ref() {
+                slf.borrow().clear();
                 return wf_error!(error.clone());
             }
 
             if let Some(is_set) = stop_event_is_set {
                 if is_set.call0()?.is_true()? {
-                    if self.debug {
+                    if slf.borrow().debug {
                         eprintln!("stop event set, stopping...");
                     }
-                    self.clear();
+                    slf.borrow().clear();
                     return Ok("stop".to_object(py));
                 }
             }
 
-            let size = self.changes.lock().unwrap().len();
+            let size = slf.borrow().changes.lock().unwrap().len();
             if size > 0 {
                 if size == last_size {
                     break;
@@ -294,13 +294,13 @@ impl RustNotify {
                 }
             } else if let Some(max_time) = max_timeout_time {
                 if SystemTime::now() > max_time {
-                    self.clear();
+                    slf.borrow().clear();
                     return Ok("timeout".to_object(py));
                 }
             }
         }
-        let py_changes = self.changes.lock().unwrap().to_object(py);
-        self.clear();
+        let py_changes = slf.borrow().changes.lock().unwrap().to_object(py);
+        slf.borrow().clear();
         Ok(py_changes)
     }
 
