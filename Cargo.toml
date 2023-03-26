@@ -25,11 +25,8 @@ include = [
 [dependencies]
 crossbeam-channel = "0.5.4"
 notify = "5.0.0"
-pyo3 = {version = "0.17.3", features = ["extension-module", "abi3-py37"]}
+pyo3 = {version = "0.18.2", features = ["extension-module", "abi3-py37"]}
 
 [lib]
 name = "_rust_notify"
 crate-type = ["cdylib"]
-
-[package.metadata.maturin]
-name = "watchfiles._rust_notify"
