@@ -42,6 +42,7 @@ def run_process(
     sigint_timeout: int = 5,
     sigkill_timeout: int = 1,
     recursive: bool = True,
+    strict_errors: bool = True,
 ) -> int:
     """
     Run a process and restart it upon file changes.
@@ -137,6 +138,7 @@ def run_process(
             debug=debug,
             raise_interrupt=False,
             recursive=recursive,
+            strict_errors=strict_errors,
         ):
             callback and callback(changes)
             process.stop(sigint_timeout=sigint_timeout, sigkill_timeout=sigkill_timeout)
@@ -159,6 +161,7 @@ async def arun_process(
     step: int = 50,
     debug: bool = False,
     recursive: bool = True,
+    strict_errors: bool = True,
 ) -> int:
     """
     Async equivalent of [`run_process`][watchfiles.run_process], all arguments match those of `run_process` except
@@ -200,7 +203,13 @@ async def arun_process(
     reloads = 0
 
     async for changes in awatch(
-        *paths, watch_filter=watch_filter, debounce=debounce, step=step, debug=debug, recursive=recursive
+        *paths,
+        watch_filter=watch_filter,
+        debounce=debounce,
+        step=step,
+        debug=debug,
+        recursive=recursive,
+        strict_errors=strict_errors,
     ):
         if callback is not None:
             r = callback(changes)

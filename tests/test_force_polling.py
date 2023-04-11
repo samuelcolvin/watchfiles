@@ -29,7 +29,7 @@ def test_watch_polling_not_env(mocker):
     for _ in watch('.'):
         pass
 
-    m.assert_called_once_with(['.'], False, False, 300, True)
+    m.assert_called_once_with(['.'], False, False, 300, True, True)
 
 
 def test_watch_polling_env(mocker, env: SetEnv):
@@ -39,7 +39,7 @@ def test_watch_polling_env(mocker, env: SetEnv):
     for _ in watch('.'):
         pass
 
-    m.assert_called_once_with(['.'], False, True, 300, True)
+    m.assert_called_once_with(['.'], False, True, 300, True, True)
 
 
 @pytest.mark.parametrize(

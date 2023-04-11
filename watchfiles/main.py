@@ -63,6 +63,7 @@ def watch(
     force_polling: Optional[bool] = None,
     poll_delay_ms: int = 300,
     recursive: bool = True,
+    strict_errors: bool = True,
 ) -> Generator[Set[FileChange], None, None]:
     """
     Watch one or more paths and yield a set of changes whenever files change.
@@ -111,7 +112,7 @@ def watch(
     ```
     """
     force_polling = _default_force_polling(force_polling)
-    with RustNotify([str(p) for p in paths], debug, force_polling, poll_delay_ms, recursive) as watcher:
+    with RustNotify([str(p) for p in paths], debug, force_polling, poll_delay_ms, recursive, strict_errors) as watcher:
         while True:
             raw_changes = watcher.watch(debounce, step, rust_timeout, stop_event)
             if raw_changes == 'timeout':
@@ -147,6 +148,7 @@ async def awatch(  # noqa C901
     force_polling: Optional[bool] = None,
     poll_delay_ms: int = 300,
     recursive: bool = True,
+    strict_errors: bool = True,
 ) -> AsyncGenerator[Set[FileChange], None]:
     """
     Asynchronous equivalent of [`watch`][watchfiles.watch] using threads to wait for changes.
@@ -230,7 +232,7 @@ async def awatch(  # noqa C901
         stop_event_ = stop_event
 
     force_polling = _default_force_polling(force_polling)
-    with RustNotify([str(p) for p in paths], debug, force_polling, poll_delay_ms, recursive) as watcher:
+    with RustNotify([str(p) for p in paths], debug, force_polling, poll_delay_ms, recursive, strict_errors) as watcher:
         timeout = _calc_async_timeout(rust_timeout)
         CancelledError = anyio.get_cancelled_exc_class()
 

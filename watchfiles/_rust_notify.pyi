@@ -15,7 +15,13 @@ class RustNotify:
     """
 
     def __init__(
-        self, watch_paths: List[str], debug: bool, force_polling: bool, poll_delay_ms: int, recursive: bool
+        self,
+        watch_paths: List[str],
+        debug: bool,
+        force_polling: bool,
+        poll_delay_ms: int,
+        recursive: bool,
+        strict_errors: bool,
     ) -> None:
         """
         Create a new `RustNotify` instance and start a thread to watch for changes.
