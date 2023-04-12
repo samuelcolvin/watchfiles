@@ -307,3 +307,6 @@ def test_polling_repr(test_dir: Path):
 @skip_windows
 def test_ignore_permission_denied():
     RustNotify(['/'], False, False, 0, True, True)
+
+    with pytest.raises(PermissionError):
+        RustNotify(['/'], False, False, 0, True, False)

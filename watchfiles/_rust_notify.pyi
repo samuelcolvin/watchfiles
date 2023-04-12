@@ -35,6 +35,7 @@ class RustNotify:
             poll_delay_ms: delay between polling for changes, only used if `force_polling=True`
             recursive: if `True`, watch for changes in sub-directories recursively, otherwise watch only for changes in
                 the top-level directory, default is `True`.
+            ignore_permission_denied: if `True`, permission denied errors are ignored while watching changes.
         """
     def watch(
         self,

@@ -3,7 +3,8 @@ usage: watchfiles [-h] [--ignore-paths [IGNORE_PATHS]]
                   [--filter [FILTER]] [--args [ARGS]] [--verbose]
                   [--non-recursive] [--verbosity [{warning,info,debug}]]
                   [--sigint-timeout [SIGINT_TIMEOUT]]
-                  [--sigkill-timeout [SIGKILL_TIMEOUT]] [--version]
+                  [--sigkill-timeout [SIGKILL_TIMEOUT]]
+                  [--ignore-permission-denied] [--version]
                   target [paths ...]
 
 Watch one or more directories and execute either a shell command or a python function on file changes.
@@ -38,4 +39,6 @@ options:
                         How long to wait for the sigint timeout before sending sigkill.
   --sigkill-timeout [SIGKILL_TIMEOUT]
                         How long to wait for the sigkill timeout before issuing a timeout exception.
+  --ignore-permission-denied
+                        Ignore permission denied errors while watching files and directories.
   --version, -V         show program's version number and exit

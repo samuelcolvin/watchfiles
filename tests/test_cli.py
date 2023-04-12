@@ -25,6 +25,7 @@ def test_function(mocker, tmp_path):
         sigint_timeout=5,
         sigkill_timeout=1,
         recursive=True,
+        ignore_permission_denied=False,
     )
 
 
@@ -52,6 +53,7 @@ def test_ignore_paths(mocker, tmp_work_path):
         sigint_timeout=5,
         sigkill_timeout=1,
         recursive=True,
+        ignore_permission_denied=False,
     )
 
 
@@ -105,6 +107,7 @@ def test_command(mocker, tmp_work_path):
         sigint_timeout=5,
         sigkill_timeout=1,
         recursive=True,
+        ignore_permission_denied=False,
     )
 
 
@@ -122,6 +125,7 @@ def test_verbosity(mocker, tmp_path):
         sigint_timeout=5,
         sigkill_timeout=1,
         recursive=True,
+        ignore_permission_denied=False,
     )
 
 
@@ -139,6 +143,7 @@ def test_verbose(mocker, tmp_path):
         sigint_timeout=5,
         sigkill_timeout=1,
         recursive=True,
+        ignore_permission_denied=False,
     )
 
 
@@ -156,6 +161,7 @@ def test_non_recursive(mocker, tmp_path):
         sigint_timeout=5,
         sigkill_timeout=1,
         recursive=False,
+        ignore_permission_denied=False,
     )
 
 
@@ -173,6 +179,7 @@ def test_filter_all(mocker, tmp_path, capsys):
         sigint_timeout=5,
         sigkill_timeout=1,
         recursive=True,
+        ignore_permission_denied=False,
     )
     out, err = capsys.readouterr()
     assert out == ''
@@ -193,6 +200,7 @@ def test_filter_default(mocker, tmp_path):
         sigint_timeout=5,
         sigkill_timeout=1,
         recursive=True,
+        ignore_permission_denied=False,
     )
 
 
@@ -210,6 +218,7 @@ def test_set_type(mocker, tmp_path):
         sigint_timeout=5,
         sigkill_timeout=1,
         recursive=True,
+        ignore_permission_denied=False,
     )
 
 
@@ -265,6 +274,7 @@ def test_args(mocker, tmp_path, reset_argv, caplog):
         sigint_timeout=5,
         sigkill_timeout=1,
         recursive=True,
+        ignore_permission_denied=False,
     )
     assert sys.argv == ['os.getcwd', '--version']
     assert 'WARNING: --args' not in caplog.text
@@ -286,5 +296,6 @@ def test_args_command(mocker, tmp_path, caplog):
         sigint_timeout=5,
         sigkill_timeout=1,
         recursive=True,
+        ignore_permission_denied=False,
     )
     assert 'WARNING: --args is only used when the target is a function\n' in caplog.text

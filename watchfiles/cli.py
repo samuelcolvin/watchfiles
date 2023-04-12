@@ -111,6 +111,11 @@ def cli(*args_: str) -> None:
         default=1,
         help='How long to wait for the sigkill timeout before issuing a timeout exception.',
     )
+    parser.add_argument(
+        '--ignore-permission-denied',
+        action='store_true',
+        help='Ignore permission denied errors while watching files and directories.',
+    )
     parser.add_argument('--version', '-V', action='version', version=f'%(prog)s v{VERSION}')
     arg_namespace = parser.parse_args(args)
 
@@ -165,6 +170,7 @@ def cli(*args_: str) -> None:
         sigint_timeout=arg_namespace.sigint_timeout,
         sigkill_timeout=arg_namespace.sigkill_timeout,
         recursive=not arg_namespace.non_recursive,
+        ignore_permission_denied=arg_namespace.ignore_permission_denied,
     )
 
 
