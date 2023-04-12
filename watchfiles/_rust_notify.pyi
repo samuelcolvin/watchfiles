@@ -21,7 +21,7 @@ class RustNotify:
         force_polling: bool,
         poll_delay_ms: int,
         recursive: bool,
-        strict_errors: bool,
+        ignore_permission_denied: bool,
     ) -> None:
         """
         Create a new `RustNotify` instance and start a thread to watch for changes.

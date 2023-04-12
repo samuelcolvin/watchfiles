@@ -45,29 +45,34 @@ struct RustNotify {
     watcher: WatcherEnum,
 }
 
-fn map_watch_error(error: notify::Error) -> PyErr {
+fn map_watch_error(error: notify::Error, ignore_permission_denied: bool) -> Option<PyErr> {
     let err_string = error.to_string();
     match error.kind {
-        NotifyErrorKind::PathNotFound => return PyFileNotFoundError::new_err(err_string),
+        NotifyErrorKind::PathNotFound => return Some(PyFileNotFoundError::new_err(err_string)),
         NotifyErrorKind::Generic(ref err) => {
             // on Windows, we get a Generic with this message when the path does not exist
             if err.as_str() == "Input watch path is neither a file nor a directory." {
-                return PyFileNotFoundError::new_err(err_string);
+                return Some(PyFileNotFoundError::new_err(err_string));
             }
         }
         NotifyErrorKind::Io(ref io_error) => match io_error.kind() {
-            IOErrorKind::NotFound => return PyFileNotFoundError::new_err(err_string),
-            IOErrorKind::PermissionDenied => return PyPermissionError::new_err(err_string),
+            IOErrorKind::NotFound => return Some(PyFileNotFoundError::new_err(err_string)),
+            IOErrorKind::PermissionDenied => {
+                if !ignore_permission_denied {
+                    return Some(PyPermissionError::new_err(err_string));
+                }
+                return None;
+            }
             _ => (),
         },
         _ => (),
     };
-    PyOSError::new_err(format!("{} ({:?})", err_string, error))
+    Some(PyOSError::new_err(format!("{} ({:?})", err_string, error)))
 }
 
 // macro to avoid duplicated code below
 macro_rules! watcher_paths {
-    ($watcher:ident, $paths:ident, $debug:ident, $recursive:ident, $strict_errors:ident) => {
+    ($watcher:ident, $paths:ident, $debug:ident, $recursive:ident, $ignore_permission_denied:ident) => {
         let mode = if $recursive {
             RecursiveMode::Recursive
         } else {
@@ -75,8 +80,12 @@ macro_rules! watcher_paths {
         };
         for watch_path in $paths.into_iter() {
             let result = $watcher.watch(Path::new(&watch_path), mode);
-            if $strict_errors {
-                (result.map_err(map_watch_error))?
+            match result {
+                Err(err) => match map_watch_error(err, $ignore_permission_denied) {
+                    Some(err) => return Err(err),
+                    _ => (),
+                },
+                _ => (),
             }
         }
         if $debug {
@@ -104,7 +113,7 @@ impl RustNotify {
         force_polling: bool,
         poll_delay_ms: u64,
         recursive: bool,
-        strict_errors: bool,
+        ignore_permission_denied: bool,
     ) -> PyResult<Self> {
         let changes: Arc<Mutex<HashSet<(u8, String)>>> = Arc::new(Mutex::new(HashSet::<(u8, String)>::new()));
         let error: Arc<Mutex<Option<String>>> = Arc::new(Mutex::new(None));
@@ -178,7 +187,7 @@ impl RustNotify {
                     Ok(watcher) => watcher,
                     Err(e) => return wf_error!($msg_template, e),
                 };
-                watcher_paths!(watcher, watch_paths, debug, recursive, strict_errors);
+                watcher_paths!(watcher, watch_paths, debug, recursive, ignore_permission_denied);
                 Ok(WatcherEnum::Poll(watcher))
             }};
         }
@@ -189,7 +198,7 @@ impl RustNotify {
                 match RecommendedWatcher::new(event_handler.clone(), NotifyConfig::default()) {
                     Ok(watcher) => {
                         let mut watcher = watcher;
-                        watcher_paths!(watcher, watch_paths, debug, recursive, strict_errors);
+                        watcher_paths!(watcher, watch_paths, debug, recursive, ignore_permission_denied);
                         Ok(WatcherEnum::Recommended(watcher))
                     }
                     Err(error) => {
