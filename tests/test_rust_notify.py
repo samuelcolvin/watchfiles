@@ -304,7 +304,7 @@ def test_polling_repr(test_dir: Path):
     assert 'delay: 123ms' in r
 
 
-@skip_windows
+@skip_unless_linux
 def test_ignore_permission_denied():
     RustNotify(['/'], False, False, 0, True, True)
 

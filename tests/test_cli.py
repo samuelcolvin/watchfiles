@@ -299,3 +299,21 @@ def test_args_command(mocker, tmp_path, caplog):
         ignore_permission_denied=False,
     )
     assert 'WARNING: --args is only used when the target is a function\n' in caplog.text
+
+
+def test_ignore_permission_denied(mocker, tmp_path):
+    mocker.patch('watchfiles.cli.sys.stdin.fileno')
+    mocker.patch('os.ttyname', return_value='/path/to/tty')
+    mock_run_process = mocker.patch('watchfiles.cli.run_process')
+    cli('--ignore-permission-denied', 'os.getcwd', str(tmp_path))
+    mock_run_process.assert_called_once_with(
+        tmp_path,
+        target='os.getcwd',
+        target_type='function',
+        watch_filter=IsInstance(DefaultFilter, only_direct_instance=True),
+        debug=False,
+        sigint_timeout=5,
+        sigkill_timeout=1,
+        recursive=True,
+        ignore_permission_denied=True,
+    )
