@@ -85,6 +85,7 @@ def cli(*args_: str) -> None:
         type=str,
         help='Arguments to set on sys.argv before calling target function, used only if the target is a function',
     )
+    parser.add_argument('--env', action='store_true', help='Pass environment variables to target')
     parser.add_argument('--verbose', action='store_true', help='Set log level to "debug", wins over `--verbosity`')
     parser.add_argument(
         '--non-recursive', action='store_true', help='Do not watch for changes in sub-directories recursively'
@@ -165,6 +166,7 @@ def cli(*args_: str) -> None:
         sigint_timeout=arg_namespace.sigint_timeout,
         sigkill_timeout=arg_namespace.sigkill_timeout,
         recursive=not arg_namespace.non_recursive,
+        env=arg_namespace.env,
     )
 
 

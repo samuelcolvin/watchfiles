@@ -36,6 +36,7 @@ def run_process(
     target_type: "Literal['function', 'command', 'auto']" = 'auto',
     callback: Optional[Callable[[Set[FileChange]], None]] = None,
     watch_filter: Optional[Callable[[Change, str], bool]] = DefaultFilter(),
+    env: bool = False,
     debounce: int = 1_600,
     step: int = 50,
     debug: bool = False,
@@ -68,6 +69,7 @@ def run_process(
             [`detect_target_type`][watchfiles.run.detect_target_type] is used to determine the type.
         callback: function to call on each reload, the function should accept a set of changes as the sole argument
         watch_filter: matches the same argument of [`watch`][watchfiles.watch]
+        env: if `True`, the current environment is passed to the new process
         debounce: matches the same argument of [`watch`][watchfiles.watch]
         step: matches the same argument of [`watch`][watchfiles.watch]
         debug: matches the same argument of [`watch`][watchfiles.watch]
@@ -125,7 +127,7 @@ def run_process(
         target_type = detect_target_type(target)
 
     logger.debug('running "%s" as %s', target, target_type)
-    process = start_process(target, target_type, args, kwargs)
+    process = start_process(target, target_type, args, kwargs, env=env)
     reloads = 0
 
     try:
@@ -232,6 +234,7 @@ def start_process(
     args: Tuple[Any, ...],
     kwargs: Optional[Dict[str, Any]],
     changes: Optional[Set[FileChange]] = None,
+    env: bool = False,
 ) -> 'CombinedProcess':
     if changes is None:
         changes_env_var = '[]'
@@ -258,7 +261,9 @@ def start_process(
 
         assert isinstance(target, str), 'target must be a string to run as a command'
         popen_args = split_cmd(target)
-        process = subprocess.Popen(popen_args)
+
+        environ = os.environ.copy() if env else None
+        process = subprocess.Popen(popen_args, env=environ)
     return CombinedProcess(process)
 
 
