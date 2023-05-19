@@ -258,7 +258,7 @@ def start_process(
 
         assert isinstance(target, str), 'target must be a string to run as a command'
         popen_args = split_cmd(target)
-        process = subprocess.Popen(popen_args)
+        process = subprocess.Popen(popen_args, env=os.environ)
     return CombinedProcess(process)
 
 
