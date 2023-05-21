@@ -45,29 +45,24 @@ struct RustNotify {
     watcher: WatcherEnum,
 }
 
-fn map_watch_error(error: notify::Error, ignore_permission_denied: bool) -> Option<PyErr> {
+fn map_watch_error(error: notify::Error) -> PyErr {
     let err_string = error.to_string();
     match error.kind {
-        NotifyErrorKind::PathNotFound => return Some(PyFileNotFoundError::new_err(err_string)),
+        NotifyErrorKind::PathNotFound => return PyFileNotFoundError::new_err(err_string),
         NotifyErrorKind::Generic(ref err) => {
             // on Windows, we get a Generic with this message when the path does not exist
             if err.as_str() == "Input watch path is neither a file nor a directory." {
-                return Some(PyFileNotFoundError::new_err(err_string));
+                return PyFileNotFoundError::new_err(err_string);
             }
         }
         NotifyErrorKind::Io(ref io_error) => match io_error.kind() {
-            IOErrorKind::NotFound => return Some(PyFileNotFoundError::new_err(err_string)),
-            IOErrorKind::PermissionDenied => {
-                if !ignore_permission_denied {
-                    return Some(PyPermissionError::new_err(err_string));
-                }
-                return None;
-            }
+            IOErrorKind::NotFound => return PyFileNotFoundError::new_err(err_string),
+            IOErrorKind::PermissionDenied => return PyPermissionError::new_err(err_string),
             _ => (),
         },
         _ => (),
     };
-    Some(PyOSError::new_err(format!("{} ({:?})", err_string, error)))
+    PyOSError::new_err(format!("{} ({:?})", err_string, error))
 }
 
 // macro to avoid duplicated code below
@@ -81,10 +76,12 @@ macro_rules! watcher_paths {
         for watch_path in $paths.into_iter() {
             let result = $watcher.watch(Path::new(&watch_path), mode);
             match result {
-                Err(err) => match map_watch_error(err, $ignore_permission_denied) {
-                    Some(err) => return Err(err),
-                    _ => (),
-                },
+                Err(err) => {
+                    let err = map_watch_error(err);
+                    if !$ignore_permission_denied {
+                        return Err(err);
+                    }
+                }
                 _ => (),
             }
         }
