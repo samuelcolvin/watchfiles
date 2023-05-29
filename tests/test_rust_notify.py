@@ -1,9 +1,14 @@
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
 from watchfiles._rust_notify import RustNotify
+from watchfiles.main import _default_ignore_permission_denied
+
+if TYPE_CHECKING:
+    from .conftest import SetEnv
 
 skip_unless_linux = pytest.mark.skipif('linux' not in sys.platform, reason='avoid differences on other systems')
 skip_windows = pytest.mark.skipif(sys.platform == 'win32', reason='fails on Windows')
@@ -310,3 +315,23 @@ def test_ignore_permission_denied():
 
     with pytest.raises(PermissionError):
         RustNotify(['/'], False, False, 0, True, False)
+
+
+@pytest.mark.parametrize(
+    'env_var,arg,expected',
+    [
+        (None, True, True),
+        (None, False, False),
+        (None, None, False),
+        ('', True, True),
+        ('', False, False),
+        ('', None, True),
+        ('1', True, True),
+        ('1', False, False),
+        ('1', None, True),
+    ],
+)
+def test_default_ignore_permission_denied(env: 'SetEnv', env_var, arg, expected):
+    if env_var is not None:
+        env('WATCHFILES_IGNORE_PERMISSION_DENIED', env_var)
+    assert _default_ignore_permission_denied(arg) == expected

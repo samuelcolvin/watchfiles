@@ -63,7 +63,7 @@ def watch(
     force_polling: Optional[bool] = None,
     poll_delay_ms: int = 300,
     recursive: bool = True,
-    ignore_permission_denied: bool = False,
+    ignore_permission_denied: Optional[bool] = None,
 ) -> Generator[Set[FileChange], None, None]:
     """
     Watch one or more paths and yield a set of changes whenever files change.
@@ -100,6 +100,8 @@ def watch(
         poll_delay_ms: delay between polling for changes, only used if `force_polling=True`.
         recursive: if `True`, watch for changes in sub-directories recursively, otherwise watch only for changes in the
             top-level directory, default is `True`.
+        ignore_permission_denied: if `True`, will ignore permission denied errors, otherwise will raise them by default.
+            Setting the `WATCHFILES_IGNORE_PERMISSION_DENIED` environment variable will set this value too.
 
     Yields:
         The generator yields sets of [`FileChange`][watchfiles.main.FileChange]s.
@@ -112,6 +114,7 @@ def watch(
     ```
     """
     force_polling = _default_force_polling(force_polling)
+    ignore_permission_denied = _default_ignore_permission_denied(ignore_permission_denied)
     with RustNotify(
         [str(p) for p in paths], debug, force_polling, poll_delay_ms, recursive, ignore_permission_denied
     ) as watcher:
@@ -150,7 +153,7 @@ async def awatch(  # noqa C901
     force_polling: Optional[bool] = None,
     poll_delay_ms: int = 300,
     recursive: bool = True,
-    ignore_permission_denied: bool = False,
+    ignore_permission_denied: Optional[bool] = None,
 ) -> AsyncGenerator[Set[FileChange], None]:
     """
     Asynchronous equivalent of [`watch`][watchfiles.watch] using threads to wait for changes.
@@ -180,6 +183,8 @@ async def awatch(  # noqa C901
         poll_delay_ms: delay between polling for changes, only used if `force_polling=True`.
         recursive: if `True`, watch for changes in sub-directories recursively, otherwise watch only for changes in the
             top-level directory, default is `True`.
+        ignore_permission_denied: if `True`, will ignore permission denied errors, otherwise will raise them by default.
+            Setting the `WATCHFILES_IGNORE_PERMISSION_DENIED` environment variable will set this value too.
 
     Yields:
         The generator yields sets of [`FileChange`][watchfiles.main.FileChange]s.
@@ -234,6 +239,7 @@ async def awatch(  # noqa C901
         stop_event_ = stop_event
 
     force_polling = _default_force_polling(force_polling)
+    ignore_permission_denied = _default_ignore_permission_denied(ignore_permission_denied)
     with RustNotify(
         [str(p) for p in paths], debug, force_polling, poll_delay_ms, recursive, ignore_permission_denied
     ) as watcher:
@@ -325,3 +331,10 @@ def _auto_force_polling() -> bool:
 
     uname = platform.uname()
     return 'microsoft-standard' in uname.release.lower() and uname.system.lower() == 'linux'
+
+
+def _default_ignore_permission_denied(ignore_permission_denied: Optional[bool]) -> bool:
+    if ignore_permission_denied is not None:
+        return ignore_permission_denied
+    env_var = os.getenv('WATCHFILES_IGNORE_PERMISSION_DENIED')
+    return env_var is not None
