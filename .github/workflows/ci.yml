@@ -5,7 +5,7 @@ on:
     branches:
       - main
     tags:
-      - '**'
+      - "**"
   pull_request: {}
 
 jobs:
@@ -15,19 +15,19 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu, macos, windows]
-        rust-version: [stable, '1.56.0']
+        rust-version: [stable, "1.56.0"]
         python-version:
-          - '3.7'
-          - '3.8'
-          - '3.9'
-          - '3.10'
-          - '3.11'
-          - 'pypy3.8'
-          - 'pypy3.9'
+          - "3.7"
+          - "3.8"
+          - "3.9"
+          - "3.10"
+          - "3.11"
+          - "pypy3.8"
+          - "pypy3.9"
         exclude:
-          - rust-version: '1.56.0'
+          - rust-version: "1.56.0"
             os: macos
-          - rust-version: '1.56.0'
+          - rust-version: "1.56.0"
             os: windows
 
     runs-on: ${{ matrix.os }}-latest
@@ -38,87 +38,87 @@ jobs:
       OS: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: set up python
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
+      - name: set up python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
 
-    - name: install rust
-      uses: actions-rs/toolchain@v1
-      with:
-        profile: minimal
-        toolchain: ${{ matrix.rust-version }}
-        override: true
+      - name: install rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust-version }}
+          override: true
 
-    - name: cache rust
-      uses: Swatinem/rust-cache@v1
+      - name: cache rust
+        uses: Swatinem/rust-cache@v1
 
-    - run: pip install -r requirements/pyproject.txt -r requirements/testing.txt
+      - run: pip install -r requirements/pyproject.txt -r requirements/testing.txt
 
-    - run: pip install -e .
-    - run: pip freeze
+      - run: pip install -e .
+      - run: pip freeze
 
-    - run: make test
+      - run: make test
 
-    - run: coverage xml
+      - run: coverage xml
 
-    - uses: codecov/codecov-action@v1.0.13
-      with:
-        file: ./coverage.xml
-        env_vars: PYTHON,RUST,OS
+      - uses: codecov/codecov-action@v1.0.13
+        with:
+          file: ./coverage.xml
+          env_vars: PYTHON,RUST,OS
 
   lint:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
 
-    - name: install rust
-      uses: actions-rs/toolchain@v1
-      with:
-        profile: minimal
-        toolchain: stable
-        override: true
-        components: rustfmt, clippy
+      - name: install rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: rustfmt, clippy
 
-    - name: cache rust
-      uses: Swatinem/rust-cache@v1
+      - name: cache rust
+        uses: Swatinem/rust-cache@v1
 
-    - run: pip install -r requirements/pyproject.txt -r requirements/linting.txt
+      - run: pip install -r requirements/pyproject.txt -r requirements/linting.txt
 
-    - run: pip install -e .
+      - run: pip install -e .
 
-    - uses: pre-commit/action@v3.0.0
-      with:
-        extra_args: --all-files
+      - uses: pre-commit/action@v3.0.0
+        with:
+          extra_args: --all-files
 
   docs:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: set up python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
+      - name: set up python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
 
-    - name: install
-      run: pip install -r requirements/docs.txt
+      - name: install
+        run: pip install -r requirements/docs.txt
 
-    - name: build site
-      run: mkdocs build
+      - name: build site
+        run: mkdocs build
 
-    - name: store docs site
-      uses: actions/upload-artifact@v3
-      with:
-        name: docs
-        path: site
+      - name: store docs site
+        uses: actions/upload-artifact@v3
+        with:
+          name: docs
+          path: site
 
   build:
     name: >
@@ -177,7 +177,7 @@ jobs:
       - name: set up python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: "3.10"
           architecture: ${{ matrix.python-architecture || 'x64' }}
 
       - name: set package version
@@ -232,19 +232,19 @@ jobs:
 
       - name: list dist files
         run: |
-         ls -lh dist/
-         echo "`ls dist | wc -l` files"
+          ls -lh dist/
+          echo "`ls dist | wc -l` files"
 
       - name: extract and list sdist file
         run: |
-         mkdir sdist-files
-         tar -xvf dist/*.tar.gz -C sdist-files
-         tree -a sdist-files
+          mkdir sdist-files
+          tar -xvf dist/*.tar.gz -C sdist-files
+          tree -a sdist-files
 
       - name: extract and list wheel file
         run: |
-         ls dist/*cp37-abi3-manylinux*x86_64.whl | head -n 1
-         python -m zipfile --list `ls dist/*cp37-abi3-manylinux*x86_64.whl | head -n 1`
+          ls dist/*cp37-abi3-manylinux*x86_64.whl | head -n 1
+          python -m zipfile --list `ls dist/*cp37-abi3-manylinux*x86_64.whl | head -n 1`
 
       - run: pip install twine
       - run: twine check dist/*
@@ -252,7 +252,7 @@ jobs:
   # Used for branch protection checks, see https://github.com/marketplace/actions/alls-green#why
   check:
     if: always()
-    needs: [test, lint, docs]
+    needs: [test, lint]
     runs-on: ubuntu-latest
     steps:
       - name: Decide whether the needed jobs succeeded or failed
@@ -261,19 +261,11 @@ jobs:
           jobs: ${{ toJSON(needs) }}
 
   release:
-    needs: [build, check, docs]
-    if: "success() && startsWith(github.ref, 'refs/tags/')"
+    needs: [build, check]
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
-
-      - name: set up python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-
-      - run: pip install twine
 
       - name: get dist artifacts
         uses: actions/download-artifact@v3
@@ -281,22 +273,42 @@ jobs:
           name: pypi_files
           path: dist
 
-      - name: get docs
-        uses: actions/download-artifact@v3
-        with:
-          name: docs
-          path: site
+      - name: create branch
+        run: |
+          git checkout -b test
 
-      - run: twine check dist/*
+      - name: push
+        run: |
+          git push origin test
+      # - name: set up python
+      #   uses: actions/setup-python@v4
+      #   with:
+      #     python-version: "3.10"
 
-      - name: upload to pypi
-        run: twine upload dist/*
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.pypi_token }}
+      # - run: pip install twine
 
-      - name: publish docs
-        uses: JamesIves/github-pages-deploy-action@v4.2.5
-        with:
-          branch: gh-pages
-          folder: site
+  #     - name: get dist artifacts
+  #       uses: actions/download-artifact@v3
+  #       with:
+  #         name: pypi_files
+  #         path: dist
+
+  #     - name: get docs
+  #       uses: actions/download-artifact@v3
+  #       with:
+  #         name: docs
+  #         path: site
+
+  #     - run: twine check dist/*
+
+  #     - name: upload to pypi
+  #       run: twine upload dist/*
+  #       env:
+  #         TWINE_USERNAME: __token__
+  #         TWINE_PASSWORD: ${{ secrets.pypi_token }}
+
+  #     - name: publish docs
+  #       uses: JamesIves/github-pages-deploy-action@v4.2.5
+  #       with:
+  #         branch: gh-pages
+  #         folder: site
