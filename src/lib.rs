@@ -29,6 +29,9 @@ create_exception!(
 const CHANGE_ADDED: u8 = 1;
 const CHANGE_MODIFIED: u8 = 2;
 const CHANGE_DELETED: u8 = 3;
+const CHANGE_CLOSED: u8 = 4;
+const CHANGE_OTHER: u8 = 99;
+
 
 #[derive(Debug)]
 enum WatcherEnum {
@@ -123,6 +126,8 @@ impl RustNotify {
                         }
                     };
                     let change = match event.kind {
+                        EventKind::Access(AccessKind::Close(_)) => CHANGE_CLOSED,
+                        EventKind::Access(_) => CHANGE_OTHER,
                         EventKind::Create(_) => CHANGE_ADDED,
                         EventKind::Modify(ModifyKind::Metadata(_))
                         | EventKind::Modify(ModifyKind::Data(_))

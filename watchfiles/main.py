@@ -27,6 +27,9 @@ class Change(IntEnum):
     deleted = 3
     """A file or directory was deleted."""
 
+    closed = 4
+    other = 99
+
     def raw_str(self) -> str:
         return self.name
 
@@ -113,7 +116,8 @@ def watch(
     force_polling = _default_force_polling(force_polling)
     with RustNotify([str(p) for p in paths], debug, force_polling, poll_delay_ms, recursive) as watcher:
         while True:
-            raw_changes = watcher.watch(debounce, step, rust_timeout, stop_event)
+            raw_changes = watcher.watch(
+                debounce, step, rust_timeout, stop_event)
             if raw_changes == 'timeout':
                 if yield_on_timeout:
                     yield set()
@@ -253,7 +257,8 @@ async def awatch(  # noqa C901
                 return
             elif raw_changes == 'signal':
                 # in theory the watch thread should never get a signal
-                raise RuntimeError('watch thread unexpectedly received a signal')
+                raise RuntimeError(
+                    'watch thread unexpectedly received a signal')
             else:
                 changes = _prep_changes(raw_changes, watch_filter)
                 if changes:
