@@ -129,6 +129,7 @@ def run_process(
         target_type = detect_target_type(target)
 
     logger.debug('running "%s" as %s', target, target_type)
+    catch_sigterm()
     process = start_process(target, target_type, args, kwargs)
     reloads = 0
 
@@ -152,6 +153,7 @@ def run_process(
             process = start_process(target, target_type, args, kwargs, changes)
             reloads += 1
     finally:
+        logger.debug('stopping process...')
         process.stop()
     return reloads
 
@@ -207,6 +209,7 @@ async def arun_process(
         target_type = detect_target_type(target)
 
     logger.debug('running "%s" as %s', target, target_type)
+    catch_sigterm()
     process = await anyio.to_thread.run_sync(start_process, target, target_type, args, kwargs)
     reloads = 0
 
@@ -421,3 +424,19 @@ def set_tty(tty_path: Optional[str]) -> Generator[None, None, None]:
     else:
         # currently on windows tty_path is None and there's nothing we can do here
         yield
+
+
+def raise_keyboard_interrupt(signum: int, _frame: Any) -> None:  # pragma: no cover
+    logger.warning('received signal %s, raising KeyboardInterrupt', signal.Signals(signum))
+    raise KeyboardInterrupt
+
+
+def catch_sigterm() -> None:
+    """
+    Catch SIGTERM and raise KeyboardInterrupt instead. This means watchfiles will stop quickly
+    on `docker compose stop` and other cases where SIGTERM is sent.
+
+    Without this the watchfiles process will be killed while a running process will continue uninterrupted.
+    """
+    logger.debug('registering handler for SIGTERM on watchfiles process %d', os.getpid())
+    signal.signal(signal.SIGTERM, raise_keyboard_interrupt)
