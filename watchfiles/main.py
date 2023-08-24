@@ -337,4 +337,4 @@ def _default_ignore_permission_denied(ignore_permission_denied: Optional[bool]) 
     if ignore_permission_denied is not None:
         return ignore_permission_denied
     env_var = os.getenv('WATCHFILES_IGNORE_PERMISSION_DENIED')
-    return env_var is not None
+    return bool(env_var)
