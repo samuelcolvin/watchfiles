@@ -124,7 +124,7 @@ async def test_awatch_no_yield(mock_rust_notify: 'MockRustType', caplog):
     assert changes == {(Change.added, 'spam.py')}
     assert mock.watch_count == 2
     assert caplog.text == (
-        "watchfiles.main DEBUG: no changes, continuing\n"
+        "watchfiles.main DEBUG: all changes filtered out, raw_changes={(1, 'spam.pyc')}\n"
         "watchfiles.main DEBUG: 1 change detected: {(<Change.added: 1>, 'spam.py')}\n"
     )
 

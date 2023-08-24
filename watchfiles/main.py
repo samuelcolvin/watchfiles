@@ -133,7 +133,7 @@ def watch(
                     _log_changes(changes)
                     yield changes
                 else:
-                    logger.debug('no changes, continuing')
+                    logger.debug('all changes filtered out, raw_changes=%s', raw_changes)
 
 
 async def awatch(  # noqa C901
@@ -262,7 +262,7 @@ async def awatch(  # noqa C901
                     _log_changes(changes)
                     yield changes
                 else:
-                    logger.debug('no changes, continuing')
+                    logger.debug('all changes filtered out, raw_changes=%s', raw_changes)
 
 
 def _prep_changes(
