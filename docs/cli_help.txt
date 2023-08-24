@@ -3,10 +3,9 @@ usage: watchfiles [-h] [--ignore-paths [IGNORE_PATHS]]
                   [--filter [FILTER]] [--args [ARGS]] [--verbose]
                   [--non-recursive] [--verbosity [{warning,info,debug}]]
                   [--sigint-timeout [SIGINT_TIMEOUT]]
+                  [--grace-period [GRACE_PERIOD]]
                   [--sigkill-timeout [SIGKILL_TIMEOUT]]
                   [--ignore-permission-denied] [--version]
-                  [--grace-period [GRACE_PERIOD]]
-                  [--sigkill-timeout [SIGKILL_TIMEOUT]] [--version]
                   target [paths ...]
 
 Watch one or more directories and execute either a shell command or a python function on file changes.

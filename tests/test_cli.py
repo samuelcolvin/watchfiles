@@ -323,6 +323,7 @@ def test_ignore_permission_denied(mocker, tmp_path):
         target_type='function',
         watch_filter=IsInstance(DefaultFilter, only_direct_instance=True),
         debug=False,
+        grace_period=0,
         sigint_timeout=5,
         sigkill_timeout=1,
         recursive=True,
