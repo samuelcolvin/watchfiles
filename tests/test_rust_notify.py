@@ -325,7 +325,7 @@ def test_ignore_permission_denied():
         (None, None, False),
         ('', True, True),
         ('', False, False),
-        ('', None, True),
+        ('', None, False),
         ('1', True, True),
         ('1', False, False),
         ('1', None, True),
