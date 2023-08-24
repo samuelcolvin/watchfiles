@@ -11,6 +11,7 @@ from importlib import import_module
 from multiprocessing import get_context
 from multiprocessing.context import SpawnProcess
 from pathlib import Path
+from time import sleep
 from typing import TYPE_CHECKING, Any, Callable, Dict, Generator, List, Optional, Set, Tuple, Union
 
 import anyio
@@ -36,6 +37,7 @@ def run_process(
     target_type: "Literal['function', 'command', 'auto']" = 'auto',
     callback: Optional[Callable[[Set[FileChange]], None]] = None,
     watch_filter: Optional[Callable[[Change, str], bool]] = DefaultFilter(),
+    grace_period: float = 0,
     debounce: int = 1_600,
     step: int = 50,
     debug: bool = False,
@@ -68,6 +70,7 @@ def run_process(
             [`detect_target_type`][watchfiles.run.detect_target_type] is used to determine the type.
         callback: function to call on each reload, the function should accept a set of changes as the sole argument
         watch_filter: matches the same argument of [`watch`][watchfiles.watch]
+        grace_period: number of seconds after the process is started before watching for changes
         debounce: matches the same argument of [`watch`][watchfiles.watch]
         step: matches the same argument of [`watch`][watchfiles.watch]
         debug: matches the same argument of [`watch`][watchfiles.watch]
@@ -128,6 +131,10 @@ def run_process(
     process = start_process(target, target_type, args, kwargs)
     reloads = 0
 
+    if grace_period:
+        logger.debug('sleeping for %s seconds before watching for changes', grace_period)
+        sleep(grace_period)
+
     try:
         for changes in watch(
             *paths,
@@ -155,6 +162,7 @@ async def arun_process(
     target_type: "Literal['function', 'command', 'auto']" = 'auto',
     callback: Optional[Callable[[Set[FileChange]], Any]] = None,
     watch_filter: Optional[Callable[[Change, str], bool]] = DefaultFilter(),
+    grace_period: float = 0,
     debounce: int = 1_600,
     step: int = 50,
     debug: bool = False,
@@ -198,6 +206,10 @@ async def arun_process(
     logger.debug('running "%s" as %s', target, target_type)
     process = await anyio.to_thread.run_sync(start_process, target, target_type, args, kwargs)
     reloads = 0
+
+    if grace_period:
+        logger.debug('sleeping for %s seconds before watching for changes', grace_period)
+        await anyio.sleep(grace_period)
 
     async for changes in awatch(
         *paths, watch_filter=watch_filter, debounce=debounce, step=step, debug=debug, recursive=recursive

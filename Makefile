@@ -20,7 +20,7 @@ build-dev:
 
 .PHONY: format
 format:
-	$(ruff) --fix
+	$(ruff) --fix-only
 	$(isort)
 	$(black)
 	@echo 'max_width = 120' > .rustfmt.toml

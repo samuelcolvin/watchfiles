@@ -47,11 +47,12 @@ def test_alive_terminates(mocker, mock_rust_notify: 'MockRustType', caplog):
     mock_kill = mocker.patch('watchfiles.run.os.kill')
     mock_rust_notify([{(1, '/path/to/foobar.py')}])
 
-    assert run_process('/x/y/z', target=os.getcwd, debounce=5, step=1) == 1
+    assert run_process('/x/y/z', target=os.getcwd, debounce=5, grace_period=0.01, step=1) == 1
     assert mock_spawn_process.call_count == 2
     assert mock_popen.call_count == 0
     assert mock_kill.call_count == 2  # kill in loop + final kill
     assert 'watchfiles.main DEBUG: running "<built-in function getcwd>" as function\n' in caplog.text
+    assert 'sleeping for 0.01 seconds before watching for changes' in caplog.text
 
 
 def test_dead_callback(mocker, mock_rust_notify: 'MockRustType'):
@@ -180,12 +181,16 @@ async def test_async_sync_callback(mocker, mock_rust_notify: 'MockRustType'):
 
     callback_calls = []
 
-    assert (
-        await arun_process(
-            '/x/y/async', target='os.getcwd', target_type='function', callback=callback_calls.append, debounce=5, step=1
-        )
-        == 2
+    v = await arun_process(
+        '/x/y/async',
+        target='os.getcwd',
+        target_type='function',
+        callback=callback_calls.append,
+        grace_period=0.01,
+        debounce=5,
+        step=1,
     )
+    assert v == 2
     assert mock_spawn_process.call_count == 3
     assert mock_kill.call_count == 3
     assert callback_calls == [{(Change.added, '/path/to/foo.py')}, {(Change.modified, '/path/to/bar.py')}]

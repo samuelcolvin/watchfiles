@@ -105,6 +105,13 @@ def cli(*args_: str) -> None:
         help='How long to wait for the sigint timeout before sending sigkill.',
     )
     parser.add_argument(
+        '--grace-period',
+        nargs='?',
+        type=float,
+        default=0,
+        help='Number of seconds after the process is started before watching for changes.',
+    )
+    parser.add_argument(
         '--sigkill-timeout',
         nargs='?',
         type=int,
@@ -165,6 +172,7 @@ def cli(*args_: str) -> None:
         sigint_timeout=arg_namespace.sigint_timeout,
         sigkill_timeout=arg_namespace.sigkill_timeout,
         recursive=not arg_namespace.non_recursive,
+        grace_period=arg_namespace.grace_period,
     )
 
 
