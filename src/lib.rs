@@ -153,7 +153,10 @@ impl RustNotify {
                         EventKind::Remove(_) => CHANGE_DELETED,
                         event_kind => {
                             if debug {
-                                eprintln!("raw-event={:?} event.kind={:?} no change detected", event, event_kind);
+                                eprintln!(
+                                    "raw-event={:?} event.kind={:?} no change detected",
+                                    event_kind, event_kind
+                                );
                             }
                             return;
                         }
