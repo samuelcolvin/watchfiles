@@ -501,11 +501,11 @@ and returns them as JSON.</p>
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    <span class="n">web</span><span class="o">.</span><span class="n">run_app</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">8000</span><span class="p">)</span>
 </code></pre></div>
 <p>You could run this and reload it when any file in the current directory changes with:</p>
-<div class="highlight"><span class="filename">Running a python function</span><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>watchfiles foobar.main
+<div class="highlight"><span class="filename">Running a python function</span><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>watchfiles<span class="w"> </span>foobar.main
 </code></pre></div>
 <h2 id="running-and-restarting-a-command">Running and restarting a command<a class="headerlink" href="#running-and-restarting-a-command" title="Permanent link">&para;</a></h2>
 <p>Let's say you want to re-run failing tests whenever files change. You could do this with <strong>watchfiles</strong> using</p>
-<div class="highlight"><span class="filename">Running a command</span><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>watchfiles <span class="s1">&#39;pytest --lf&#39;</span>
+<div class="highlight"><span class="filename">Running a command</span><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>watchfiles<span class="w"> </span><span class="s1">&#39;pytest --lf&#39;</span>
 </code></pre></div>
 <p>(pytest's <code>--lf</code> option is a shortcut for <code>--last-failed</code>,
 see <a href="https://docs.pytest.org/en/latest/how-to/cache.html">pytest docs</a>)</p>
@@ -513,7 +513,7 @@ see <a href="https://docs.pytest.org/en/latest/how-to/cache.html">pytest docs</a
 can be changed.</p>
 <p>In this example, we might want to watch only the <code>src</code> and <code>tests</code> directories, and only react to changes in python
 files:</p>
-<div class="highlight"><span class="filename">Watching custom directories and files</span><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>watchfiles --filter python <span class="s1">&#39;pytest --lf&#39;</span> src tests
+<div class="highlight"><span class="filename">Watching custom directories and files</span><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>watchfiles<span class="w"> </span>--filter<span class="w"> </span>python<span class="w"> </span><span class="s1">&#39;pytest --lf&#39;</span><span class="w"> </span>src<span class="w"> </span>tests
 </code></pre></div>
 <h2 id="help">Help<a class="headerlink" href="#help" title="Permanent link">&para;</a></h2>
 <p>Run <code>watchfiles --help</code> for more options.</p>
@@ -522,42 +522,48 @@ files:</p>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>                  [--filter [FILTER]] [--args [ARGS]] [--verbose]
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>                  [--non-recursive] [--verbosity [{warning,info,debug}]]
 <a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>                  [--sigint-timeout [SIGINT_TIMEOUT]]
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>                  [--sigkill-timeout [SIGKILL_TIMEOUT]] [--version]
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>                  target [paths ...]
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>Watch one or more directories and execute either a shell command or a python function on file changes.
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>                  [--grace-period [GRACE_PERIOD]]
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>                  [--sigkill-timeout [SIGKILL_TIMEOUT]]
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>                  [--ignore-permission-denied] [--version]
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>                  target [paths ...]
 <a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>
-<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>Example of watching the current directory and calling a python function:
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>Watch one or more directories and execute either a shell command or a python function on file changes.
 <a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>
-<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>    watchfiles foobar.main
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>Example of watching the current directory and calling a python function:
 <a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>
-<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>Example of watching python files in two local directories and calling a shell command:
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>    watchfiles foobar.main
 <a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>
-<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>    watchfiles --filter python &#39;pytest --lf&#39; src tests
+<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>Example of watching python files in two local directories and calling a shell command:
 <a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>
-<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>See https://watchfiles.helpmanual.io/cli/ for more information.
+<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>    watchfiles --filter python &#39;pytest --lf&#39; src tests
 <a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>
-<a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>positional arguments:
-<a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>  target                Command or dotted function path to run
-<a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>  paths                 Filesystem paths to watch, defaults to current directory
-<a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>
-<a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>options:
-<a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a>  -h, --help            show this help message and exit
-<a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a>  --ignore-paths [IGNORE_PATHS]
-<a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a>                        Specify directories to ignore, to ignore multiple paths use a comma as separator, e.g. &quot;env&quot; or &quot;env,node_modules&quot;
-<a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a>  --target-type [{command,function,auto}]
-<a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a>                        Whether the target should be intercepted as a shell command or a python function, defaults to &quot;auto&quot; which infers the target type from the target string
-<a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a>  --filter [FILTER]     Which files to watch, defaults to &quot;default&quot; which uses the &quot;DefaultFilter&quot;, &quot;python&quot; uses the &quot;PythonFilter&quot;, &quot;all&quot; uses no filter, any other value is interpreted as a python function/class path which is imported
-<a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a>  --args [ARGS]         Arguments to set on sys.argv before calling target function, used only if the target is a function
-<a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a>  --verbose             Set log level to &quot;debug&quot;, wins over `--verbosity`
-<a id="__codelineno-4-34" name="__codelineno-4-34" href="#__codelineno-4-34"></a>  --non-recursive       Do not watch for changes in sub-directories recursively
-<a id="__codelineno-4-35" name="__codelineno-4-35" href="#__codelineno-4-35"></a>  --verbosity [{warning,info,debug}]
-<a id="__codelineno-4-36" name="__codelineno-4-36" href="#__codelineno-4-36"></a>                        Log level, defaults to &quot;info&quot;
-<a id="__codelineno-4-37" name="__codelineno-4-37" href="#__codelineno-4-37"></a>  --sigint-timeout [SIGINT_TIMEOUT]
-<a id="__codelineno-4-38" name="__codelineno-4-38" href="#__codelineno-4-38"></a>                        How long to wait for the sigint timeout before sending sigkill.
-<a id="__codelineno-4-39" name="__codelineno-4-39" href="#__codelineno-4-39"></a>  --sigkill-timeout [SIGKILL_TIMEOUT]
-<a id="__codelineno-4-40" name="__codelineno-4-40" href="#__codelineno-4-40"></a>                        How long to wait for the sigkill timeout before issuing a timeout exception.
-<a id="__codelineno-4-41" name="__codelineno-4-41" href="#__codelineno-4-41"></a>  --version, -V         show program&#39;s version number and exit
+<a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>See https://watchfiles.helpmanual.io/cli/ for more information.
+<a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>
+<a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>positional arguments:
+<a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>  target                Command or dotted function path to run
+<a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>  paths                 Filesystem paths to watch, defaults to current directory
+<a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a>
+<a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a>options:
+<a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a>  -h, --help            show this help message and exit
+<a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a>  --ignore-paths [IGNORE_PATHS]
+<a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a>                        Specify directories to ignore, to ignore multiple paths use a comma as separator, e.g. &quot;env&quot; or &quot;env,node_modules&quot;
+<a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a>  --target-type [{command,function,auto}]
+<a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a>                        Whether the target should be intercepted as a shell command or a python function, defaults to &quot;auto&quot; which infers the target type from the target string
+<a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a>  --filter [FILTER]     Which files to watch, defaults to &quot;default&quot; which uses the &quot;DefaultFilter&quot;, &quot;python&quot; uses the &quot;PythonFilter&quot;, &quot;all&quot; uses no filter, any other value is interpreted as a python function/class path which is imported
+<a id="__codelineno-4-34" name="__codelineno-4-34" href="#__codelineno-4-34"></a>  --args [ARGS]         Arguments to set on sys.argv before calling target function, used only if the target is a function
+<a id="__codelineno-4-35" name="__codelineno-4-35" href="#__codelineno-4-35"></a>  --verbose             Set log level to &quot;debug&quot;, wins over `--verbosity`
+<a id="__codelineno-4-36" name="__codelineno-4-36" href="#__codelineno-4-36"></a>  --non-recursive       Do not watch for changes in sub-directories recursively
+<a id="__codelineno-4-37" name="__codelineno-4-37" href="#__codelineno-4-37"></a>  --verbosity [{warning,info,debug}]
+<a id="__codelineno-4-38" name="__codelineno-4-38" href="#__codelineno-4-38"></a>                        Log level, defaults to &quot;info&quot;
+<a id="__codelineno-4-39" name="__codelineno-4-39" href="#__codelineno-4-39"></a>  --sigint-timeout [SIGINT_TIMEOUT]
+<a id="__codelineno-4-40" name="__codelineno-4-40" href="#__codelineno-4-40"></a>                        How long to wait for the sigint timeout before sending sigkill.
+<a id="__codelineno-4-41" name="__codelineno-4-41" href="#__codelineno-4-41"></a>  --grace-period [GRACE_PERIOD]
+<a id="__codelineno-4-42" name="__codelineno-4-42" href="#__codelineno-4-42"></a>                        Number of seconds after the process is started before watching for changes.
+<a id="__codelineno-4-43" name="__codelineno-4-43" href="#__codelineno-4-43"></a>  --sigkill-timeout [SIGKILL_TIMEOUT]
+<a id="__codelineno-4-44" name="__codelineno-4-44" href="#__codelineno-4-44"></a>                        How long to wait for the sigkill timeout before issuing a timeout exception.
+<a id="__codelineno-4-45" name="__codelineno-4-45" href="#__codelineno-4-45"></a>  --ignore-permission-denied
+<a id="__codelineno-4-46" name="__codelineno-4-46" href="#__codelineno-4-46"></a>                        Ignore permission denied errors while watching files and directories.
+<a id="__codelineno-4-47" name="__codelineno-4-47" href="#__codelineno-4-47"></a>  --version, -V         show program&#39;s version number and exit
 </code></pre></div>
 
 
