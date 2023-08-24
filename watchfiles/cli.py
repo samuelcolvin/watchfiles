@@ -172,6 +172,7 @@ def cli(*args_: str) -> None:
         sigint_timeout=arg_namespace.sigint_timeout,
         sigkill_timeout=arg_namespace.sigkill_timeout,
         recursive=not arg_namespace.non_recursive,
+        grace_period=arg_namespace.grace_period,
     )
 
 
