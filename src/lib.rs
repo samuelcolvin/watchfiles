@@ -110,9 +110,6 @@ impl RustNotify {
 
         let event_handler = move |res: NotifyResult<Event>| match res {
             Ok(event) => {
-                if debug {
-                    eprintln!("raw-event: {:?}", event);
-                }
                 if let Some(path_buf) = event.paths.first() {
                     let path = match path_buf.to_str() {
                         Some(s) => s.to_string(),
@@ -154,9 +151,19 @@ impl RustNotify {
                             }
                         }
                         EventKind::Remove(_) => CHANGE_DELETED,
-                        _ => return,
+                        event_kind => {
+                            if debug {
+                                eprintln!("raw-event={:?} event.kind={:?} no change detected", event, event_kind);
+                            }
+                            return;
+                        }
                     };
+                    if debug {
+                        eprintln!("raw-event={:?} change={:?}", event, change);
+                    }
                     changes_clone.lock().unwrap().insert((change, path));
+                } else if debug {
+                    eprintln!("raw-event={:?} no paths found", event);
                 }
             }
             Err(e) => {
