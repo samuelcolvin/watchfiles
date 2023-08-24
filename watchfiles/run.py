@@ -153,7 +153,6 @@ def run_process(
             process = start_process(target, target_type, args, kwargs, changes)
             reloads += 1
     finally:
-        logger.debug('stopping process...')
         process.stop()
     return reloads
 
