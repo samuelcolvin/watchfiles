@@ -132,6 +132,8 @@ def watch(
                 if changes:
                     _log_changes(changes)
                     yield changes
+                else:
+                    logger.debug('no changes, continuing')
 
 
 async def awatch(  # noqa C901
@@ -259,6 +261,8 @@ async def awatch(  # noqa C901
                 if changes:
                     _log_changes(changes)
                     yield changes
+                else:
+                    logger.debug('no changes, continuing')
 
 
 def _prep_changes(
