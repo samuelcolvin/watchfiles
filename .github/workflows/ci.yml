@@ -257,8 +257,8 @@ jobs:
 
       - name: extract and list wheel file
         run: |
-         ls dist/*cp37-abi3-manylinux*x86_64.whl | head -n 1
-         python -m zipfile --list `ls dist/*cp37-abi3-manylinux*x86_64.whl | head -n 1`
+         ls dist/*cp312-abi3-manylinux*x86_64.whl | head -n 1
+         python -m zipfile --list `ls dist/*cp312-abi3-manylinux*x86_64.whl | head -n 1`
 
       - run: pip install twine
       - run: twine check dist/*
