@@ -256,9 +256,10 @@ jobs:
          tree -a sdist-files
 
       - name: extract and list wheel file
-        run: |
-         ls dist/*cp312-abi3-manylinux*x86_64.whl | head -n 1
-         python -m zipfile --list `ls dist/*cp312-manylinux_2_17_x86_64*.whl | head -n 1`
+        run: ls dist/*cp312-manylinux_2_17_x86_64*.whl | head -n 1
+
+      - name: extract and list wheel file
+        run: python -m zipfile --list `ls dist/*cp312-manylinux_2_17_x86_64*.whl | head -n 1`
 
       - run: pip install twine
       - run: twine check dist/*
