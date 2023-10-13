@@ -23,7 +23,7 @@ see [the migration guide](https://watchfiles.helpmanual.io/migrating/) for more 
 
 ## Installation
 
-**watchfiles** requires Python 3.7 - 3.10.
+**watchfiles** requires Python 3.8 - 3.12.
 
 ```bash
 pip install watchfiles
@@ -32,7 +32,7 @@ pip install watchfiles
 Binaries are available for:
 
 * **Linux**: `x86_64`, `aarch64`, `i686`, `armv7l`, `musl-x86_64` & `musl-aarch64`
-* **MacOS**: `x86_64` & `arm64` (except python 3.7)
+* **MacOS**: `x86_64` & `arm64`
 * **Windows**: `amd64` & `win32`
 
 Otherwise, you can install from source which requires Rust stable to be installed.
