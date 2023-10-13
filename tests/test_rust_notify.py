@@ -1,3 +1,4 @@
+import os
 import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -311,10 +312,12 @@ def test_polling_repr(test_dir: Path):
 
 @skip_unless_linux
 def test_ignore_permission_denied():
-    RustNotify(['/'], False, False, 0, True, True)
+    path = os.getenv('WATCHFILES_TEST_PERMISSION_DENIED_PATH') or '/'
+
+    RustNotify([path], False, False, 0, True, True)
 
     with pytest.raises(PermissionError):
-        RustNotify(['/'], False, False, 0, True, False)
+        RustNotify([path], False, False, 0, True, False)
 
 
 @pytest.mark.parametrize(
