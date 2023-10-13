@@ -61,7 +61,16 @@ jobs:
     - run: pip install -e .
     - run: pip freeze
 
+    - if: matrix.os == 'ubuntu'
+      run: |
+        mkdir -p ${{ github.workspace }}/protected
+        touch ${{ github.workspace }}/protected/test
+        sudo chown -R root:root ${{ github.workspace }}/protected
+        sudo chmod 700 ${{ github.workspace }}/protected
+
     - run: make test
+      env:
+        WATCHFILES_TEST_PERMISSION_DENIED_PATH: ${{ github.workspace }}/protected
 
     - run: coverage xml
 
