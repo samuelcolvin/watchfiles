@@ -22,7 +22,7 @@ def test_watch(tmp_path: Path, write_soon):
     for changes in watch(tmp_path, debounce=50, step=10, watch_filter=None):
         break
 
-    assert changes == {(Change.added, str((tmp_path / 'foo.txt')))}
+    assert changes == {(Change.added, str(tmp_path / 'foo.txt'))}
 
 
 def test_wait_stop_event(tmp_path: Path, write_soon):
@@ -31,7 +31,7 @@ def test_wait_stop_event(tmp_path: Path, write_soon):
 
     stop_event = threading.Event()
     for changes in watch(tmp_path, debounce=50, step=10, watch_filter=None, stop_event=stop_event):
-        assert changes == {(Change.added, str((tmp_path / 'foo.txt')))}
+        assert changes == {(Change.added, str(tmp_path / 'foo.txt'))}
         stop_event.set()
 
 
@@ -39,7 +39,7 @@ async def test_awatch(tmp_path: Path, write_soon):
     sleep(0.05)
     write_soon(tmp_path / 'foo.txt')
     async for changes in awatch(tmp_path, debounce=50, step=10, watch_filter=None):
-        assert changes == {(Change.added, str((tmp_path / 'foo.txt')))}
+        assert changes == {(Change.added, str(tmp_path / 'foo.txt'))}
         break
 
 
@@ -49,7 +49,7 @@ async def test_await_stop_event(tmp_path: Path, write_soon):
     write_soon(tmp_path / 'foo.txt')
     stop_event = anyio.Event()
     async for changes in awatch(tmp_path, debounce=50, step=10, watch_filter=None, stop_event=stop_event):
-        assert changes == {(Change.added, str((tmp_path / 'foo.txt')))}
+        assert changes == {(Change.added, str(tmp_path / 'foo.txt'))}
         stop_event.set()
 
 
