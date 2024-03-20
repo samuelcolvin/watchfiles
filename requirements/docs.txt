@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements/docs.txt requirements/docs.in
 #
-black==22.8.0
+black==24.3.0
     # via -r docs.in
 click==8.1.3
     # via
@@ -62,8 +62,10 @@ mkdocstrings-python==0.7.1
     # via mkdocstrings
 mypy-extensions==0.4.3
     # via black
-packaging==21.3
-    # via mkdocs
+packaging==24.0
+    # via
+    #   black
+    #   mkdocs
 pathspec==0.10.1
     # via black
 platformdirs==2.5.2
@@ -74,8 +76,6 @@ pymdown-extensions==10.0
     # via
     #   mkdocs-material
     #   mkdocstrings
-pyparsing==3.0.9
-    # via packaging
 python-dateutil==2.8.2
     # via ghp-import
 pyyaml==6.0
@@ -89,6 +89,10 @@ rcslice==1.1.0
     # via mdx-include
 six==1.16.0
     # via python-dateutil
+tomli==2.0.1
+    # via black
+typing-extensions==4.10.0
+    # via black
 watchdog==2.1.9
     # via mkdocs
 zipp==3.8.1
