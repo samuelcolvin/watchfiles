@@ -46,8 +46,7 @@ if TYPE_CHECKING:
     AnyEvent = Union[anyio.Event, asyncio.Event, trio.Event]
 
     class AbstractEvent(Protocol):
-        def is_set(self) -> bool:
-            ...
+        def is_set(self) -> bool: ...
 
 
 def watch(
