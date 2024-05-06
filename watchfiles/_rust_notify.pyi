@@ -74,7 +74,7 @@ class RustNotify:
         * `'stop'` string, if the `stop_event` was set
         * `'timeout'` string, if `timeout_ms` was exceeded
         """
-    def __enter__(self) -> 'RustNotify':
+    def __enter__(self) -> RustNotify:
         """
         Does nothing, but allows `RustNotify` to be used as a context manager.
 

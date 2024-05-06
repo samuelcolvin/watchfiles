@@ -79,9 +79,10 @@ omit = ['*/__main__.py']
 [tool.ruff]
 line-length = 120
 target-version = 'py38'
-lint.extend-select = ['Q']
-#lint.extend-select = ['Q', 'RUF100', 'UP', 'I']
+lint.mccabe = { max-complexity = 14 }
+lint.extend-select = ['Q', 'RUF100', 'C90', 'UP', 'I']
 lint.flake8-quotes = {inline-quotes = 'single', multiline-quotes = 'double'}
+lint.pydocstyle = { convention = 'google' }
 format.quote-style = 'single'
 
 [tool.mypy]
