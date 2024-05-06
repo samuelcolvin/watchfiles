@@ -20,10 +20,7 @@ from .filters import DefaultFilter
 from .main import Change, FileChange, awatch, watch
 
 if TYPE_CHECKING:
-    try:
-        from typing import Literal
-    except ImportError:
-        from typing_extensions import Literal  # type: ignore[misc]
+    from typing import Literal
 
 __all__ = 'run_process', 'arun_process', 'detect_target_type', 'import_string'
 logger = logging.getLogger('watchfiles.main')
