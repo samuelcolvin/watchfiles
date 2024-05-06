@@ -6,7 +6,7 @@
 #
 anyio==3.6.1
     # via watchfiles (pyproject.toml)
-idna==3.3
+idna==3.7
     # via
     #   -c requirements/linting.txt
     #   anyio
