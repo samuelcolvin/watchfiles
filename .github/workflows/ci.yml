@@ -191,7 +191,7 @@ jobs:
       - name: set up python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
           architecture: ${{ matrix.python-architecture || 'x64' }}
 
       - name: set package version
@@ -204,13 +204,13 @@ jobs:
 
       - name: build sdist
         if: ${{ matrix.os == 'ubuntu' && matrix.target == 'x86_64' && matrix.manylinux == 'auto' }}
-        uses: messense/maturin-action@v1
+        uses: PyO3/maturin-action@v1
         with:
           command: sdist
           args: --out dist
 
       - name: build wheels
-        uses: messense/maturin-action@v1
+        uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
           manylinux: ${{ matrix.manylinux || 'auto' }}
@@ -218,7 +218,7 @@ jobs:
 
       - name: build pypy wheels
         if: ${{ matrix.pypy }}
-        uses: messense/maturin-action@v1
+        uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
           manylinux: ${{ matrix.manylinux || 'auto' }}
@@ -228,7 +228,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: pypi_files
+          name: pypi_files_${{ matrix.os }}_${{ matrix.target }}_${{ matrix.interpreter || 'all' }}_${{ matrix.manylinux }}
           path: dist
 
   list-pypi-files:
@@ -293,7 +293,8 @@ jobs:
       - name: get dist artifacts
         uses: actions/download-artifact@v4
         with:
-          name: pypi_files
+          pattern: pypi_files_*
+          merge-multiple: true
           path: dist
 
       - name: get docs
