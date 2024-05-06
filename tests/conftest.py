@@ -93,8 +93,9 @@ if TYPE_CHECKING:
     from typing import Literal, Protocol
 
     class MockRustType(Protocol):
-        def __call__(self, changes: ChangesType, *, exit_code: Literal['signal', 'stop', 'timeout'] = 'stop') -> Any:
-            ...
+        def __call__(
+            self, changes: ChangesType, *, exit_code: Literal['signal', 'stop', 'timeout'] = 'stop'
+        ) -> Any: ...
 
 
 @pytest.fixture

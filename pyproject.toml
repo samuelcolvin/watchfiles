@@ -76,24 +76,14 @@ exclude_lines = [
 ]
 omit = ['*/__main__.py']
 
-[tool.black]
-color = true
-line-length = 120
-target-version = ['py39']
-skip-string-normalization = true
-
-[tool.isort]
-line_length = 120
-multi_line_output = 3
-include_trailing_comma = true
-force_grid_wrap = 0
-combine_as_imports = true
-color_output = true
-
 [tool.ruff]
 line-length = 120
-extend-select = ['Q']
-flake8-quotes = {inline-quotes = 'single', multiline-quotes = 'double'}
+target-version = 'py38'
+lint.mccabe = { max-complexity = 14 }
+lint.extend-select = ['Q', 'RUF100', 'C90', 'UP', 'I']
+lint.flake8-quotes = {inline-quotes = 'single', multiline-quotes = 'double'}
+lint.pydocstyle = { convention = 'google' }
+format.quote-style = 'single'
 
 [tool.mypy]
 strict = true

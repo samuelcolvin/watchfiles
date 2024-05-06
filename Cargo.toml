@@ -3,7 +3,7 @@ name = "watchfiles_rust_notify"
 version = "0.0.0"
 edition = "2021"
 license = "MIT"
-homepage = "https://github.com/samuelcolvin/watchfiles/watchfiles"
+homepage = "https://github.com/samuelcolvin/watchfiles"
 repository = "https://github.com/samuelcolvin/watchfiles/watchfiles.git"
 readme = "README.md"
 include = [
@@ -21,11 +21,12 @@ include = [
     "!tests/.pytest_cache",
     "!*.so",
 ]
+rust-version = "1.63"
 
 [dependencies]
-crossbeam-channel = "0.5.4"
+crossbeam-channel = "0.5.12"
 notify = "5.0.0"
-pyo3 = {version = "=0.20", features = ["extension-module", "generate-import-lib"]}
+pyo3 = {version = "0.21.2", features = ["extension-module", "generate-import-lib"]}
 
 [lib]
 name = "_rust_notify"
