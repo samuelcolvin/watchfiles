@@ -241,7 +241,8 @@ jobs:
       - name: get dist artifacts
         uses: actions/download-artifact@v4
         with:
-          name: pypi_files
+          pattern: pypi_files_*
+          merge-multiple: true
           path: dist
 
       - name: list dist files
