@@ -1,41 +1,40 @@
 .DEFAULT_GOAL := all
-isort = isort watchfiles tests
-black = black watchfiles tests
-ruff = ruff watchfiles tests
 
 .PHONY: install
 install:
-	pip install -U pip pre-commit
+	pip install -U pip pre-commit maturin
 	pip install -r requirements/all.txt
 	pip install -e .
 	pre-commit install
 
+.PHONY: update-lockfiles
+update-lockfiles:
+	@echo "Updating requirements files using pip-compile"
+	pip-compile -q --strip-extras -o requirements/linting.txt requirements/linting.in
+	pip-compile -q --strip-extras -c requirements/linting.txt -o requirements/pyproject.txt pyproject.toml
+	pip-compile -q --strip-extras -c requirements/linting.txt -c requirements/pyproject.txt -o requirements/testing.txt requirements/testing.in
+	pip-compile -q --strip-extras -c requirements/linting.txt -c requirements/pyproject.txt -c requirements/testing.txt -o requirements/docs.txt requirements/docs.in
+	pip install --dry-run -r requirements/all.txt
+
 .PHONY: build-dev
 build-dev:
-	pip uninstall -y watchfiles
-	@rm -f watchfiles/*.so
-	cargo build
-	@rm -f target/debug/lib_rust_notify.d
-	@mv target/debug/lib_rust_notify.* watchfiles/_rust_notify.so
+	maturin develop
 
 .PHONY: format
 format:
-	$(ruff) --fix-only
-	$(isort)
-	$(black)
+	ruff check --fix-only watchfiles tests
+	ruff format watchfiles tests
 	@echo 'max_width = 120' > .rustfmt.toml
 	cargo fmt
 
 .PHONY: lint-python
 lint-python:
-	$(ruff)
-	$(isort) --check-only --df
-	$(black) --check --diff
+	ruff check watchfiles tests
+	ruff format --check watchfiles tests
 
 .PHONY: lint-rust
 lint-rust:
 	cargo fmt --version
-	@echo 'max_width = 120' > .rustfmt.toml
 	cargo fmt --all -- --check
 	cargo clippy --version
 	cargo clippy -- -D warnings

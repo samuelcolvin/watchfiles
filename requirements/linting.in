@@ -1,5 +1,3 @@
-black
-isort[colors]
 mypy
 ruff
 trio
