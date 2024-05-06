@@ -140,7 +140,7 @@ def test_watch_timeout(mock_rust_notify: 'MockRustType', caplog):
     assert change_list == [{(Change.added, 'spam.py')}]
     assert mock.watch_count == 2
     assert caplog.text == (
-        "watchfiles.main DEBUG: rust notify timeout, continuing\n"  # noqa: Q000
+        'watchfiles.main DEBUG: rust notify timeout, continuing\n'
         "watchfiles.main DEBUG: 1 change detected: {(<Change.added: 1>, 'spam.py')}\n"
     )
 
@@ -167,7 +167,7 @@ async def test_awatch_timeout(mock_rust_notify: 'MockRustType', caplog):
     assert change_list == [{(Change.added, 'spam.py')}]
     assert mock.watch_count == 2
     assert caplog.text == (
-        "watchfiles.main DEBUG: rust notify timeout, continuing\n"  # noqa: Q000
+        'watchfiles.main DEBUG: rust notify timeout, continuing\n'
         "watchfiles.main DEBUG: 1 change detected: {(<Change.added: 1>, 'spam.py')}\n"
     )
 

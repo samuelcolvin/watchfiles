@@ -46,8 +46,7 @@ if TYPE_CHECKING:
     AnyEvent = Union[anyio.Event, asyncio.Event, trio.Event]
 
     class AbstractEvent(Protocol):
-        def is_set(self) -> bool:
-            ...
+        def is_set(self) -> bool: ...
 
 
 def watch(
@@ -142,7 +141,7 @@ def watch(
                     logger.debug('all changes filtered out, raw_changes=%s', raw_changes)
 
 
-async def awatch(  # noqa C901
+async def awatch(  # C901
     *paths: Union[Path, str],
     watch_filter: Optional[Callable[[Change, str], bool]] = DefaultFilter(),
     debounce: int = 1_600,

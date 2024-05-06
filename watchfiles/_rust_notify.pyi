@@ -1,4 +1,4 @@
-from typing import Any, List, Literal, Optional, Protocol, Set, Tuple, Union
+from typing import Any, Literal, Protocol
 
 __all__ = 'RustNotify', 'WatchfilesRustInternalError'
 
@@ -16,7 +16,7 @@ class RustNotify:
 
     def __init__(
         self,
-        watch_paths: List[str],
+        watch_paths: list[str],
         debug: bool,
         force_polling: bool,
         poll_delay_ms: int,
@@ -42,8 +42,8 @@ class RustNotify:
         debounce_ms: int,
         step_ms: int,
         timeout_ms: int,
-        stop_event: Optional[AbstractEvent],
-    ) -> Union[Set[Tuple[int, str]], Literal['signal', 'stop', 'timeout']]:
+        stop_event: AbstractEvent | None,
+    ) -> set[tuple[int, str]] | Literal['signal', 'stop', 'timeout']:
         """
         Watch for changes.
 
@@ -74,7 +74,7 @@ class RustNotify:
         * `'stop'` string, if the `stop_event` was set
         * `'timeout'` string, if `timeout_ms` was exceeded
         """
-    def __enter__(self) -> 'RustNotify':
+    def __enter__(self) -> RustNotify:
         """
         Does nothing, but allows `RustNotify` to be used as a context manager.
 

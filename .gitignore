@@ -17,5 +17,3 @@ docs/_build/
 /watchfiles/*.so
 /target/
 /site/
-# i have a pet hate of the proliferation of files in the root directory
-.rustfmt.toml
