@@ -1,6 +1,7 @@
 coverage
 dirty-equals
-pytest
+# avoid https://github.com/pytest-dev/pytest/issues/11904, I would see an obvious problem/solution but if failed on CI
+pytest<8
 pytest-mock
 pytest-pretty
 pytest-timeout
