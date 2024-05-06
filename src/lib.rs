@@ -244,7 +244,7 @@ impl RustNotify {
     }
 
     pub fn watch(
-        slf: &PyCell<Self>,
+        slf: &Bound<Self>,
         py: Python,
         debounce_ms: u64,
         step_ms: u64,
@@ -289,7 +289,7 @@ impl RustNotify {
             }
 
             if let Some(is_set) = stop_event_is_set {
-                if is_set.call0()?.is_true()? {
+                if is_set.call0()?.is_truthy()? {
                     if slf.borrow().debug {
                         eprintln!("stop event set, stopping...");
                     }
@@ -350,7 +350,7 @@ impl RustNotify {
 }
 
 #[pymodule]
-fn _rust_notify(py: Python, m: &PyModule) -> PyResult<()> {
+fn _rust_notify(py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     let mut version = env!("CARGO_PKG_VERSION").to_string();
     // cargo uses "1.0-alpha1" etc. while python uses "1.0.0a1", this is not full compatibility,
     // but it's good enough for now
@@ -361,7 +361,7 @@ fn _rust_notify(py: Python, m: &PyModule) -> PyResult<()> {
     m.add("__version__", version)?;
     m.add(
         "WatchfilesRustInternalError",
-        py.get_type::<WatchfilesRustInternalError>(),
+        py.get_type_bound::<WatchfilesRustInternalError>(),
     )?;
     m.add_class::<RustNotify>()?;
     Ok(())
