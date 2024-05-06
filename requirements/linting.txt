@@ -10,7 +10,7 @@ attrs==22.1.0
     # via
     #   outcome
     #   trio
-idna==3.3
+idna==3.7
     # via trio
 mypy==0.971
     # via -r requirements/linting.in
