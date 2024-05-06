@@ -25,7 +25,7 @@ rust-version = "1.63"
 
 [dependencies]
 crossbeam-channel = "0.5.12"
-notify = "5.0.0"
+notify = "6.1.1"
 pyo3 = {version = "0.21.2", features = ["extension-module", "generate-import-lib"]}
 
 [lib]

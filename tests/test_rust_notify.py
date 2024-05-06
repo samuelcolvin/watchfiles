@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -307,7 +308,7 @@ def test_polling_repr(test_dir: Path):
     watcher = RustNotify([str(test_dir)], True, True, 123, True, False)
     r = repr(watcher)
     assert r.startswith('RustNotify(Poll(\n    PollWatcher {\n')
-    assert 'delay: 123ms' in r
+    assert 'delay: Some( 123ms, )' in re.sub(r'\s+', ' ', r)
 
 
 @skip_unless_linux
