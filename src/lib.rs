@@ -30,6 +30,7 @@ const CHANGE_ADDED: u8 = 1;
 const CHANGE_MODIFIED: u8 = 2;
 const CHANGE_DELETED: u8 = 3;
 
+#[allow(dead_code)]
 #[derive(Debug)]
 enum WatcherEnum {
     None,
