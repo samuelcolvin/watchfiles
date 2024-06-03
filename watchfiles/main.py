@@ -72,8 +72,8 @@ def watch(
 
     #### Force polling
 
-    Notify will fall back to file polling if it can't use file system notifications, but we also force notify
-    to us polling if the `force_polling` argument is `True`; if `force_polling` is unset (or `None`), we enable
+    Notify will fall back to file polling if it can't use file system notifications, but we also force Notify
+    to use polling if the `force_polling` argument is `True`; if `force_polling` is unset (or `None`), we enable
     force polling thus:
 
     * if the `WATCHFILES_FORCE_POLLING` environment variable exists and is not empty:
