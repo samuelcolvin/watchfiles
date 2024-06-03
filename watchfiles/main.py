@@ -77,8 +77,8 @@ def watch(
     force polling thus:
 
     * if the `WATCHFILES_FORCE_POLLING` environment variable exists and is not empty:
-       * if the value is `false`, `disable` or `disabled`, force polling is disabled
-       * otherwise, force polling is enabled
+        * if the value is `false`, `disable` or `disabled`, force polling is disabled
+        * otherwise, force polling is enabled
     * otherwise, we enable force polling only if we detect we're running on WSL (Windows Subsystem for Linux)
 
     Args:
