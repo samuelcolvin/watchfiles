@@ -54,7 +54,7 @@ jobs:
         override: true
 
     - name: cache rust
-      uses: Swatinem/rust-cache@v1
+      uses: Swatinem/rust-cache@v2
 
     - run: pip install -r requirements/pyproject.txt -r requirements/testing.txt
 
@@ -98,7 +98,7 @@ jobs:
         components: rustfmt, clippy
 
     - name: cache rust
-      uses: Swatinem/rust-cache@v1
+      uses: Swatinem/rust-cache@v2
 
     - run: pip install -r requirements/pyproject.txt -r requirements/linting.txt
 
