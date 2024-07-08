@@ -46,6 +46,7 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
+        allow-prereleases: true
 
     - name: install rust
       uses: actions-rs/toolchain@v1
