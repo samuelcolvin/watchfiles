@@ -254,14 +254,14 @@ impl RustNotify {
         if matches!(slf.borrow().watcher, WatcherEnum::None) {
             return Err(PyRuntimeError::new_err("RustNotify watcher closed"));
         }
-        let stop_event_is_set: Option<&PyAny> = match stop_event.is_none(py) {
+        let stop_event_is_set: Option<Bound<PyAny>> = match stop_event.is_none(py) {
             true => None,
             false => {
-                let event: &PyAny = stop_event.extract(py)?;
-                let func: &PyAny = event.getattr("is_set")?.extract()?;
+                let func = stop_event.getattr(py, "is_set")?.into_bound(py);
                 if !func.is_callable() {
                     return Err(PyTypeError::new_err("'stop_event.is_set' must be callable"));
                 }
+
                 Some(func)
             }
         };
@@ -288,7 +288,7 @@ impl RustNotify {
                 return wf_error!(error.clone());
             }
 
-            if let Some(is_set) = stop_event_is_set {
+            if let Some(is_set) = stop_event_is_set.as_ref() {
                 if is_set.call0()?.is_truthy()? {
                     if slf.borrow().debug {
                         eprintln!("stop event set, stopping...");
