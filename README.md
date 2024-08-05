@@ -23,7 +23,7 @@ see [the migration guide](https://watchfiles.helpmanual.io/migrating/) for more 
 
 ## Installation
 
-**watchfiles** requires Python 3.8 - 3.12.
+**watchfiles** requires Python 3.8 - 3.13.
 
 ```bash
 pip install watchfiles
