@@ -8,9 +8,9 @@ use std::sync::{Arc, Mutex};
 use std::thread::sleep;
 use std::time::{Duration, SystemTime};
 
-use pyo3::create_exception;
-use pyo3::exceptions::{PyFileNotFoundError, PyOSError, PyPermissionError, PyRuntimeError, PyTypeError};
+use pyo3::exceptions::{PyFileNotFoundError, PyOSError, PyPermissionError, PyRuntimeError};
 use pyo3::prelude::*;
+use pyo3::{create_exception, intern};
 
 use notify::event::{Event, EventKind, ModifyKind, RenameMode};
 use notify::{
@@ -243,7 +243,7 @@ impl RustNotify {
         })
     }
 
-    pub fn watch(
+    fn watch(
         slf: &Bound<Self>,
         py: Python,
         debounce_ms: u64,
@@ -256,14 +256,7 @@ impl RustNotify {
         }
         let stop_event_is_set: Option<Bound<PyAny>> = match stop_event.is_none(py) {
             true => None,
-            false => {
-                let func = stop_event.getattr(py, "is_set")?.into_bound(py);
-                if !func.is_callable() {
-                    return Err(PyTypeError::new_err("'stop_event.is_set' must be callable"));
-                }
-
-                Some(func)
-            }
+            false => Some(stop_event.getattr(py, intern!(py, "is_set"))?.into_bound(py)),
         };
 
         let mut max_debounce_time: Option<SystemTime> = None;
@@ -279,7 +272,7 @@ impl RustNotify {
                 Ok(_) => (),
                 Err(_) => {
                     slf.borrow().clear();
-                    return Ok("signal".to_object(py));
+                    return Ok(intern!(py, "signal").into_py(py));
                 }
             };
 
@@ -288,13 +281,13 @@ impl RustNotify {
                 return wf_error!(error.clone());
             }
 
-            if let Some(is_set) = stop_event_is_set.as_ref() {
+            if let Some(is_set) = &stop_event_is_set {
                 if is_set.call0()?.is_truthy()? {
                     if slf.borrow().debug {
                         eprintln!("stop event set, stopping...");
                     }
                     slf.borrow().clear();
-                    return Ok("stop".to_object(py));
+                    return Ok(intern!(py, "stop").into_py(py));
                 }
             }
 
@@ -316,7 +309,7 @@ impl RustNotify {
             } else if let Some(max_time) = max_timeout_time {
                 if SystemTime::now() > max_time {
                     slf.borrow().clear();
-                    return Ok("timeout".to_object(py));
+                    return Ok(intern!(py, "timeout").into_py(py));
                 }
             }
         }
@@ -326,19 +319,19 @@ impl RustNotify {
     }
 
     /// https://github.com/PyO3/pyo3/issues/1205#issuecomment-1164096251 for advice on `__enter__`
-    pub fn __enter__(slf: Py<Self>) -> Py<Self> {
+    fn __enter__(slf: Py<Self>) -> Py<Self> {
         slf
     }
 
-    pub fn close(&mut self) {
+    fn close(&mut self) {
         self.watcher = WatcherEnum::None;
     }
 
-    pub fn __exit__(&mut self, _exc_type: PyObject, _exc_value: PyObject, _traceback: PyObject) {
+    fn __exit__(&mut self, _exc_type: PyObject, _exc_value: PyObject, _traceback: PyObject) {
         self.close();
     }
 
-    pub fn __repr__(&self) -> PyResult<String> {
+    fn __repr__(&self) -> PyResult<String> {
         Ok(format!("RustNotify({:#?})", self.watcher))
     }
 }

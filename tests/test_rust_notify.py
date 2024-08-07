@@ -212,7 +212,7 @@ def test_wrong_type_event_is_set(test_dir: Path, time_taken):
     watcher = RustNotify([str(test_dir)], False, False, 0, True, False)
     event = type('BadEvent', (), {'is_set': 123})()
 
-    with pytest.raises(TypeError, match="'stop_event.is_set' must be callable"):
+    with pytest.raises(TypeError, match="'int' object is not callable"):
         watcher.watch(100, 1, 500, event)
 
 
