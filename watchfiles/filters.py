@@ -79,7 +79,6 @@ class DefaultFilter(BaseFilter):
         '.svn',
         '.tox',
         '.venv',
-        'site-packages',
         '.idea',
         'node_modules',
         '.mypy_cache',
