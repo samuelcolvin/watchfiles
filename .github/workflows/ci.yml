@@ -138,7 +138,7 @@ jobs:
     name: >
       build on ${{ matrix.platform || matrix.os }} (${{ matrix.target }} - ${{ matrix.manylinux || 'auto' }})
 
-    if: "startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main' || contains(github.event.pull_request.labels.*.name, 'Full Build')"
+    if: "!contains(github.event.pull_request.labels.*.name, 'Quick Build')"
     strategy:
       fail-fast: false
       matrix:
