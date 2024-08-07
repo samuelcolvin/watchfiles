@@ -465,9 +465,10 @@
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
+    <nav class="md-nav" aria-label="RustNotify">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#watchfiles._rust_notify.RustNotify.__enter__" class="md-nav__link">
     <span class="md-ellipsis">
       __enter__
@@ -475,8 +476,8 @@
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#watchfiles._rust_notify.RustNotify.__exit__" class="md-nav__link">
     <span class="md-ellipsis">
       __exit__
@@ -484,17 +485,8 @@
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#watchfiles._rust_notify.RustNotify.__init__" class="md-nav__link">
-    <span class="md-ellipsis">
-      __init__
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#watchfiles._rust_notify.RustNotify.close" class="md-nav__link">
     <span class="md-ellipsis">
       close
@@ -502,13 +494,18 @@
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#watchfiles._rust_notify.RustNotify.watch" class="md-nav__link">
     <span class="md-ellipsis">
       watch
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -586,9 +583,10 @@
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
+    <nav class="md-nav" aria-label="RustNotify">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#watchfiles._rust_notify.RustNotify.__enter__" class="md-nav__link">
     <span class="md-ellipsis">
       __enter__
@@ -596,8 +594,8 @@
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#watchfiles._rust_notify.RustNotify.__exit__" class="md-nav__link">
     <span class="md-ellipsis">
       __exit__
@@ -605,17 +603,8 @@
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#watchfiles._rust_notify.RustNotify.__init__" class="md-nav__link">
-    <span class="md-ellipsis">
-      __init__
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#watchfiles._rust_notify.RustNotify.close" class="md-nav__link">
     <span class="md-ellipsis">
       close
@@ -623,13 +612,18 @@
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#watchfiles._rust_notify.RustNotify.watch" class="md-nav__link">
     <span class="md-ellipsis">
       watch
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -679,299 +673,19 @@
 
 
 
-<a id="watchfiles._rust_notify.RustNotify"></a>
+<h2 id="watchfiles._rust_notify.RustNotify" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">RustNotify</span>
+
+
+<a href="#watchfiles._rust_notify.RustNotify" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">RustNotify</span><span class="p">(</span><span class="n">watch_paths</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">force_polling</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">poll_delay_ms</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">recursive</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">ignore_permission_denied</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span>
+</code></pre></div>
+
   <div class="doc doc-contents first">
 
   
       <p>Interface to the Rust <a href="https://crates.io/crates/notify">notify</a> crate which does
 the heavy lifting of watching for file changes and grouping them into events.</p>
-
-            <details class="quote">
-              <summary>Source code in <code>watchfiles/_rust_notify.pyi</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-11"> 11</a></span>
-<span class="normal"><a href="#__codelineno-0-12"> 12</a></span>
-<span class="normal"><a href="#__codelineno-0-13"> 13</a></span>
-<span class="normal"><a href="#__codelineno-0-14"> 14</a></span>
-<span class="normal"><a href="#__codelineno-0-15"> 15</a></span>
-<span class="normal"><a href="#__codelineno-0-16"> 16</a></span>
-<span class="normal"><a href="#__codelineno-0-17"> 17</a></span>
-<span class="normal"><a href="#__codelineno-0-18"> 18</a></span>
-<span class="normal"><a href="#__codelineno-0-19"> 19</a></span>
-<span class="normal"><a href="#__codelineno-0-20"> 20</a></span>
-<span class="normal"><a href="#__codelineno-0-21"> 21</a></span>
-<span class="normal"><a href="#__codelineno-0-22"> 22</a></span>
-<span class="normal"><a href="#__codelineno-0-23"> 23</a></span>
-<span class="normal"><a href="#__codelineno-0-24"> 24</a></span>
-<span class="normal"><a href="#__codelineno-0-25"> 25</a></span>
-<span class="normal"><a href="#__codelineno-0-26"> 26</a></span>
-<span class="normal"><a href="#__codelineno-0-27"> 27</a></span>
-<span class="normal"><a href="#__codelineno-0-28"> 28</a></span>
-<span class="normal"><a href="#__codelineno-0-29"> 29</a></span>
-<span class="normal"><a href="#__codelineno-0-30"> 30</a></span>
-<span class="normal"><a href="#__codelineno-0-31"> 31</a></span>
-<span class="normal"><a href="#__codelineno-0-32"> 32</a></span>
-<span class="normal"><a href="#__codelineno-0-33"> 33</a></span>
-<span class="normal"><a href="#__codelineno-0-34"> 34</a></span>
-<span class="normal"><a href="#__codelineno-0-35"> 35</a></span>
-<span class="normal"><a href="#__codelineno-0-36"> 36</a></span>
-<span class="normal"><a href="#__codelineno-0-37"> 37</a></span>
-<span class="normal"><a href="#__codelineno-0-38"> 38</a></span>
-<span class="normal"><a href="#__codelineno-0-39"> 39</a></span>
-<span class="normal"><a href="#__codelineno-0-40"> 40</a></span>
-<span class="normal"><a href="#__codelineno-0-41"> 41</a></span>
-<span class="normal"><a href="#__codelineno-0-42"> 42</a></span>
-<span class="normal"><a href="#__codelineno-0-43"> 43</a></span>
-<span class="normal"><a href="#__codelineno-0-44"> 44</a></span>
-<span class="normal"><a href="#__codelineno-0-45"> 45</a></span>
-<span class="normal"><a href="#__codelineno-0-46"> 46</a></span>
-<span class="normal"><a href="#__codelineno-0-47"> 47</a></span>
-<span class="normal"><a href="#__codelineno-0-48"> 48</a></span>
-<span class="normal"><a href="#__codelineno-0-49"> 49</a></span>
-<span class="normal"><a href="#__codelineno-0-50"> 50</a></span>
-<span class="normal"><a href="#__codelineno-0-51"> 51</a></span>
-<span class="normal"><a href="#__codelineno-0-52"> 52</a></span>
-<span class="normal"><a href="#__codelineno-0-53"> 53</a></span>
-<span class="normal"><a href="#__codelineno-0-54"> 54</a></span>
-<span class="normal"><a href="#__codelineno-0-55"> 55</a></span>
-<span class="normal"><a href="#__codelineno-0-56"> 56</a></span>
-<span class="normal"><a href="#__codelineno-0-57"> 57</a></span>
-<span class="normal"><a href="#__codelineno-0-58"> 58</a></span>
-<span class="normal"><a href="#__codelineno-0-59"> 59</a></span>
-<span class="normal"><a href="#__codelineno-0-60"> 60</a></span>
-<span class="normal"><a href="#__codelineno-0-61"> 61</a></span>
-<span class="normal"><a href="#__codelineno-0-62"> 62</a></span>
-<span class="normal"><a href="#__codelineno-0-63"> 63</a></span>
-<span class="normal"><a href="#__codelineno-0-64"> 64</a></span>
-<span class="normal"><a href="#__codelineno-0-65"> 65</a></span>
-<span class="normal"><a href="#__codelineno-0-66"> 66</a></span>
-<span class="normal"><a href="#__codelineno-0-67"> 67</a></span>
-<span class="normal"><a href="#__codelineno-0-68"> 68</a></span>
-<span class="normal"><a href="#__codelineno-0-69"> 69</a></span>
-<span class="normal"><a href="#__codelineno-0-70"> 70</a></span>
-<span class="normal"><a href="#__codelineno-0-71"> 71</a></span>
-<span class="normal"><a href="#__codelineno-0-72"> 72</a></span>
-<span class="normal"><a href="#__codelineno-0-73"> 73</a></span>
-<span class="normal"><a href="#__codelineno-0-74"> 74</a></span>
-<span class="normal"><a href="#__codelineno-0-75"> 75</a></span>
-<span class="normal"><a href="#__codelineno-0-76"> 76</a></span>
-<span class="normal"><a href="#__codelineno-0-77"> 77</a></span>
-<span class="normal"><a href="#__codelineno-0-78"> 78</a></span>
-<span class="normal"><a href="#__codelineno-0-79"> 79</a></span>
-<span class="normal"><a href="#__codelineno-0-80"> 80</a></span>
-<span class="normal"><a href="#__codelineno-0-81"> 81</a></span>
-<span class="normal"><a href="#__codelineno-0-82"> 82</a></span>
-<span class="normal"><a href="#__codelineno-0-83"> 83</a></span>
-<span class="normal"><a href="#__codelineno-0-84"> 84</a></span>
-<span class="normal"><a href="#__codelineno-0-85"> 85</a></span>
-<span class="normal"><a href="#__codelineno-0-86"> 86</a></span>
-<span class="normal"><a href="#__codelineno-0-87"> 87</a></span>
-<span class="normal"><a href="#__codelineno-0-88"> 88</a></span>
-<span class="normal"><a href="#__codelineno-0-89"> 89</a></span>
-<span class="normal"><a href="#__codelineno-0-90"> 90</a></span>
-<span class="normal"><a href="#__codelineno-0-91"> 91</a></span>
-<span class="normal"><a href="#__codelineno-0-92"> 92</a></span>
-<span class="normal"><a href="#__codelineno-0-93"> 93</a></span>
-<span class="normal"><a href="#__codelineno-0-94"> 94</a></span>
-<span class="normal"><a href="#__codelineno-0-95"> 95</a></span>
-<span class="normal"><a href="#__codelineno-0-96"> 96</a></span>
-<span class="normal"><a href="#__codelineno-0-97"> 97</a></span>
-<span class="normal"><a href="#__codelineno-0-98"> 98</a></span>
-<span class="normal"><a href="#__codelineno-0-99"> 99</a></span>
-<span class="normal"><a href="#__codelineno-0-100">100</a></span>
-<span class="normal"><a href="#__codelineno-0-101">101</a></span>
-<span class="normal"><a href="#__codelineno-0-102">102</a></span>
-<span class="normal"><a href="#__codelineno-0-103">103</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-11" name="__codelineno-0-11"></a><span class="k">class</span> <span class="nc">RustNotify</span><span class="p">:</span>
-<a id="__codelineno-0-12" name="__codelineno-0-12"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-13" name="__codelineno-0-13"></a><span class="sd">    Interface to the Rust [notify](https://crates.io/crates/notify) crate which does</span>
-<a id="__codelineno-0-14" name="__codelineno-0-14"></a><span class="sd">    the heavy lifting of watching for file changes and grouping them into events.</span>
-<a id="__codelineno-0-15" name="__codelineno-0-15"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-16" name="__codelineno-0-16"></a>
-<a id="__codelineno-0-17" name="__codelineno-0-17"></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-<a id="__codelineno-0-18" name="__codelineno-0-18"></a>        <span class="bp">self</span><span class="p">,</span>
-<a id="__codelineno-0-19" name="__codelineno-0-19"></a>        <span class="n">watch_paths</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-<a id="__codelineno-0-20" name="__codelineno-0-20"></a>        <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
-<a id="__codelineno-0-21" name="__codelineno-0-21"></a>        <span class="n">force_polling</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
-<a id="__codelineno-0-22" name="__codelineno-0-22"></a>        <span class="n">poll_delay_ms</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-<a id="__codelineno-0-23" name="__codelineno-0-23"></a>        <span class="n">recursive</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
-<a id="__codelineno-0-24" name="__codelineno-0-24"></a>        <span class="n">ignore_permission_denied</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
-<a id="__codelineno-0-25" name="__codelineno-0-25"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-26" name="__codelineno-0-26"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-27" name="__codelineno-0-27"></a><span class="sd">        Create a new `RustNotify` instance and start a thread to watch for changes.</span>
-<a id="__codelineno-0-28" name="__codelineno-0-28"></a>
-<a id="__codelineno-0-29" name="__codelineno-0-29"></a><span class="sd">        `FileNotFoundError` is raised if any of the paths do not exist.</span>
-<a id="__codelineno-0-30" name="__codelineno-0-30"></a>
-<a id="__codelineno-0-31" name="__codelineno-0-31"></a><span class="sd">        Args:</span>
-<a id="__codelineno-0-32" name="__codelineno-0-32"></a><span class="sd">            watch_paths: file system paths to watch for changes, can be directories or files</span>
-<a id="__codelineno-0-33" name="__codelineno-0-33"></a><span class="sd">            debug: if true, print details about all events to stderr</span>
-<a id="__codelineno-0-34" name="__codelineno-0-34"></a><span class="sd">            force_polling: if true, always use polling instead of file system notifications</span>
-<a id="__codelineno-0-35" name="__codelineno-0-35"></a><span class="sd">            poll_delay_ms: delay between polling for changes, only used if `force_polling=True`</span>
-<a id="__codelineno-0-36" name="__codelineno-0-36"></a><span class="sd">            recursive: if `True`, watch for changes in sub-directories recursively, otherwise watch only for changes in</span>
-<a id="__codelineno-0-37" name="__codelineno-0-37"></a><span class="sd">                the top-level directory, default is `True`.</span>
-<a id="__codelineno-0-38" name="__codelineno-0-38"></a><span class="sd">            ignore_permission_denied: if `True`, permission denied errors are ignored while watching changes.</span>
-<a id="__codelineno-0-39" name="__codelineno-0-39"></a><span class="sd">        &quot;&quot;&quot;</span>
-<a id="__codelineno-0-40" name="__codelineno-0-40"></a>    <span class="k">def</span> <span class="nf">watch</span><span class="p">(</span>
-<a id="__codelineno-0-41" name="__codelineno-0-41"></a>        <span class="bp">self</span><span class="p">,</span>
-<a id="__codelineno-0-42" name="__codelineno-0-42"></a>        <span class="n">debounce_ms</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-<a id="__codelineno-0-43" name="__codelineno-0-43"></a>        <span class="n">step_ms</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-<a id="__codelineno-0-44" name="__codelineno-0-44"></a>        <span class="n">timeout_ms</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-<a id="__codelineno-0-45" name="__codelineno-0-45"></a>        <span class="n">stop_event</span><span class="p">:</span> <span class="n">AbstractEvent</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-46" name="__codelineno-0-46"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">|</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;signal&#39;</span><span class="p">,</span> <span class="s1">&#39;stop&#39;</span><span class="p">,</span> <span class="s1">&#39;timeout&#39;</span><span class="p">]:</span>
-<a id="__codelineno-0-47" name="__codelineno-0-47"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-48" name="__codelineno-0-48"></a><span class="sd">        Watch for changes.</span>
-<a id="__codelineno-0-49" name="__codelineno-0-49"></a>
-<a id="__codelineno-0-50" name="__codelineno-0-50"></a><span class="sd">        This method will wait `timeout_ms` milliseconds for changes, but once a change is detected,</span>
-<a id="__codelineno-0-51" name="__codelineno-0-51"></a><span class="sd">        it will group changes and return in no more than `debounce_ms` milliseconds.</span>
-<a id="__codelineno-0-52" name="__codelineno-0-52"></a>
-<a id="__codelineno-0-53" name="__codelineno-0-53"></a><span class="sd">        The GIL is released during a `step_ms` sleep on each iteration to avoid</span>
-<a id="__codelineno-0-54" name="__codelineno-0-54"></a><span class="sd">        blocking python.</span>
-<a id="__codelineno-0-55" name="__codelineno-0-55"></a>
-<a id="__codelineno-0-56" name="__codelineno-0-56"></a><span class="sd">        Args:</span>
-<a id="__codelineno-0-57" name="__codelineno-0-57"></a><span class="sd">            debounce_ms: maximum time in milliseconds to group changes over before returning.</span>
-<a id="__codelineno-0-58" name="__codelineno-0-58"></a><span class="sd">            step_ms: time to wait for new changes in milliseconds, if no changes are detected</span>
-<a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="sd">                in this time, and at least one change has been detected, the changes are yielded.</span>
-<a id="__codelineno-0-60" name="__codelineno-0-60"></a><span class="sd">            timeout_ms: maximum time in milliseconds to wait for changes before returning,</span>
-<a id="__codelineno-0-61" name="__codelineno-0-61"></a><span class="sd">                `0` means wait indefinitely, `debounce_ms` takes precedence over `timeout_ms` once</span>
-<a id="__codelineno-0-62" name="__codelineno-0-62"></a><span class="sd">                a change is detected.</span>
-<a id="__codelineno-0-63" name="__codelineno-0-63"></a><span class="sd">            stop_event: event to check on every iteration to see if this function should return early.</span>
-<a id="__codelineno-0-64" name="__codelineno-0-64"></a><span class="sd">                The event should be an object which has an `is_set()` method which returns a boolean.</span>
-<a id="__codelineno-0-65" name="__codelineno-0-65"></a>
-<a id="__codelineno-0-66" name="__codelineno-0-66"></a><span class="sd">        Returns:</span>
-<a id="__codelineno-0-67" name="__codelineno-0-67"></a><span class="sd">            See below.</span>
-<a id="__codelineno-0-68" name="__codelineno-0-68"></a>
-<a id="__codelineno-0-69" name="__codelineno-0-69"></a><span class="sd">        Return values have the following meanings:</span>
-<a id="__codelineno-0-70" name="__codelineno-0-70"></a>
-<a id="__codelineno-0-71" name="__codelineno-0-71"></a><span class="sd">        * Change details as a `set` of `(event_type, path)` tuples, the event types are ints which match</span>
-<a id="__codelineno-0-72" name="__codelineno-0-72"></a><span class="sd">          [`Change`][watchfiles.Change], `path` is a string representing the path of the file that changed</span>
-<a id="__codelineno-0-73" name="__codelineno-0-73"></a><span class="sd">        * `&#39;signal&#39;` string, if a signal was received</span>
-<a id="__codelineno-0-74" name="__codelineno-0-74"></a><span class="sd">        * `&#39;stop&#39;` string, if the `stop_event` was set</span>
-<a id="__codelineno-0-75" name="__codelineno-0-75"></a><span class="sd">        * `&#39;timeout&#39;` string, if `timeout_ms` was exceeded</span>
-<a id="__codelineno-0-76" name="__codelineno-0-76"></a><span class="sd">        &quot;&quot;&quot;</span>
-<a id="__codelineno-0-77" name="__codelineno-0-77"></a>    <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RustNotify</span><span class="p">:</span>
-<a id="__codelineno-0-78" name="__codelineno-0-78"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-79" name="__codelineno-0-79"></a><span class="sd">        Does nothing, but allows `RustNotify` to be used as a context manager.</span>
-<a id="__codelineno-0-80" name="__codelineno-0-80"></a>
-<a id="__codelineno-0-81" name="__codelineno-0-81"></a><span class="sd">        !!! note</span>
-<a id="__codelineno-0-82" name="__codelineno-0-82"></a>
-<a id="__codelineno-0-83" name="__codelineno-0-83"></a><span class="sd">            The watching thead is created when an instance is initiated, not on `__enter__`.</span>
-<a id="__codelineno-0-84" name="__codelineno-0-84"></a><span class="sd">        &quot;&quot;&quot;</span>
-<a id="__codelineno-0-85" name="__codelineno-0-85"></a>    <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-86" name="__codelineno-0-86"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-87" name="__codelineno-0-87"></a><span class="sd">        Calls [`close`][watchfiles._rust_notify.RustNotify.close].</span>
-<a id="__codelineno-0-88" name="__codelineno-0-88"></a><span class="sd">        &quot;&quot;&quot;</span>
-<a id="__codelineno-0-89" name="__codelineno-0-89"></a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-90" name="__codelineno-0-90"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-91" name="__codelineno-0-91"></a><span class="sd">        Stops the watching thread. After `close` is called, the `RustNotify` instance can no</span>
-<a id="__codelineno-0-92" name="__codelineno-0-92"></a><span class="sd">        longer be used, calls to [`watch`][watchfiles._rust_notify.RustNotify.watch] will raise a `RuntimeError`.</span>
-<a id="__codelineno-0-93" name="__codelineno-0-93"></a>
-<a id="__codelineno-0-94" name="__codelineno-0-94"></a><span class="sd">        !!! note</span>
-<a id="__codelineno-0-95" name="__codelineno-0-95"></a>
-<a id="__codelineno-0-96" name="__codelineno-0-96"></a><span class="sd">            `close` is not required, just deleting the `RustNotify` instance will kill the thread</span>
-<a id="__codelineno-0-97" name="__codelineno-0-97"></a><span class="sd">            implicitly.</span>
-<a id="__codelineno-0-98" name="__codelineno-0-98"></a>
-<a id="__codelineno-0-99" name="__codelineno-0-99"></a><span class="sd">            As per [#163](https://github.com/samuelcolvin/watchfiles/issues/163) `close()` is only required because</span>
-<a id="__codelineno-0-100" name="__codelineno-0-100"></a><span class="sd">            in the event of an error, the traceback in `sys.exc_info` keeps a reference to `watchfiles.watch`&#39;s</span>
-<a id="__codelineno-0-101" name="__codelineno-0-101"></a><span class="sd">            frame, so you can&#39;t rely on the `RustNotify` object being deleted, and thereby stopping</span>
-<a id="__codelineno-0-102" name="__codelineno-0-102"></a><span class="sd">            the watching thread.</span>
-<a id="__codelineno-0-103" name="__codelineno-0-103"></a><span class="sd">        &quot;&quot;&quot;</span>
-</code></pre></div></td></tr></table></div>
-            </details>
-
-  
-
-  <div class="doc doc-children">
-
-
-
-
-
-
-
-
-
-
-<div class="doc doc-object doc-function">
-
-
-
-<h2 id="watchfiles._rust_notify.RustNotify.__enter__" class="doc doc-heading">
-          <code class="highlight language-python"><span class="fm">__enter__</span><span class="p">()</span></code>
-
-<a href="#watchfiles._rust_notify.RustNotify.__enter__" class="headerlink" title="Permanent link">&para;</a></h2>
-
-
-  <div class="doc doc-contents ">
-  
-      <p>Does nothing, but allows <code>RustNotify</code> to be used as a context manager.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The watching thead is created when an instance is initiated, not on <code>__enter__</code>.</p>
-</div>
-
-          <details class="quote">
-            <summary>Source code in <code>watchfiles/_rust_notify.pyi</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-77">77</a></span>
-<span class="normal"><a href="#__codelineno-0-78">78</a></span>
-<span class="normal"><a href="#__codelineno-0-79">79</a></span>
-<span class="normal"><a href="#__codelineno-0-80">80</a></span>
-<span class="normal"><a href="#__codelineno-0-81">81</a></span>
-<span class="normal"><a href="#__codelineno-0-82">82</a></span>
-<span class="normal"><a href="#__codelineno-0-83">83</a></span>
-<span class="normal"><a href="#__codelineno-0-84">84</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-77" name="__codelineno-0-77"></a><span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RustNotify</span><span class="p">:</span>
-<a id="__codelineno-0-78" name="__codelineno-0-78"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-79" name="__codelineno-0-79"></a><span class="sd">    Does nothing, but allows `RustNotify` to be used as a context manager.</span>
-<a id="__codelineno-0-80" name="__codelineno-0-80"></a>
-<a id="__codelineno-0-81" name="__codelineno-0-81"></a><span class="sd">    !!! note</span>
-<a id="__codelineno-0-82" name="__codelineno-0-82"></a>
-<a id="__codelineno-0-83" name="__codelineno-0-83"></a><span class="sd">        The watching thead is created when an instance is initiated, not on `__enter__`.</span>
-<a id="__codelineno-0-84" name="__codelineno-0-84"></a><span class="sd">    &quot;&quot;&quot;</span>
-</code></pre></div></td></tr></table></div>
-          </details>
-  </div>
-
-</div>
-
-
-<div class="doc doc-object doc-function">
-
-
-
-<h2 id="watchfiles._rust_notify.RustNotify.__exit__" class="doc doc-heading">
-          <code class="highlight language-python"><span class="fm">__exit__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span></code>
-
-<a href="#watchfiles._rust_notify.RustNotify.__exit__" class="headerlink" title="Permanent link">&para;</a></h2>
-
-
-  <div class="doc doc-contents ">
-  
-      <p>Calls <a class="autorefs autorefs-internal" href="#watchfiles._rust_notify.RustNotify.close"><code>close</code></a>.</p>
-
-          <details class="quote">
-            <summary>Source code in <code>watchfiles/_rust_notify.pyi</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-85">85</a></span>
-<span class="normal"><a href="#__codelineno-0-86">86</a></span>
-<span class="normal"><a href="#__codelineno-0-87">87</a></span>
-<span class="normal"><a href="#__codelineno-0-88">88</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-85" name="__codelineno-0-85"></a><span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-86" name="__codelineno-0-86"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-87" name="__codelineno-0-87"></a><span class="sd">    Calls [`close`][watchfiles._rust_notify.RustNotify.close].</span>
-<a id="__codelineno-0-88" name="__codelineno-0-88"></a><span class="sd">    &quot;&quot;&quot;</span>
-</code></pre></div></td></tr></table></div>
-          </details>
-  </div>
-
-</div>
-
-
-<div class="doc doc-object doc-function">
-
-
-
-<h2 id="watchfiles._rust_notify.RustNotify.__init__" class="doc doc-heading">
-          <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">watch_paths</span><span class="p">,</span> <span class="n">debug</span><span class="p">,</span> <span class="n">force_polling</span><span class="p">,</span> <span class="n">poll_delay_ms</span><span class="p">,</span> <span class="n">recursive</span><span class="p">,</span> <span class="n">ignore_permission_denied</span><span class="p">)</span></code>
-
-<a href="#watchfiles._rust_notify.RustNotify.__init__" class="headerlink" title="Permanent link">&para;</a></h2>
-
-
-  <div class="doc doc-contents ">
   
       <p>Create a new <code>RustNotify</code> instance and start a thread to watch for changes.</p>
 <p><code>FileNotFoundError</code> is raised if any of the paths do not exist.</p>
@@ -1077,55 +791,40 @@ the top-level directory, default is <code>True</code>.</p>
     </tbody>
   </table>
 
-          <details class="quote">
-            <summary>Source code in <code>watchfiles/_rust_notify.pyi</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-17">17</a></span>
-<span class="normal"><a href="#__codelineno-0-18">18</a></span>
-<span class="normal"><a href="#__codelineno-0-19">19</a></span>
-<span class="normal"><a href="#__codelineno-0-20">20</a></span>
-<span class="normal"><a href="#__codelineno-0-21">21</a></span>
-<span class="normal"><a href="#__codelineno-0-22">22</a></span>
-<span class="normal"><a href="#__codelineno-0-23">23</a></span>
-<span class="normal"><a href="#__codelineno-0-24">24</a></span>
-<span class="normal"><a href="#__codelineno-0-25">25</a></span>
-<span class="normal"><a href="#__codelineno-0-26">26</a></span>
-<span class="normal"><a href="#__codelineno-0-27">27</a></span>
-<span class="normal"><a href="#__codelineno-0-28">28</a></span>
-<span class="normal"><a href="#__codelineno-0-29">29</a></span>
-<span class="normal"><a href="#__codelineno-0-30">30</a></span>
-<span class="normal"><a href="#__codelineno-0-31">31</a></span>
-<span class="normal"><a href="#__codelineno-0-32">32</a></span>
-<span class="normal"><a href="#__codelineno-0-33">33</a></span>
-<span class="normal"><a href="#__codelineno-0-34">34</a></span>
-<span class="normal"><a href="#__codelineno-0-35">35</a></span>
-<span class="normal"><a href="#__codelineno-0-36">36</a></span>
-<span class="normal"><a href="#__codelineno-0-37">37</a></span>
-<span class="normal"><a href="#__codelineno-0-38">38</a></span>
-<span class="normal"><a href="#__codelineno-0-39">39</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-17" name="__codelineno-0-17"></a><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-<a id="__codelineno-0-18" name="__codelineno-0-18"></a>    <span class="bp">self</span><span class="p">,</span>
-<a id="__codelineno-0-19" name="__codelineno-0-19"></a>    <span class="n">watch_paths</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-<a id="__codelineno-0-20" name="__codelineno-0-20"></a>    <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
-<a id="__codelineno-0-21" name="__codelineno-0-21"></a>    <span class="n">force_polling</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
-<a id="__codelineno-0-22" name="__codelineno-0-22"></a>    <span class="n">poll_delay_ms</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-<a id="__codelineno-0-23" name="__codelineno-0-23"></a>    <span class="n">recursive</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
-<a id="__codelineno-0-24" name="__codelineno-0-24"></a>    <span class="n">ignore_permission_denied</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
-<a id="__codelineno-0-25" name="__codelineno-0-25"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-26" name="__codelineno-0-26"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-27" name="__codelineno-0-27"></a><span class="sd">    Create a new `RustNotify` instance and start a thread to watch for changes.</span>
-<a id="__codelineno-0-28" name="__codelineno-0-28"></a>
-<a id="__codelineno-0-29" name="__codelineno-0-29"></a><span class="sd">    `FileNotFoundError` is raised if any of the paths do not exist.</span>
-<a id="__codelineno-0-30" name="__codelineno-0-30"></a>
-<a id="__codelineno-0-31" name="__codelineno-0-31"></a><span class="sd">    Args:</span>
-<a id="__codelineno-0-32" name="__codelineno-0-32"></a><span class="sd">        watch_paths: file system paths to watch for changes, can be directories or files</span>
-<a id="__codelineno-0-33" name="__codelineno-0-33"></a><span class="sd">        debug: if true, print details about all events to stderr</span>
-<a id="__codelineno-0-34" name="__codelineno-0-34"></a><span class="sd">        force_polling: if true, always use polling instead of file system notifications</span>
-<a id="__codelineno-0-35" name="__codelineno-0-35"></a><span class="sd">        poll_delay_ms: delay between polling for changes, only used if `force_polling=True`</span>
-<a id="__codelineno-0-36" name="__codelineno-0-36"></a><span class="sd">        recursive: if `True`, watch for changes in sub-directories recursively, otherwise watch only for changes in</span>
-<a id="__codelineno-0-37" name="__codelineno-0-37"></a><span class="sd">            the top-level directory, default is `True`.</span>
-<a id="__codelineno-0-38" name="__codelineno-0-38"></a><span class="sd">        ignore_permission_denied: if `True`, permission denied errors are ignored while watching changes.</span>
-<a id="__codelineno-0-39" name="__codelineno-0-39"></a><span class="sd">    &quot;&quot;&quot;</span>
-</code></pre></div></td></tr></table></div>
-          </details>
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="watchfiles._rust_notify.RustNotify.__enter__" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">__enter__</span>
+
+
+<a href="#watchfiles._rust_notify.RustNotify.__enter__" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="fm">__enter__</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nf">RustNotify</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Does nothing, but allows <code>RustNotify</code> to be used as a context manager.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The watching thead is created when an instance is initiated, not on <code>__enter__</code>.</p>
+</div>
+
   </div>
 
 </div>
@@ -1135,11 +834,34 @@ the top-level directory, default is <code>True</code>.</p>
 
 
 
-<h2 id="watchfiles._rust_notify.RustNotify.close" class="doc doc-heading">
-          <code class="highlight language-python"><span class="n">close</span><span class="p">()</span></code>
+<h3 id="watchfiles._rust_notify.RustNotify.__exit__" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">__exit__</span>
 
-<a href="#watchfiles._rust_notify.RustNotify.close" class="headerlink" title="Permanent link">&para;</a></h2>
 
+<a href="#watchfiles._rust_notify.RustNotify.__exit__" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="fm">__exit__</span><span class="p">(</span><span class="o">*</span><span class="nf">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Calls <a class="autorefs autorefs-internal" href="#watchfiles._rust_notify.RustNotify.close"><code>close</code></a>.</p>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="watchfiles._rust_notify.RustNotify.close" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">close</span>
+
+
+<a href="#watchfiles._rust_notify.RustNotify.close" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">close</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
 
   <div class="doc doc-contents ">
   
@@ -1155,39 +877,6 @@ frame, so you can't rely on the <code>RustNotify</code> object being deleted, an
 the watching thread.</p>
 </div>
 
-          <details class="quote">
-            <summary>Source code in <code>watchfiles/_rust_notify.pyi</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-89"> 89</a></span>
-<span class="normal"><a href="#__codelineno-0-90"> 90</a></span>
-<span class="normal"><a href="#__codelineno-0-91"> 91</a></span>
-<span class="normal"><a href="#__codelineno-0-92"> 92</a></span>
-<span class="normal"><a href="#__codelineno-0-93"> 93</a></span>
-<span class="normal"><a href="#__codelineno-0-94"> 94</a></span>
-<span class="normal"><a href="#__codelineno-0-95"> 95</a></span>
-<span class="normal"><a href="#__codelineno-0-96"> 96</a></span>
-<span class="normal"><a href="#__codelineno-0-97"> 97</a></span>
-<span class="normal"><a href="#__codelineno-0-98"> 98</a></span>
-<span class="normal"><a href="#__codelineno-0-99"> 99</a></span>
-<span class="normal"><a href="#__codelineno-0-100">100</a></span>
-<span class="normal"><a href="#__codelineno-0-101">101</a></span>
-<span class="normal"><a href="#__codelineno-0-102">102</a></span>
-<span class="normal"><a href="#__codelineno-0-103">103</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-89" name="__codelineno-0-89"></a><span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-90" name="__codelineno-0-90"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-91" name="__codelineno-0-91"></a><span class="sd">    Stops the watching thread. After `close` is called, the `RustNotify` instance can no</span>
-<a id="__codelineno-0-92" name="__codelineno-0-92"></a><span class="sd">    longer be used, calls to [`watch`][watchfiles._rust_notify.RustNotify.watch] will raise a `RuntimeError`.</span>
-<a id="__codelineno-0-93" name="__codelineno-0-93"></a>
-<a id="__codelineno-0-94" name="__codelineno-0-94"></a><span class="sd">    !!! note</span>
-<a id="__codelineno-0-95" name="__codelineno-0-95"></a>
-<a id="__codelineno-0-96" name="__codelineno-0-96"></a><span class="sd">        `close` is not required, just deleting the `RustNotify` instance will kill the thread</span>
-<a id="__codelineno-0-97" name="__codelineno-0-97"></a><span class="sd">        implicitly.</span>
-<a id="__codelineno-0-98" name="__codelineno-0-98"></a>
-<a id="__codelineno-0-99" name="__codelineno-0-99"></a><span class="sd">        As per [#163](https://github.com/samuelcolvin/watchfiles/issues/163) `close()` is only required because</span>
-<a id="__codelineno-0-100" name="__codelineno-0-100"></a><span class="sd">        in the event of an error, the traceback in `sys.exc_info` keeps a reference to `watchfiles.watch`&#39;s</span>
-<a id="__codelineno-0-101" name="__codelineno-0-101"></a><span class="sd">        frame, so you can&#39;t rely on the `RustNotify` object being deleted, and thereby stopping</span>
-<a id="__codelineno-0-102" name="__codelineno-0-102"></a><span class="sd">        the watching thread.</span>
-<a id="__codelineno-0-103" name="__codelineno-0-103"></a><span class="sd">    &quot;&quot;&quot;</span>
-</code></pre></div></td></tr></table></div>
-          </details>
   </div>
 
 </div>
@@ -1197,11 +886,13 @@ the watching thread.</p>
 
 
 
-<h2 id="watchfiles._rust_notify.RustNotify.watch" class="doc doc-heading">
-          <code class="highlight language-python"><span class="n">watch</span><span class="p">(</span><span class="n">debounce_ms</span><span class="p">,</span> <span class="n">step_ms</span><span class="p">,</span> <span class="n">timeout_ms</span><span class="p">,</span> <span class="n">stop_event</span><span class="p">)</span></code>
+<h3 id="watchfiles._rust_notify.RustNotify.watch" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">watch</span>
 
-<a href="#watchfiles._rust_notify.RustNotify.watch" class="headerlink" title="Permanent link">&para;</a></h2>
 
+<a href="#watchfiles._rust_notify.RustNotify.watch" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">watch</span><span class="p">(</span><span class="n">debounce_ms</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">step_ms</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">timeout_ms</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">stop_event</span><span class="p">:</span> <span class="n">AbstractEvent</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">|</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;signal&#39;</span><span class="p">,</span> <span class="s1">&#39;stop&#39;</span><span class="p">,</span> <span class="s1">&#39;timeout&#39;</span><span class="p">]</span>
+</code></pre></div>
 
   <div class="doc doc-contents ">
   
@@ -1319,83 +1010,6 @@ The event should be an object which has an <code>is_set()</code> method which re
 <li><code>'timeout'</code> string, if <code>timeout_ms</code> was exceeded</li>
 </ul>
 
-          <details class="quote">
-            <summary>Source code in <code>watchfiles/_rust_notify.pyi</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-40">40</a></span>
-<span class="normal"><a href="#__codelineno-0-41">41</a></span>
-<span class="normal"><a href="#__codelineno-0-42">42</a></span>
-<span class="normal"><a href="#__codelineno-0-43">43</a></span>
-<span class="normal"><a href="#__codelineno-0-44">44</a></span>
-<span class="normal"><a href="#__codelineno-0-45">45</a></span>
-<span class="normal"><a href="#__codelineno-0-46">46</a></span>
-<span class="normal"><a href="#__codelineno-0-47">47</a></span>
-<span class="normal"><a href="#__codelineno-0-48">48</a></span>
-<span class="normal"><a href="#__codelineno-0-49">49</a></span>
-<span class="normal"><a href="#__codelineno-0-50">50</a></span>
-<span class="normal"><a href="#__codelineno-0-51">51</a></span>
-<span class="normal"><a href="#__codelineno-0-52">52</a></span>
-<span class="normal"><a href="#__codelineno-0-53">53</a></span>
-<span class="normal"><a href="#__codelineno-0-54">54</a></span>
-<span class="normal"><a href="#__codelineno-0-55">55</a></span>
-<span class="normal"><a href="#__codelineno-0-56">56</a></span>
-<span class="normal"><a href="#__codelineno-0-57">57</a></span>
-<span class="normal"><a href="#__codelineno-0-58">58</a></span>
-<span class="normal"><a href="#__codelineno-0-59">59</a></span>
-<span class="normal"><a href="#__codelineno-0-60">60</a></span>
-<span class="normal"><a href="#__codelineno-0-61">61</a></span>
-<span class="normal"><a href="#__codelineno-0-62">62</a></span>
-<span class="normal"><a href="#__codelineno-0-63">63</a></span>
-<span class="normal"><a href="#__codelineno-0-64">64</a></span>
-<span class="normal"><a href="#__codelineno-0-65">65</a></span>
-<span class="normal"><a href="#__codelineno-0-66">66</a></span>
-<span class="normal"><a href="#__codelineno-0-67">67</a></span>
-<span class="normal"><a href="#__codelineno-0-68">68</a></span>
-<span class="normal"><a href="#__codelineno-0-69">69</a></span>
-<span class="normal"><a href="#__codelineno-0-70">70</a></span>
-<span class="normal"><a href="#__codelineno-0-71">71</a></span>
-<span class="normal"><a href="#__codelineno-0-72">72</a></span>
-<span class="normal"><a href="#__codelineno-0-73">73</a></span>
-<span class="normal"><a href="#__codelineno-0-74">74</a></span>
-<span class="normal"><a href="#__codelineno-0-75">75</a></span>
-<span class="normal"><a href="#__codelineno-0-76">76</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-40" name="__codelineno-0-40"></a><span class="k">def</span> <span class="nf">watch</span><span class="p">(</span>
-<a id="__codelineno-0-41" name="__codelineno-0-41"></a>    <span class="bp">self</span><span class="p">,</span>
-<a id="__codelineno-0-42" name="__codelineno-0-42"></a>    <span class="n">debounce_ms</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-<a id="__codelineno-0-43" name="__codelineno-0-43"></a>    <span class="n">step_ms</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-<a id="__codelineno-0-44" name="__codelineno-0-44"></a>    <span class="n">timeout_ms</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-<a id="__codelineno-0-45" name="__codelineno-0-45"></a>    <span class="n">stop_event</span><span class="p">:</span> <span class="n">AbstractEvent</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-46" name="__codelineno-0-46"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">|</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;signal&#39;</span><span class="p">,</span> <span class="s1">&#39;stop&#39;</span><span class="p">,</span> <span class="s1">&#39;timeout&#39;</span><span class="p">]:</span>
-<a id="__codelineno-0-47" name="__codelineno-0-47"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-48" name="__codelineno-0-48"></a><span class="sd">    Watch for changes.</span>
-<a id="__codelineno-0-49" name="__codelineno-0-49"></a>
-<a id="__codelineno-0-50" name="__codelineno-0-50"></a><span class="sd">    This method will wait `timeout_ms` milliseconds for changes, but once a change is detected,</span>
-<a id="__codelineno-0-51" name="__codelineno-0-51"></a><span class="sd">    it will group changes and return in no more than `debounce_ms` milliseconds.</span>
-<a id="__codelineno-0-52" name="__codelineno-0-52"></a>
-<a id="__codelineno-0-53" name="__codelineno-0-53"></a><span class="sd">    The GIL is released during a `step_ms` sleep on each iteration to avoid</span>
-<a id="__codelineno-0-54" name="__codelineno-0-54"></a><span class="sd">    blocking python.</span>
-<a id="__codelineno-0-55" name="__codelineno-0-55"></a>
-<a id="__codelineno-0-56" name="__codelineno-0-56"></a><span class="sd">    Args:</span>
-<a id="__codelineno-0-57" name="__codelineno-0-57"></a><span class="sd">        debounce_ms: maximum time in milliseconds to group changes over before returning.</span>
-<a id="__codelineno-0-58" name="__codelineno-0-58"></a><span class="sd">        step_ms: time to wait for new changes in milliseconds, if no changes are detected</span>
-<a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="sd">            in this time, and at least one change has been detected, the changes are yielded.</span>
-<a id="__codelineno-0-60" name="__codelineno-0-60"></a><span class="sd">        timeout_ms: maximum time in milliseconds to wait for changes before returning,</span>
-<a id="__codelineno-0-61" name="__codelineno-0-61"></a><span class="sd">            `0` means wait indefinitely, `debounce_ms` takes precedence over `timeout_ms` once</span>
-<a id="__codelineno-0-62" name="__codelineno-0-62"></a><span class="sd">            a change is detected.</span>
-<a id="__codelineno-0-63" name="__codelineno-0-63"></a><span class="sd">        stop_event: event to check on every iteration to see if this function should return early.</span>
-<a id="__codelineno-0-64" name="__codelineno-0-64"></a><span class="sd">            The event should be an object which has an `is_set()` method which returns a boolean.</span>
-<a id="__codelineno-0-65" name="__codelineno-0-65"></a>
-<a id="__codelineno-0-66" name="__codelineno-0-66"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-67" name="__codelineno-0-67"></a><span class="sd">        See below.</span>
-<a id="__codelineno-0-68" name="__codelineno-0-68"></a>
-<a id="__codelineno-0-69" name="__codelineno-0-69"></a><span class="sd">    Return values have the following meanings:</span>
-<a id="__codelineno-0-70" name="__codelineno-0-70"></a>
-<a id="__codelineno-0-71" name="__codelineno-0-71"></a><span class="sd">    * Change details as a `set` of `(event_type, path)` tuples, the event types are ints which match</span>
-<a id="__codelineno-0-72" name="__codelineno-0-72"></a><span class="sd">      [`Change`][watchfiles.Change], `path` is a string representing the path of the file that changed</span>
-<a id="__codelineno-0-73" name="__codelineno-0-73"></a><span class="sd">    * `&#39;signal&#39;` string, if a signal was received</span>
-<a id="__codelineno-0-74" name="__codelineno-0-74"></a><span class="sd">    * `&#39;stop&#39;` string, if the `stop_event` was set</span>
-<a id="__codelineno-0-75" name="__codelineno-0-75"></a><span class="sd">    * `&#39;timeout&#39;` string, if `timeout_ms` was exceeded</span>
-<a id="__codelineno-0-76" name="__codelineno-0-76"></a><span class="sd">    &quot;&quot;&quot;</span>
-</code></pre></div></td></tr></table></div>
-          </details>
   </div>
 
 </div>
@@ -1413,7 +1027,13 @@ The event should be an object which has an <code>is_set()</code> method which re
 
 
 
-<a id="watchfiles._rust_notify.WatchfilesRustInternalError"></a>
+<h2 id="watchfiles._rust_notify.WatchfilesRustInternalError" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">WatchfilesRustInternalError</span>
+
+
+<a href="#watchfiles._rust_notify.WatchfilesRustInternalError" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
   <div class="doc doc-contents first">
           <p class="doc doc-class-bases">
             Bases: <code>RuntimeError</code></p>
@@ -1423,23 +1043,6 @@ The event should be an object which has an <code>is_set()</code> method which re
 <p>If you get this a lot, please check <a href="https://github.com/samuelcolvin/watchfiles/issues">github</a> issues
 and create a new issue if your problem is not discussed.</p>
 
-            <details class="quote">
-              <summary>Source code in <code>watchfiles/_rust_notify.pyi</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-105">105</a></span>
-<span class="normal"><a href="#__codelineno-0-106">106</a></span>
-<span class="normal"><a href="#__codelineno-0-107">107</a></span>
-<span class="normal"><a href="#__codelineno-0-108">108</a></span>
-<span class="normal"><a href="#__codelineno-0-109">109</a></span>
-<span class="normal"><a href="#__codelineno-0-110">110</a></span>
-<span class="normal"><a href="#__codelineno-0-111">111</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-105" name="__codelineno-0-105"></a><span class="k">class</span> <span class="nc">WatchfilesRustInternalError</span><span class="p">(</span><span class="ne">RuntimeError</span><span class="p">):</span>
-<a id="__codelineno-0-106" name="__codelineno-0-106"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-107" name="__codelineno-0-107"></a><span class="sd">    Raised when RustNotify encounters an unknown error.</span>
-<a id="__codelineno-0-108" name="__codelineno-0-108"></a>
-<a id="__codelineno-0-109" name="__codelineno-0-109"></a><span class="sd">    If you get this a lot, please check [github](https://github.com/samuelcolvin/watchfiles/issues) issues</span>
-<a id="__codelineno-0-110" name="__codelineno-0-110"></a><span class="sd">    and create a new issue if your problem is not discussed.</span>
-<a id="__codelineno-0-111" name="__codelineno-0-111"></a><span class="sd">    &quot;&quot;&quot;</span>
-</code></pre></div></td></tr></table></div>
-            </details>
 
   </div>
 
@@ -1450,8 +1053,18 @@ and create a new issue if your problem is not discussed.</p>
 
 
 
+<h2 id="watchfiles._rust_notify.__version__" class="doc doc-heading">
+          <span class="doc doc-object-name doc-attribute-name">__version__</span>
 
-<a id="watchfiles._rust_notify.__version__"></a>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+<a href="#watchfiles._rust_notify.__version__" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">__version__</span><span class="p">:</span> <span class="nb">str</span>
+</code></pre></div>
+
   <div class="doc doc-contents first">
   
       <p>The package version as defined in <code>Cargo.toml</code>, modified to match python's versioning semantics.</p>
