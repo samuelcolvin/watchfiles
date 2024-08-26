@@ -25,7 +25,6 @@ rust-version = "1.63"
 
 [dependencies]
 crossbeam-channel = "0.5.12"
-#notify = "6.1.1"
 notify = {git = "https://github.com/samuelcolvin/notify.git", branch = "keep-io-error"}
 pyo3 = { version = "0.22.2", features = ["extension-module", "generate-import-lib"] }
 
