@@ -57,7 +57,7 @@ def watch(
     stop_event: Optional['AbstractEvent'] = None,
     rust_timeout: int = 5_000,
     yield_on_timeout: bool = False,
-    debug: bool = False,
+    debug: Optional[bool] = None,
     raise_interrupt: bool = True,
     force_polling: Optional[bool] = None,
     poll_delay_ms: int = 300,
@@ -93,7 +93,8 @@ def watch(
             this can be anything with an `is_set()` method which returns a bool, e.g. `threading.Event()`.
         rust_timeout: maximum time in milliseconds to wait in the rust code for changes, `0` means no timeout.
         yield_on_timeout: if `True`, the generator will yield upon timeout in rust even if no changes are detected.
-        debug: whether to print information about all filesystem changes in rust to stdout.
+        debug: whether to print information about all filesystem changes in rust to stdout, if `None` will use the
+            `WATCHFILES_DEBUG` environment variable.
         raise_interrupt: whether to re-raise `KeyboardInterrupt`s, or suppress the error and just stop iterating.
         force_polling: See [Force polling](#force-polling) above.
         poll_delay_ms: delay between polling for changes, only used if `force_polling=True`.
@@ -114,6 +115,7 @@ def watch(
     """
     force_polling = _default_force_polling(force_polling)
     ignore_permission_denied = _default_ignore_permission_denied(ignore_permission_denied)
+    debug = _default_debug(debug)
     with RustNotify(
         [str(p) for p in paths], debug, force_polling, poll_delay_ms, recursive, ignore_permission_denied
     ) as watcher:
@@ -149,7 +151,7 @@ async def awatch(  # C901
     stop_event: Optional['AnyEvent'] = None,
     rust_timeout: Optional[int] = None,
     yield_on_timeout: bool = False,
-    debug: bool = False,
+    debug: Optional[bool] = None,
     raise_interrupt: Optional[bool] = None,
     force_polling: Optional[bool] = None,
     poll_delay_ms: int = 300,
@@ -241,6 +243,7 @@ async def awatch(  # C901
 
     force_polling = _default_force_polling(force_polling)
     ignore_permission_denied = _default_ignore_permission_denied(ignore_permission_denied)
+    debug = _default_debug(debug)
     with RustNotify(
         [str(p) for p in paths], debug, force_polling, poll_delay_ms, recursive, ignore_permission_denied
     ) as watcher:
@@ -322,6 +325,13 @@ def _default_force_polling(force_polling: Optional[bool]) -> bool:
         return env_var.lower() not in {'false', 'disable', 'disabled'}
     else:
         return _auto_force_polling()
+
+
+def _default_debug(debug: Optional[bool]) -> bool:
+    if debug is not None:
+        return debug
+    env_var = os.getenv('WATCHFILES_DEBUG')
+    return bool(env_var)
 
 
 def _auto_force_polling() -> bool:
