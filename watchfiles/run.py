@@ -37,7 +37,7 @@ def run_process(
     grace_period: float = 0,
     debounce: int = 1_600,
     step: int = 50,
-    debug: bool = False,
+    debug: Optional[bool] = None,
     sigint_timeout: int = 5,
     sigkill_timeout: int = 1,
     recursive: bool = True,
@@ -165,7 +165,7 @@ async def arun_process(
     grace_period: float = 0,
     debounce: int = 1_600,
     step: int = 50,
-    debug: bool = False,
+    debug: Optional[bool] = None,
     recursive: bool = True,
     ignore_permission_denied: bool = False,
 ) -> int:

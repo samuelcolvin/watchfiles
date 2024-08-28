@@ -161,7 +161,7 @@ def test_does_not_exist(tmp_path: Path):
 @skip_unless_linux
 def test_does_not_exist_message(tmp_path: Path):
     p = tmp_path / 'missing'
-    with pytest.raises(FileNotFoundError, match='No such file or directory'):
+    with pytest.raises(FileNotFoundError, match='(No such file or directory|No path was found.)'):
         RustNotify([str(p)], False, False, 0, True, False)
 
 

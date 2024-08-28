@@ -181,6 +181,21 @@ impl RustNotify {
                 }
             }
             Err(e) => {
+                if debug {
+                    eprintln!("raw-error={:?} error.kind={:?} error.paths={:?}", e, e.kind, e.paths);
+                }
+                // see https://github.com/samuelcolvin/watchfiles/issues/282
+                // if we have IO errors from files not found, we return "file deleted", rather than the error
+                if let NotifyErrorKind::Io(io_error) = &e.kind {
+                    if io_error.kind() == IOErrorKind::NotFound {
+                        changes_clone.lock().unwrap().extend(
+                            e.paths
+                                .iter()
+                                .map(|p| (CHANGE_DELETED, p.to_string_lossy().to_string())),
+                        );
+                        return;
+                    }
+                }
                 *error_clone.lock().unwrap() = Some(format!("error in underlying watcher: {}", e));
             }
         };
