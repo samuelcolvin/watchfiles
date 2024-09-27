@@ -42,6 +42,17 @@ def test_watch_polling_env(mocker, env: SetEnv):
     m.assert_called_once_with(['.'], False, True, 300, True, False)
 
 
+def test_watch_polling_env_with_custom_delay(mocker, env: SetEnv):
+    env('WATCHFILES_FORCE_POLLING', '1')
+    env('WATCHFILES_POLL_DELAY_MS', '1000')
+    m = mocker.patch('watchfiles.main.RustNotify', return_value=MockRustNotify())
+
+    for _ in watch('.'):
+        pass
+
+    m.assert_called_once_with(['.'], False, True, 1000, True, False)
+
+
 @pytest.mark.parametrize(
     'env_var,arg,expected',
     [

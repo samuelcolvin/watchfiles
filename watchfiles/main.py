@@ -81,6 +81,13 @@ def watch(
         * otherwise, force polling is enabled
     * otherwise, we enable force polling only if we detect we're running on WSL (Windows Subsystem for Linux)
 
+    It is also possible change the poll delay between iterations, it can change to maintain a good response time
+    and an appropiate CPU consumption using the `poll_delay_ms` argument, we change poll delay thus:
+
+    * if file polling is enabled and the `WATCHFILES_POLL_DELAY_MS` environment variable exists and it is numeric:
+       * the `poll_delay_ms` argument value will change to the one defined in the environment variable.
+    * otherwise, it will be the original value of the argument
+
     Args:
         *paths: filesystem paths to watch.
         watch_filter: callable used to filter out changes which are not important, you can either use a raw callable
@@ -114,6 +121,7 @@ def watch(
     ```
     """
     force_polling = _default_force_polling(force_polling)
+    poll_delay_ms = _default_poll_delay_ms(poll_delay_ms)
     ignore_permission_denied = _default_ignore_permission_denied(ignore_permission_denied)
     debug = _default_debug(debug)
     with RustNotify(
@@ -184,6 +192,7 @@ async def awatch(  # C901
         force_polling: if true, always use polling instead of file system notifications, default is `None` where
             `force_polling` is set to `True` if the `WATCHFILES_FORCE_POLLING` environment variable exists.
         poll_delay_ms: delay between polling for changes, only used if `force_polling=True`.
+            `poll_delay_ms` can be changed by using `WATCHFILES_POLL_DELAY_MS` environment variable.
         recursive: if `True`, watch for changes in sub-directories recursively, otherwise watch only for changes in the
             top-level directory, default is `True`.
         ignore_permission_denied: if `True`, will ignore permission denied errors, otherwise will raise them by default.
@@ -242,6 +251,7 @@ async def awatch(  # C901
         stop_event_ = stop_event
 
     force_polling = _default_force_polling(force_polling)
+    poll_delay_ms = _default_poll_delay_ms(poll_delay_ms)
     ignore_permission_denied = _default_ignore_permission_denied(ignore_permission_denied)
     debug = _default_debug(debug)
     with RustNotify(
@@ -325,6 +335,17 @@ def _default_force_polling(force_polling: Optional[bool]) -> bool:
         return env_var.lower() not in {'false', 'disable', 'disabled'}
     else:
         return _auto_force_polling()
+
+
+def _default_poll_delay_ms(poll_delay_ms: int) -> int:
+    """
+    See docstring for `watch` above for details.
+    """
+    env_var = os.getenv('WATCHFILES_POLL_DELAY_MS')
+    if env_var and env_var.isdecimal():
+        return int(env_var)
+    else:
+        return poll_delay_ms
 
 
 def _default_debug(debug: Optional[bool]) -> bool:
