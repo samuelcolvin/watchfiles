@@ -1,6 +1,6 @@
 [package]
 name = "watchfiles_rust_notify"
-version = "0.0.0"
+version = "1.0.0"
 edition = "2021"
 license = "MIT"
 homepage = "https://github.com/samuelcolvin/watchfiles"
