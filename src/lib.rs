@@ -287,7 +287,7 @@ impl RustNotify {
                 Ok(_) => (),
                 Err(_) => {
                     slf.borrow().clear();
-                    return Ok(intern!(py, "signal").into_py(py));
+                    return Ok(intern!(py, "signal").as_any().to_owned().unbind());
                 }
             };
 
@@ -302,7 +302,7 @@ impl RustNotify {
                         eprintln!("stop event set, stopping...");
                     }
                     slf.borrow().clear();
-                    return Ok(intern!(py, "stop").into_py(py));
+                    return Ok(intern!(py, "stop").as_any().to_owned().unbind());
                 }
             }
 
@@ -324,11 +324,19 @@ impl RustNotify {
             } else if let Some(max_time) = max_timeout_time {
                 if SystemTime::now() > max_time {
                     slf.borrow().clear();
-                    return Ok(intern!(py, "timeout").into_py(py));
+                    return Ok(intern!(py, "timeout").as_any().to_owned().unbind());
                 }
             }
         }
-        let py_changes = slf.borrow().changes.lock().unwrap().to_object(py);
+        let py_changes = slf
+            .borrow()
+            .changes
+            .lock()
+            .unwrap()
+            .to_owned()
+            .into_pyobject(py)?
+            .into_any()
+            .unbind();
         slf.borrow().clear();
         Ok(py_changes)
     }
@@ -357,7 +365,7 @@ impl RustNotify {
     }
 }
 
-#[pymodule]
+#[pymodule(gil_used = false)]
 fn _rust_notify(py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     let mut version = env!("CARGO_PKG_VERSION").to_string();
     // cargo uses "1.0-alpha1" etc. while python uses "1.0.0a1", this is not full compatibility,
@@ -369,7 +377,7 @@ fn _rust_notify(py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add("__version__", version)?;
     m.add(
         "WatchfilesRustInternalError",
-        py.get_type_bound::<WatchfilesRustInternalError>(),
+        py.get_type::<WatchfilesRustInternalError>(),
     )?;
     m.add_class::<RustNotify>()?;
     Ok(())
