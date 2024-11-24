@@ -81,12 +81,11 @@ def watch(
         * otherwise, force polling is enabled
     * otherwise, we enable force polling only if we detect we're running on WSL (Windows Subsystem for Linux)
 
-    It is also possible change the poll delay between iterations, it can change to maintain a good response time
+    It is also possible to change the poll delay between iterations, it can be changed to maintain a good response time
     and an appropiate CPU consumption using the `poll_delay_ms` argument, we change poll delay thus:
 
-    * if file polling is enabled and the `WATCHFILES_POLL_DELAY_MS` environment variable exists and it is numeric:
-       * the `poll_delay_ms` argument value will change to the one defined in the environment variable.
-    * otherwise, it will be the original value of the argument
+    * if file polling is enabled and the `WATCHFILES_POLL_DELAY_MS` env var exists and it is numeric, we use that
+    * otherwise, we use the argument value
 
     Args:
         *paths: filesystem paths to watch.
@@ -192,7 +191,7 @@ async def awatch(  # C901
         force_polling: if true, always use polling instead of file system notifications, default is `None` where
             `force_polling` is set to `True` if the `WATCHFILES_FORCE_POLLING` environment variable exists.
         poll_delay_ms: delay between polling for changes, only used if `force_polling=True`.
-            `poll_delay_ms` can be changed by using `WATCHFILES_POLL_DELAY_MS` environment variable.
+            `poll_delay_ms` can be changed via the `WATCHFILES_POLL_DELAY_MS` environment variable.
         recursive: if `True`, watch for changes in sub-directories recursively, otherwise watch only for changes in the
             top-level directory, default is `True`.
         ignore_permission_denied: if `True`, will ignore permission denied errors, otherwise will raise them by default.
