@@ -714,6 +714,12 @@ force polling thus:</p>
 </li>
 <li>otherwise, we enable force polling only if we detect we're running on WSL (Windows Subsystem for Linux)</li>
 </ul>
+<p>It is also possible to change the poll delay between iterations, it can be changed to maintain a good response time
+and an appropiate CPU consumption using the <code>poll_delay_ms</code> argument, we change poll delay thus:</p>
+<ul>
+<li>if file polling is enabled and the <code>WATCHFILES_POLL_DELAY_MS</code> env var exists and it is numeric, we use that</li>
+<li>otherwise, we use the argument value</li>
+</ul>
 
 
 
@@ -1143,7 +1149,8 @@ See <a href="https://github.com/samuelcolvin/watchfiles/issues/136">#136</a></p>
           </td>
           <td>
             <div class="doc-md-description">
-              <p>delay between polling for changes, only used if <code>force_polling=True</code>.</p>
+              <p>delay between polling for changes, only used if <code>force_polling=True</code>.
+<code>poll_delay_ms</code> can be changed via the <code>WATCHFILES_POLL_DELAY_MS</code> environment variable.</p>
             </div>
           </td>
           <td>
