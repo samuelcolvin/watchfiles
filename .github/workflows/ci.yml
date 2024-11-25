@@ -313,7 +313,7 @@ jobs:
           skip-existing: true
 
       - name: publish docs
-        uses: JamesIves/github-pages-deploy-action@v4.2.5
+        uses: JamesIves/github-pages-deploy-action@v4.6.9
         with:
           branch: gh-pages
           folder: site
