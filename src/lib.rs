@@ -328,16 +328,14 @@ impl RustNotify {
                 }
             }
         }
-        let py_changes = slf
-            .borrow()
-            .changes
-            .lock()
-            .unwrap()
-            .to_owned()
-            .into_pyobject(py)?
-            .into_any()
-            .unbind();
-        slf.borrow().clear();
+        let py_changes = {
+            let borrowed = slf.borrow();
+            let mut locked_changes = borrowed.changes.lock().unwrap();
+            let py_changes = locked_changes.to_owned().into_pyobject(py)?.into_any().unbind();
+            // Clear the changes while holding the lock
+            locked_changes.clear();
+            py_changes
+        };
         Ok(py_changes)
     }
 
