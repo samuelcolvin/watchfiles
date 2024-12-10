@@ -290,6 +290,7 @@ jobs:
 
     permissions:
       id-token: write
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
@@ -313,7 +314,7 @@ jobs:
           skip-existing: true
 
       - name: publish docs
-        uses: JamesIves/github-pages-deploy-action@v4.6.9
+        uses: JamesIves/github-pages-deploy-action@v4.7.2
         with:
           branch: gh-pages
           folder: site
