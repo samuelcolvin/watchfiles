@@ -14,6 +14,12 @@ from watchfiles.main import _calc_async_timeout
 if TYPE_CHECKING:
     from conftest import MockRustType
 
+try:
+    from exceptiongroup import BaseExceptionGroup
+except ImportError:
+    # outherwise BaseExceptionGroup should be in builtins
+    pass
+
 
 def test_watch(tmp_path: Path, write_soon):
     sleep(0.05)
@@ -220,9 +226,14 @@ async def test_awatch_interrupt_raise(mocker):
 
     count = 0
     stop_event = threading.Event()
-    with pytest.raises(KeyboardInterrupt, match='test error'):
+    with pytest.raises(BaseExceptionGroup) as exc_info:
         async for _ in awatch('.', stop_event=stop_event):
             count += 1
+
+    assert len(exc_info.value.exceptions) == 1
+    exc = exc_info.value.exceptions[0]
+    assert isinstance(exc, KeyboardInterrupt)
+    assert exc.args == ('test error',)
 
     # event is set because it's set while handling the KeyboardInterrupt
     assert stop_event.is_set()

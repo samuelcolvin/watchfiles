@@ -1190,7 +1190,7 @@ dev = [
     { name = "coverage", specifier = ">=7.6.10" },
     { name = "dirty-equals", specifier = ">=0.8.0" },
     { name = "maturin", specifier = ">=1.8.1" },
-    { name = "pytest", specifier = ">=7.4.4" },
+    { name = "pytest", specifier = "==7.4.4" },
     { name = "pytest-mock", specifier = ">=3.14.0" },
     { name = "pytest-pretty", specifier = ">=1.2.0" },
     { name = "pytest-timeout", specifier = ">=2.3.1" },
