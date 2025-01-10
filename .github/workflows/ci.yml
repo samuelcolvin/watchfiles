@@ -8,6 +8,11 @@ on:
       - '**'
   pull_request: {}
 
+env:
+  COLUMNS: 120
+  UV_PYTHON: 3.12
+  UV_FROZEN: '1'
+
 jobs:
   test:
     name: test ${{ matrix.python-version }}, rust ${{ matrix.rust-version }} on ${{ matrix.os }}
@@ -36,18 +41,16 @@ jobs:
     runs-on: ${{ matrix.os }}-latest
 
     env:
-      PYTHON: ${{ matrix.python-version }}
+      UV_PYTHON: ${{ matrix.python-version }}
       RUST: ${{ matrix.rust-version }}
       OS: ${{ matrix.os }}
 
     steps:
     - uses: actions/checkout@v4
 
-    - name: set up python
-      uses: actions/setup-python@v5
+    - uses: astral-sh/setup-uv@v5
       with:
-        python-version: ${{ matrix.python-version }}
-        allow-prereleases: true
+        enable-cache: true
 
     - name: install rust
       uses: actions-rs/toolchain@v1
@@ -58,11 +61,6 @@ jobs:
 
     - name: cache rust
       uses: Swatinem/rust-cache@v1
-
-    - run: pip install -r requirements/pyproject.txt -r requirements/testing.txt
-
-    - run: pip install -e .
-    - run: pip freeze
 
     - if: matrix.os == 'ubuntu'
       run: |
@@ -75,12 +73,12 @@ jobs:
       env:
         WATCHFILES_TEST_PERMISSION_DENIED_PATH: ${{ github.workspace }}/protected
 
-    - run: coverage xml
+    - run: uv run coverage xml
 
     - uses: codecov/codecov-action@v1.0.13
       with:
         file: ./coverage.xml
-        env_vars: PYTHON,RUST,OS
+        env_vars: UV_PYTHON,RUST,OS
 
   lint:
     runs-on: ubuntu-latest
@@ -88,9 +86,9 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - uses: actions/setup-python@v5
+    - uses: astral-sh/setup-uv@v5
       with:
-        python-version: '3.10'
+        enable-cache: true
 
     - name: install rust
       uses: actions-rs/toolchain@v1
@@ -103,7 +101,7 @@ jobs:
     - name: cache rust
       uses: Swatinem/rust-cache@v1
 
-    - run: pip install -r requirements/pyproject.txt -r requirements/linting.txt
+    - run: uv sync --group lint
 
     - run: pip install -e .
 
@@ -118,16 +116,13 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: set up python
-      uses: actions/setup-python@v5
+    - uses: astral-sh/setup-uv@v5
       with:
-        python-version: '3.10'
+        enable-cache: true
 
-    - name: install
-      run: pip install -r requirements/docs.txt
+    - run: uv sync --group docs
 
-    - name: build site
-      run: mkdocs build
+    - run: uv run mkdocs build
 
     - name: store docs site
       uses: actions/upload-artifact@v4

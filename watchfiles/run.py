@@ -260,7 +260,7 @@ def start_process(
 
     os.environ['WATCHFILES_CHANGES'] = changes_env_var
 
-    process: 'Union[SpawnProcess, subprocess.Popen[bytes]]'
+    process: Union[SpawnProcess, subprocess.Popen[bytes]]
     if target_type == 'function':
         kwargs = kwargs or {}
         if isinstance(target, str):

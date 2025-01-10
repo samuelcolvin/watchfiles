@@ -1,89 +1,112 @@
 [build-system]
-requires = ['maturin>=0.14.16,<2']
-build-backend = 'maturin'
+requires = ["maturin>=0.14.16,<2"]
+build-backend = "maturin"
 
 [project]
-name = 'watchfiles'
-requires-python = '>=3.9'
-description = 'Simple, modern and high performance file watching and code reload in python.'
+name = "watchfiles"
+requires-python = ">=3.9"
+description = "Simple, modern and high performance file watching and code reload in python."
 authors = [
-    {name ='Samuel Colvin', email = 's@muelcolvin.com'},
+    {name ="Samuel Colvin", email = "s@muelcolvin.com"},
 ]
 dependencies = [
-    'anyio>=3.0.0',
+    "anyio>=3.0.0",
 ]
 classifiers = [
-    'Development Status :: 5 - Production/Stable',
-    'Environment :: Console',
-    'Programming Language :: Python',
-    'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 3 :: Only',
-    'Programming Language :: Python :: 3.9',
-    'Programming Language :: Python :: 3.10',
-    'Programming Language :: Python :: 3.11',
-    'Programming Language :: Python :: 3.12',
-    'Programming Language :: Python :: 3.13',
-    'Intended Audience :: Developers',
-    'Intended Audience :: Information Technology',
-    'Intended Audience :: System Administrators',
-    'License :: OSI Approved :: MIT License',
-    'Operating System :: POSIX :: Linux',
-    'Operating System :: Microsoft :: Windows',
-    'Operating System :: MacOS',
-    'Environment :: MacOS X',
-    'Topic :: Software Development :: Libraries :: Python Modules',
-    'Topic :: System :: Filesystems',
-    'Framework :: AnyIO',
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: MacOS",
+    "Environment :: MacOS X",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Filesystems",
+    "Framework :: AnyIO",
 ]
 dynamic = [
-    'license',
-    'readme',
-    'version'
+    "license",
+    "readme",
+    "version"
 ]
 
 [project.scripts]
-watchfiles = 'watchfiles.cli:cli'
+watchfiles = "watchfiles.cli:cli"
 
 [project.urls]
-Homepage = 'https://github.com/samuelcolvin/watchfiles'
-Documentation = 'https://watchfiles.helpmanual.io'
-Funding = 'https://github.com/sponsors/samuelcolvin'
-Source = 'https://github.com/samuelcolvin/watchfiles'
-Changelog = 'https://github.com/samuelcolvin/watchfiles/releases'
+Homepage = "https://github.com/samuelcolvin/watchfiles"
+Documentation = "https://watchfiles.helpmanual.io"
+Funding = "https://github.com/sponsors/samuelcolvin"
+Source = "https://github.com/samuelcolvin/watchfiles"
+Changelog = "https://github.com/samuelcolvin/watchfiles/releases"
+
+[dependency-groups]
+dev = [
+    "coverage>=7.6.10",
+    "dirty-equals>=0.8.0",
+    "maturin>=1.8.1",
+    "pytest>=7.4.4",
+    "pytest-mock>=3.14.0",
+    "pytest-pretty>=1.2.0",
+    "pytest-timeout>=2.3.1",
+]
+lint = [
+    "mypy>=1.14.1",
+    "ruff>=0.9.0",
+    "trio>=0.28.0",
+]
+docs = [
+    "mdx-include>=1.4.2",
+    "mkdocs>=1.6.1",
+    "mkdocs-material>=9.5.49",
+    "mkdocstrings[python]>=0.25.1",
+]
 
 [tool.maturin]
+python-source = "python"
 module-name = "watchfiles._rust_notify"
-bindings = 'pyo3'
+bindings = "pyo3"
 
 [tool.pytest.ini_options]
-testpaths = 'tests'
-log_format = '%(name)s %(levelname)s: %(message)s'
-filterwarnings = 'error'
+testpaths = "tests"
+log_format = "%(name)s %(levelname)s: %(message)s"
+filterwarnings = "error"
 timeout = 10
 
 [tool.coverage.run]
-source = ['watchfiles']
+source = ["watchfiles"]
 branch = true
 
 [tool.coverage.report]
 precision = 2
 exclude_lines = [
-    'pragma: no cover',
-    'raise NotImplementedError',
-    'raise NotImplemented',
-    'if TYPE_CHECKING:',
-    '@overload',
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "raise NotImplemented",
+    "if TYPE_CHECKING:",
+    "@overload",
 ]
-omit = ['*/__main__.py']
+omit = ["*/__main__.py"]
 
 [tool.ruff]
 line-length = 120
-target-version = 'py38'
+target-version = "py38"
 lint.mccabe = { max-complexity = 14 }
-lint.extend-select = ['Q', 'RUF100', 'C90', 'UP', 'I']
-lint.flake8-quotes = {inline-quotes = 'single', multiline-quotes = 'double'}
-lint.pydocstyle = { convention = 'google' }
-format.quote-style = 'single'
+lint.extend-select = ["Q", "RUF100", "C90", "UP", "I"]
+lint.flake8-quotes = {inline-quotes = "single", multiline-quotes = "double"}
+lint.pydocstyle = { convention = "google" }
+format.quote-style = "single"
 
 [tool.mypy]
 strict = true
@@ -91,5 +114,5 @@ warn_return_any = false
 show_error_codes = true
 
 [[tool.mypy.overrides]]
-module = ['trio.*']
+module = ["trio.*"]
 ignore_missing_imports = true

@@ -78,8 +78,6 @@ plugins:
             merge_init_into_class: true
             show_signature_annotations: true
             separate_signature: true
-  - mkdocs-simple-hooks:
-      hooks:
-        on_pre_build: 'docs.plugins:on_pre_build'
-        on_files: 'docs.plugins:on_files'
-        on_page_markdown: 'docs.plugins:on_page_markdown'
+
+hooks:
+  - 'docs/.hooks/main.py'

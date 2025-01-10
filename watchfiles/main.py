@@ -245,7 +245,7 @@ async def awatch(  # C901
         )
 
     if stop_event is None:
-        stop_event_: 'AnyEvent' = anyio.Event()
+        stop_event_: AnyEvent = anyio.Event()
     else:
         stop_event_ = stop_event
 
