@@ -27,9 +27,7 @@ jobs:
           - '3.11'
           - '3.12'
           - '3.13'
-          # NOTE: gha setup-python doesn't support 3.13t yet
-          #       (https://github.com/actions/setup-python/pull/973)
-          # - '3.13t'
+          - '3.13t'
           - 'pypy3.9'
           - 'pypy3.10'
         exclude:
@@ -68,6 +66,8 @@ jobs:
         touch ${{ github.workspace }}/protected/test
         sudo chown -R root:root ${{ github.workspace }}/protected
         sudo chmod 700 ${{ github.workspace }}/protected
+
+    - run: uv run python -c 'import sys; print("free threading enable:", hasattr(sys, "_is_gil_enabled") and not sys._is_gil_enabled())'
 
     - run: make test
       env:
