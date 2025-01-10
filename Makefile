@@ -54,7 +54,7 @@ testcov: test
 .PHONY: docs
 docs:
 	rm -f watchfiles/*.so
-	uv run mkdocs build
+	uv run --no-sync mkdocs build
 
 .PHONY: all
 all: lint mypy testcov docs
