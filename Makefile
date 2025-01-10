@@ -1,36 +1,32 @@
 .DEFAULT_GOAL := all
 
-.PHONY: install
-install:
-	pip install -U pip pre-commit maturin
-	pip install -r requirements/all.txt
-	pip install -e .
-	pre-commit install
+.PHONY: .uv
+.uv: ## Check that uv is installed
+	@uv --version || echo 'Please install uv: https://docs.astral.sh/uv/getting-started/installation/'
 
-.PHONY: update-lockfiles
-update-lockfiles:
-	@echo "Updating requirements files using pip-compile"
-	pip-compile -q --strip-extras -o requirements/linting.txt requirements/linting.in
-	pip-compile -q --strip-extras -c requirements/linting.txt -o requirements/pyproject.txt pyproject.toml
-	pip-compile -q --strip-extras -c requirements/linting.txt -c requirements/pyproject.txt -o requirements/testing.txt requirements/testing.in
-	pip-compile -q --strip-extras -c requirements/linting.txt -c requirements/pyproject.txt -c requirements/testing.txt -o requirements/docs.txt requirements/docs.in
-	pip install --dry-run -r requirements/all.txt
+.PHONY: .pre-commit
+.pre-commit: ## Check that pre-commit is installed
+	@pre-commit -V || echo 'Please install pre-commit: https://pre-commit.com/'
+
+.PHONY: install
+install: .uv .pre-commit ## Install the package, dependencies, and pre-commit for local development
+	uv sync --frozen --group lint --group docs
+	pre-commit install --install-hooks
 
 .PHONY: build-dev
 build-dev:
-	maturin develop
+	uv run maturin develop --uv
 
 .PHONY: format
 format:
-	ruff check --fix-only watchfiles tests
-	ruff format watchfiles tests
-	@echo 'max_width = 120' > .rustfmt.toml
+	uv run ruff check --fix-only watchfiles tests
+	uv run ruff format watchfiles tests
 	cargo fmt
 
 .PHONY: lint-python
 lint-python:
-	ruff check watchfiles tests
-	ruff format --check watchfiles tests
+	uv run ruff check watchfiles tests
+	uv run ruff format --check watchfiles tests
 
 .PHONY: lint-rust
 lint-rust:
@@ -44,21 +40,21 @@ lint: lint-python lint-rust
 
 .PHONY: mypy
 mypy:
-	mypy watchfiles
+	uv run mypy watchfiles
 
 .PHONY: test
 test:
-	coverage run -m pytest
+	uv run coverage run -m pytest
 
 .PHONY: testcov
 testcov: test
 	@echo "building coverage html"
-	@coverage html
+	@uv run coverage html
 
 .PHONY: docs
 docs:
 	rm -f watchfiles/*.so
-	mkdocs build
+	uv run mkdocs build
 
 .PHONY: all
 all: lint mypy testcov docs

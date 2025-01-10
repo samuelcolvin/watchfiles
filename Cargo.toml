@@ -14,7 +14,7 @@ include = [
     "/src",
     "/watchfiles",
     "/tests",
-    "/requirements",
+    "/uv.lock",
     "/.cargo",
     "!__pycache__",
     "!tests/.mypy_cache",
