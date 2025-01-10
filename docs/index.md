@@ -1,6 +1,6 @@
 # watchfiles
 
-[![CI](https://github.com/samuelcolvin/watchfiles/workflows/ci/badge.svg)](https://github.com/samuelcolvin/watchfiles/actions/workflows/ci.yml)
+[![CI](https://github.com/samuelcolvin/watchfiles/actions/workflows/ci.yml/badge.svg)](https://github.com/samuelcolvin/watchfiles/actions/workflows/ci.yml?query=branch%3Amain)
 [![Coverage](https://codecov.io/gh/samuelcolvin/watchfiles/branch/main/graph/badge.svg)](https://codecov.io/gh/samuelcolvin/watchfiles)
 [![pypi](https://img.shields.io/pypi/v/watchfiles.svg)](https://pypi.python.org/pypi/watchfiles)
 [![license](https://img.shields.io/github/license/samuelcolvin/watchfiles.svg)](https://github.com/samuelcolvin/watchfiles/blob/main/LICENSE)

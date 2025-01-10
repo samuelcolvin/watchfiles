@@ -1154,7 +1154,7 @@ wheels = [
 
 [[package]]
 name = "watchfiles"
-version = "1.0.3"
+version = "1.0.4"
 source = { editable = "." }
 dependencies = [
     { name = "anyio" },
