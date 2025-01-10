@@ -49,7 +49,7 @@ test:
 .PHONY: testcov
 testcov: test
 	@echo "building coverage html"
-	@coverage html
+	@uv run coverage html
 
 .PHONY: docs
 docs:

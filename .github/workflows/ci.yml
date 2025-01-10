@@ -103,11 +103,9 @@ jobs:
 
     - run: uv sync --group lint
 
-    - run: pip install -e .
-
     - uses: pre-commit/action@v3.0.0
       with:
-        extra_args: --all-files
+        extra_args: --all-files --verbose
       env:
         SKIP: no-commit-to-branch
 
@@ -122,7 +120,7 @@ jobs:
 
     - run: uv sync --group docs
 
-    - run: uv run mkdocs build
+    - run: make docs
 
     - name: store docs site
       uses: actions/upload-artifact@v4
