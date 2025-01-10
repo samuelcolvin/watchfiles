@@ -21,7 +21,7 @@ include = [
     "!tests/.pytest_cache",
     "!*.so",
 ]
-rust-version = "1.63"
+rust-version = "1.77"
 
 [dependencies]
 crossbeam-channel = "0.5.15"
