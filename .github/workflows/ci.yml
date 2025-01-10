@@ -67,6 +67,8 @@ jobs:
         sudo chown -R root:root ${{ github.workspace }}/protected
         sudo chmod 700 ${{ github.workspace }}/protected
 
+    - run: uv run python -c 'import sys; print("free threading enable:", hasattr(sys, "_is_gil_enabled") and not sys._is_gil_enabled())'
+
     - run: make test
       env:
         WATCHFILES_TEST_PERMISSION_DENIED_PATH: ${{ github.workspace }}/protected
