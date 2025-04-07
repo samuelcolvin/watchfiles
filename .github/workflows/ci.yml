@@ -5,13 +5,13 @@ on:
     branches:
       - main
     tags:
-      - '**'
+      - "**"
   pull_request: {}
 
 env:
   COLUMNS: 120
   UV_PYTHON: 3.12
-  UV_FROZEN: '1'
+  UV_FROZEN: "1"
 
 jobs:
   test:
@@ -20,20 +20,20 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu, macos, windows]
-        rust-version: [stable, '1.72']
+        rust-version: [stable, "1.72"]
         python-version:
-          - '3.9'
-          - '3.10'
-          - '3.11'
-          - '3.12'
-          - '3.13'
-          - '3.13t'
-          - 'pypy3.9'
-          - 'pypy3.10'
+          - "3.9"
+          - "3.10"
+          - "3.11"
+          - "3.12"
+          - "3.13"
+          - "3.13t"
+          - "pypy3.9"
+          - "pypy3.10"
         exclude:
-          - rust-version: '1.72'
+          - rust-version: "1.72"
             os: macos
-          - rust-version: '1.72'
+          - rust-version: "1.72"
             os: windows
 
     runs-on: ${{ matrix.os }}-latest
@@ -44,89 +44,89 @@ jobs:
       OS: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - uses: astral-sh/setup-uv@v5
-      with:
-        enable-cache: true
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
 
-    - name: install rust
-      uses: actions-rs/toolchain@v1
-      with:
-        profile: minimal
-        toolchain: ${{ matrix.rust-version }}
-        override: true
+      - name: install rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust-version }}
+          override: true
 
-    - name: cache rust
-      uses: Swatinem/rust-cache@v1
+      - name: cache rust
+        uses: Swatinem/rust-cache@v1
 
-    - if: matrix.os == 'ubuntu'
-      run: |
-        mkdir -p ${{ github.workspace }}/protected
-        touch ${{ github.workspace }}/protected/test
-        sudo chown -R root:root ${{ github.workspace }}/protected
-        sudo chmod 700 ${{ github.workspace }}/protected
+      - if: matrix.os == 'ubuntu'
+        run: |
+          mkdir -p ${{ github.workspace }}/protected
+          touch ${{ github.workspace }}/protected/test
+          sudo chown -R root:root ${{ github.workspace }}/protected
+          sudo chmod 700 ${{ github.workspace }}/protected
 
-    - run: uv run python -c 'import sys; print("free threading enable:", hasattr(sys, "_is_gil_enabled") and not sys._is_gil_enabled())'
+      - run: uv run python -c 'import sys; print("free threading enable:", hasattr(sys, "_is_gil_enabled") and not sys._is_gil_enabled())'
 
-    - run: make test
-      env:
-        WATCHFILES_TEST_PERMISSION_DENIED_PATH: ${{ github.workspace }}/protected
+      - run: make test
+        env:
+          WATCHFILES_TEST_PERMISSION_DENIED_PATH: ${{ github.workspace }}/protected
 
-    - run: uv run coverage xml
+      - run: uv run coverage xml
 
-    - uses: codecov/codecov-action@v1.0.13
-      with:
-        file: ./coverage.xml
-        env_vars: UV_PYTHON,RUST,OS
+      - uses: codecov/codecov-action@v1.0.13
+        with:
+          file: ./coverage.xml
+          env_vars: UV_PYTHON,RUST,OS
 
   lint:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - uses: astral-sh/setup-uv@v5
-      with:
-        enable-cache: true
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
 
-    - name: install rust
-      uses: actions-rs/toolchain@v1
-      with:
-        profile: minimal
-        toolchain: stable
-        override: true
-        components: rustfmt, clippy
+      - name: install rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: rustfmt, clippy
 
-    - name: cache rust
-      uses: Swatinem/rust-cache@v1
+      - name: cache rust
+        uses: Swatinem/rust-cache@v1
 
-    - run: uv sync --group lint
+      - run: uv sync --group lint
 
-    - uses: pre-commit/action@v3.0.0
-      with:
-        extra_args: --all-files --verbose
-      env:
-        SKIP: no-commit-to-branch
+      - uses: pre-commit/action@v3.0.0
+        with:
+          extra_args: --all-files --verbose
+        env:
+          SKIP: no-commit-to-branch
 
   docs:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - uses: astral-sh/setup-uv@v5
-      with:
-        enable-cache: true
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
 
-    - run: uv sync --group docs
+      - run: uv sync --group docs
 
-    - run: make docs
+      - run: make docs
 
-    - name: store docs site
-      uses: actions/upload-artifact@v4
-      with:
-        name: docs
-        path: site
+      - name: store docs site
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs
+          path: site
 
   build:
     name: >
@@ -189,7 +189,7 @@ jobs:
       - name: set up python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
           architecture: ${{ matrix.python-architecture || 'x64' }}
 
       - name: check GITHUB_REF matches package version
@@ -246,23 +246,20 @@ jobs:
 
       - name: list dist files
         run: |
-         ls -lh dist/
-         echo "`ls dist | wc -l` files"
+          ls -lh dist/
+          echo "`ls dist | wc -l` files"
 
       - name: extract and list sdist file
         run: |
-         mkdir sdist-files
-         tar -xvf dist/*.tar.gz -C sdist-files
-         tree -a sdist-files
+          mkdir sdist-files
+          tar -xvf dist/*.tar.gz -C sdist-files
+          tree -a sdist-files
 
       - name: extract and list wheel file
         run: ls dist/*cp312-manylinux_2_17_x86_64*.whl | head -n 1
 
       - name: extract and list wheel file
         run: python -m zipfile --list `ls dist/*cp312-manylinux_2_17_x86_64*.whl | head -n 1`
-
-      - run: pip install twine
-      - run: twine check dist/*
 
   # Used for branch protection checks, see https://github.com/marketplace/actions/alls-green#why
   check:
@@ -288,6 +285,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
       - name: get dist artifacts
         uses: actions/download-artifact@v4
         with:
@@ -302,9 +303,7 @@ jobs:
           path: site
 
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@v1.12.3
-        with:
-          skip-existing: true
+        run: "uv publish --trusted-publishing dist/*"
 
       - name: publish docs
         uses: JamesIves/github-pages-deploy-action@v4.7.2
