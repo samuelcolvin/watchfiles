@@ -303,7 +303,7 @@ jobs:
           path: site
 
       - name: Publish to PyPI
-        run: "uv publish --trusted-publishing dist/*"
+        run: "uv publish --trusted-publishing always dist/*"
 
       - name: publish docs
         uses: JamesIves/github-pages-deploy-action@v4.7.2
