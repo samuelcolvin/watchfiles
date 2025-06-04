@@ -26,7 +26,7 @@ rust-version = "1.63"
 [dependencies]
 crossbeam-channel = "0.5.12"
 notify = { version = "7.0.0" }
-pyo3 = { version = "0.24.1", features = ["extension-module", "generate-import-lib"] }
+pyo3 = { version = "0.25.1", features = ["extension-module", "generate-import-lib"] }
 
 [lib]
 name = "_rust_notify"
