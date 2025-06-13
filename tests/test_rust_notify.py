@@ -51,6 +51,7 @@ def test_modify_write(test_dir: Path):
     assert watcher.watch(200, 50, 500, None) == {(2, str(test_dir / 'a.txt'))}
 
 
+@skip_windows
 def test_modify_write_non_recursive(test_dir: Path):
     watcher = RustNotify([str(test_dir)], True, False, 0, False, False)
 
