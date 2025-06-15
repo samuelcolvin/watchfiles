@@ -20,7 +20,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu, macos, windows]
-        rust-version: [stable, '1.77']
+        rust-version: [stable, "1.77"]
         python-version:
           - "3.9"
           - "3.10"
@@ -28,12 +28,15 @@ jobs:
           - "3.12"
           - "3.13"
           - "3.13t"
+          - "3.14"
+          - "3.14t"
           - "pypy3.9"
           - "pypy3.10"
+          - "pypy3.11"
         exclude:
-          - rust-version: '1.77'
+          - rust-version: "1.77"
             os: macos
-          - rust-version: '1.77'
+          - rust-version: "1.77"
             os: windows
 
     runs-on: ${{ matrix.os }}-latest
@@ -155,10 +158,15 @@ jobs:
             ls: dir
             target: i686
             python-architecture: x86
+            interpreter: 3.9 3.10 3.11 3.12 3.13
+          - os: windows
+            ls: dir
+            target: x86_64
+            interpreter: 3.9 3.10 3.11 3.12 3.13
           - os: windows
             ls: dir
             target: aarch64
-            interpreter: 3.11 3.12
+            interpreter: 3.11 3.12 3.13
           - os: ubuntu
             platform: linux
             target: i686
@@ -210,10 +218,7 @@ jobs:
         with:
           target: ${{ matrix.target }}
           manylinux: ${{ matrix.manylinux || 'auto' }}
-          # NOTE: gha setup-python doesn't support 3.13t yet
-          #       (https://github.com/actions/setup-python/pull/973)
-          # args: --release --out dist --interpreter ${{ matrix.interpreter || '3.9 3.10 3.11 3.12 3.13 3.13t' }}
-          args: --release --out dist --interpreter ${{ matrix.interpreter || '3.9 3.10 3.11 3.12 3.13' }}
+          args: --release --out dist --interpreter ${{ matrix.interpreter || '3.9 3.10 3.11 3.12 3.13 3.13t 3.14 3.14t' }}
 
       - name: build pypy wheels
         if: ${{ matrix.pypy }}
@@ -221,7 +226,7 @@ jobs:
         with:
           target: ${{ matrix.target }}
           manylinux: ${{ matrix.manylinux || 'auto' }}
-          args: --release --out dist --interpreter pypy3.9 pypy3.10
+          args: --release --out dist --interpreter pypy3.9 pypy3.10 pypy3.11
 
       - run: ${{ matrix.ls || 'ls -lh' }} dist/
 
