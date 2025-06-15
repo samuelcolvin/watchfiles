@@ -72,7 +72,7 @@ See [`arun_process` docs][watchfiles.arun_process] for more details.
 
 ## Installation
 
-**watchfiles** requires **Python 3.8** to **Python 3.14**.
+**watchfiles** requires **Python 3.9** to **Python 3.14**.
 
 ### From PyPI
 
