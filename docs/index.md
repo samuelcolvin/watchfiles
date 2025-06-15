@@ -85,8 +85,8 @@ pip install watchfiles
 Binaries are available for:
 
 * **Linux**: `x86_64`, `aarch64`, `i686`, `armv7l`, `musl-x86_64` & `musl-aarch64`
-* **MacOS**: `x86_64` & `arm64`
-* **Windows**: `amd64` & `win32`
+* **MacOS**: `x86_64` & `aarch64`
+* **Windows**: `x86_64`, `aarch64` & `i686`
 
 ### From conda-forge
 

@@ -165,7 +165,7 @@ jobs:
           - os: windows
             ls: dir
             target: aarch64
-            interpreter: 3.11 3.12 3.13 3.13t 3.14 3.14t
+            interpreter: 3.11 3.12 3.13
           - os: ubuntu
             platform: linux
             target: i686
