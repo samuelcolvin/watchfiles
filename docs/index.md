@@ -72,7 +72,7 @@ See [`arun_process` docs][watchfiles.arun_process] for more details.
 
 ## Installation
 
-**watchfiles** requires **Python 3.8** to **Python 3.13**.
+**watchfiles** requires **Python 3.8** to **Python 3.14**.
 
 ### From PyPI
 
@@ -85,7 +85,7 @@ pip install watchfiles
 Binaries are available for:
 
 * **Linux**: `x86_64`, `aarch64`, `i686`, `armv7l`, `musl-x86_64` & `musl-aarch64`
-* **MacOS**: `x86_64` & `arm64` (except python 3.7)
+* **MacOS**: `x86_64` & `arm64`
 * **Windows**: `amd64` & `win32`
 
 ### From conda-forge

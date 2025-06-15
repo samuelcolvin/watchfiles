@@ -6,12 +6,8 @@ build-backend = "maturin"
 name = "watchfiles"
 requires-python = ">=3.9"
 description = "Simple, modern and high performance file watching and code reload in python."
-authors = [
-    {name ="Samuel Colvin", email = "s@muelcolvin.com"},
-]
-dependencies = [
-    "anyio>=3.0.0",
-]
+authors = [{ name = "Samuel Colvin", email = "s@muelcolvin.com" }]
+dependencies = ["anyio>=3.0.0"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
@@ -23,6 +19,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Intended Audience :: Developers",
     "Intended Audience :: Information Technology",
     "Intended Audience :: System Administrators",
@@ -35,11 +32,7 @@ classifiers = [
     "Topic :: System :: Filesystems",
     "Framework :: AnyIO",
 ]
-dynamic = [
-    "license",
-    "readme",
-    "version"
-]
+dynamic = ["license", "readme", "version"]
 
 [project.scripts]
 watchfiles = "watchfiles.cli:cli"
@@ -61,11 +54,7 @@ dev = [
     "pytest-pretty>=1.2.0",
     "pytest-timeout>=2.3.1",
 ]
-lint = [
-    "mypy>=1.14.1",
-    "ruff>=0.9.0",
-    "trio>=0.28.0",
-]
+lint = ["mypy>=1.14.1", "ruff>=0.9.0", "trio>=0.28.0"]
 docs = [
     "mdx-include>=1.4.2",
     "mkdocs>=1.6.1",
@@ -103,7 +92,7 @@ line-length = 120
 target-version = "py38"
 lint.mccabe = { max-complexity = 14 }
 lint.extend-select = ["Q", "RUF100", "C90", "UP", "I"]
-lint.flake8-quotes = {inline-quotes = "single", multiline-quotes = "double"}
+lint.flake8-quotes = { inline-quotes = "single", multiline-quotes = "double" }
 lint.pydocstyle = { convention = "google" }
 format.quote-style = "single"
 
