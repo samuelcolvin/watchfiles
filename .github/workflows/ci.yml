@@ -208,19 +208,17 @@ jobs:
 
       - name: build sdist
         if: ${{ matrix.os == 'ubuntu' && matrix.target == 'x86_64' && matrix.manylinux == 'auto' }}
-        uses: PyO3/maturin-action@v1.49.4
+        uses: PyO3/maturin-action@v1
         with:
           command: sdist
           args: --out dist
 
       - name: build wheels
-        uses: PyO3/maturin-action@v1.49.4
+        uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
           manylinux: ${{ matrix.manylinux || 'auto' }}
           args: --release --out dist --interpreter ${{ matrix.interpreter || '3.9 3.10 3.11 3.12 3.13 3.13t 3.14 3.14t' }}
-          rust-toolchain: stable
-          docker-options: -e CI
 
       - name: build pypy wheels
         if: ${{ matrix.pypy }}
