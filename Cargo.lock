@@ -360,6 +360,7 @@ dependencies = [
  "crossbeam-channel",
  "notify",
  "pyo3",
+ "pyo3-build-config",
 ]
 
 [[package]]

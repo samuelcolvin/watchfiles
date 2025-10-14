@@ -31,6 +31,9 @@ pyo3 = { version = "0.26.0", features = [
     "generate-import-lib",
 ] }
 
+[build-dependencies]
+pyo3-build-config = { version = "0.26" }
+
 [lib]
 name = "_rust_notify"
 crate-type = ["cdylib"]
