@@ -264,8 +264,8 @@ impl RustNotify {
         debounce_ms: u64,
         step_ms: u64,
         timeout_ms: u64,
-        stop_event: PyObject,
-    ) -> PyResult<PyObject> {
+        stop_event: Py<PyAny>,
+    ) -> PyResult<Py<PyAny>> {
         if matches!(slf.borrow().watcher, WatcherEnum::None) {
             return Err(PyRuntimeError::new_err("RustNotify watcher closed"));
         }
@@ -282,7 +282,7 @@ impl RustNotify {
             _ => Some(SystemTime::now() + Duration::from_millis(timeout_ms)),
         };
         loop {
-            py.allow_threads(|| sleep(step_time));
+            py.detach(|| sleep(step_time));
             match py.check_signals() {
                 Ok(_) => (),
                 Err(_) => {
@@ -348,7 +348,7 @@ impl RustNotify {
         self.watcher = WatcherEnum::None;
     }
 
-    fn __exit__(&mut self, _exc_type: PyObject, _exc_value: PyObject, _traceback: PyObject) {
+    fn __exit__(&mut self, _exc_type: Py<PyAny>, _exc_value: Py<PyAny>, _traceback: Py<PyAny>) {
         self.close();
     }
 
