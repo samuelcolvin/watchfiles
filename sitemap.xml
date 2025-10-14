@@ -2,30 +2,30 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://watchfiles.helpmanual.io/</loc>
-         <lastmod>2025-06-15</lastmod>
+         <lastmod>2025-10-14</lastmod>
     </url>
     <url>
          <loc>https://watchfiles.helpmanual.io/cli/</loc>
-         <lastmod>2025-06-15</lastmod>
+         <lastmod>2025-10-14</lastmod>
     </url>
     <url>
          <loc>https://watchfiles.helpmanual.io/migrating/</loc>
-         <lastmod>2025-06-15</lastmod>
+         <lastmod>2025-10-14</lastmod>
     </url>
     <url>
          <loc>https://watchfiles.helpmanual.io/api/filters/</loc>
-         <lastmod>2025-06-15</lastmod>
+         <lastmod>2025-10-14</lastmod>
     </url>
     <url>
          <loc>https://watchfiles.helpmanual.io/api/run_process/</loc>
-         <lastmod>2025-06-15</lastmod>
+         <lastmod>2025-10-14</lastmod>
     </url>
     <url>
          <loc>https://watchfiles.helpmanual.io/api/rust_backend/</loc>
-         <lastmod>2025-06-15</lastmod>
+         <lastmod>2025-10-14</lastmod>
     </url>
     <url>
          <loc>https://watchfiles.helpmanual.io/api/watch/</loc>
-         <lastmod>2025-06-15</lastmod>
+         <lastmod>2025-10-14</lastmod>
     </url>
 </urlset>
