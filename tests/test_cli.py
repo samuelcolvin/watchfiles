@@ -59,6 +59,35 @@ def test_ignore_paths(mocker, tmp_work_path):
     )
 
 
+def test_extensions(mocker, tmp_work_path):
+    mocker.patch('watchfiles.cli.sys.stdin.fileno')
+    mocker.patch('os.ttyname', return_value='/path/to/tty')
+    mock_run_process = mocker.patch('watchfiles.cli.run_process')
+    cli(
+        '--extensions',
+        '.html,.jinja',
+        '--filter',
+        'python',
+        'os.getcwd',
+        '.',
+    )
+    mock_run_process.assert_called_once_with(
+        Path(str(tmp_work_path)),
+        target='os.getcwd',
+        target_type='function',
+        watch_filter=(
+            IsInstance(PythonFilter)
+            & HasAttributes(extensions=('.py', '.pyx', '.pyd', '.html', '.jinja'), _ignore_paths=())
+        ),
+        debug=False,
+        grace_period=0,
+        sigint_timeout=5,
+        sigkill_timeout=1,
+        recursive=True,
+        ignore_permission_denied=False,
+    )
+
+
 class SysError(RuntimeError):
     pass
 

@@ -56,6 +56,13 @@ files:
 watchfiles --filter python 'pytest --lf' src tests
 ```
 
+If you want to watch additional file extensions beyond the default Python files (`.py`, `.pyx`, `.pyd`), you can use
+the `--extensions` flag:
+
+```bash title="Watching Python files and templates"
+watchfiles --filter python --extensions '.html,.jinja' 'pytest --lf' src tests
+```
+
 ## Help
 
 Run `watchfiles --help` for more options.

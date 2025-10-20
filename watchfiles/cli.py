@@ -58,6 +58,15 @@ def cli(*args_: str) -> None:
         ),
     )
     parser.add_argument(
+        '--extensions',
+        nargs='?',
+        type=str,
+        help=(
+            'Specify extra extensions to watch, '
+            'to specify multiple extensions use a comma as separator, e.g. ".jinja" or ".html,.jinja"'
+        ),
+    )
+    parser.add_argument(
         '--target-type',
         nargs='?',
         type=str,
@@ -157,7 +166,11 @@ def cli(*args_: str) -> None:
         print(f'path "{e}" does not exist', file=sys.stderr)
         sys.exit(1)
 
-    watch_filter, watch_filter_str = build_filter(arg_namespace.filter, arg_namespace.ignore_paths)
+    watch_filter, watch_filter_str = build_filter(
+        arg_namespace.filter,
+        arg_namespace.ignore_paths,
+        arg_namespace.extensions,
+    )
 
     logger.info(
         'watchfiles v%s 👀  path=%s target="%s" (%s) filter=%s...',
@@ -195,19 +208,26 @@ def import_exit(function_path: str) -> Any:
 
 
 def build_filter(
-    filter_name: str, ignore_paths_str: Optional[str]
+    filter_name: str, ignore_paths_str: Optional[str], extensions_str: Optional[str] = None
 ) -> Tuple[Union[None, DefaultFilter, Callable[[Change, str], bool]], str]:
     ignore_paths: List[Path] = []
     if ignore_paths_str:
         ignore_paths = [Path(p).resolve() for p in ignore_paths_str.split(',')]
+    extensions: List[str] = []
+    if extensions_str:
+        extensions = [p for p in extensions_str.split(',')]
 
     if filter_name == 'default':
+        if extensions:
+            logger.warning('"--extensions" argument ignored as "all" filter was selected')
         return DefaultFilter(ignore_paths=ignore_paths), 'DefaultFilter'
     elif filter_name == 'python':
-        return PythonFilter(ignore_paths=ignore_paths), 'PythonFilter'
+        return PythonFilter(ignore_paths=ignore_paths, extra_extensions=extensions), 'PythonFilter'
     elif filter_name == 'all':
         if ignore_paths:
             logger.warning('"--ignore-paths" argument ignored as "all" filter was selected')
+        if extensions:
+            logger.warning('"--extensions" argument ignored as "all" filter was selected')
         return None, '(no filter)'
 
     watch_filter_cls = import_exit(filter_name)
