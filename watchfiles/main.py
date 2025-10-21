@@ -39,7 +39,7 @@ of the file or directory that changed.
 
 if TYPE_CHECKING:
     import asyncio
-    from typing import Protocol
+    from typing import Any, Protocol
 
     import trio
 
@@ -49,7 +49,7 @@ if TYPE_CHECKING:
         def is_set(self) -> bool: ...
 
     class AbstractWritableEvent(Protocol):
-        def set(self): ...
+        def set(self) -> Any: ...
 
 
 def watch(
