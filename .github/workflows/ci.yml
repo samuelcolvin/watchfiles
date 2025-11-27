@@ -179,6 +179,9 @@ jobs:
           - os: ubuntu
             platform: linux
             target: s390x
+          - os: ubuntu
+            platform: linux
+            target: riscv64gc-unknown-linux-gnu
           # musllinux
           - os: ubuntu
             platform: linux
@@ -208,13 +211,13 @@ jobs:
 
       - name: build sdist
         if: ${{ matrix.os == 'ubuntu' && matrix.target == 'x86_64' && matrix.manylinux == 'auto' }}
-        uses: PyO3/maturin-action@v1
+        uses: PyO3/maturin-action@v1.49.3
         with:
           command: sdist
           args: --out dist
 
       - name: build wheels
-        uses: PyO3/maturin-action@v1
+        uses: PyO3/maturin-action@v1.49.3
         with:
           target: ${{ matrix.target }}
           manylinux: ${{ matrix.manylinux || 'auto' }}
@@ -222,7 +225,7 @@ jobs:
 
       - name: build pypy wheels
         if: ${{ matrix.pypy }}
-        uses: PyO3/maturin-action@v1
+        uses: PyO3/maturin-action@v1.49.3
         with:
           target: ${{ matrix.target }}
           manylinux: ${{ matrix.manylinux || 'auto' }}
