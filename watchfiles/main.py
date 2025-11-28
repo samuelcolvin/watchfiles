@@ -39,7 +39,7 @@ of the file or directory that changed.
 
 if TYPE_CHECKING:
     import asyncio
-    from typing import Protocol
+    from typing import Any, Protocol
 
     import trio
 
@@ -47,6 +47,9 @@ if TYPE_CHECKING:
 
     class AbstractEvent(Protocol):
         def is_set(self) -> bool: ...
+
+    class AbstractWritableEvent(Protocol):
+        def set(self) -> Any: ...
 
 
 def watch(
@@ -63,6 +66,7 @@ def watch(
     poll_delay_ms: int = 300,
     recursive: bool = True,
     ignore_permission_denied: Optional[bool] = None,
+    ready_event: Optional['AbstractWritableEvent'] = None,
 ) -> Generator[Set[FileChange], None, None]:
     """
     Watch one or more paths and yield a set of changes whenever files change.
@@ -108,6 +112,8 @@ def watch(
             top-level directory, default is `True`.
         ignore_permission_denied: if `True`, will ignore permission denied errors, otherwise will raise them by default.
             Setting the `WATCHFILES_IGNORE_PERMISSION_DENIED` environment variable will set this value too.
+        ready_event: event to signal when the watcher is ready and watching has started,
+            this can be any object with a `set()` method, e.g. `threading.Event()`.
 
     Yields:
         The generator yields sets of [`FileChange`][watchfiles.main.FileChange]s.
@@ -126,6 +132,8 @@ def watch(
     with RustNotify(
         [str(p) for p in paths], debug, force_polling, poll_delay_ms, recursive, ignore_permission_denied
     ) as watcher:
+        if ready_event:
+            ready_event.set()
         while True:
             raw_changes = watcher.watch(debounce, step, rust_timeout, stop_event)
             if raw_changes == 'timeout':
@@ -164,6 +172,7 @@ async def awatch(  # C901
     poll_delay_ms: int = 300,
     recursive: bool = True,
     ignore_permission_denied: Optional[bool] = None,
+    ready_event: Optional['AbstractWritableEvent'] = None,
 ) -> AsyncGenerator[Set[FileChange], None]:
     """
     Asynchronous equivalent of [`watch`][watchfiles.watch] using threads to wait for changes.
@@ -196,6 +205,8 @@ async def awatch(  # C901
             top-level directory, default is `True`.
         ignore_permission_denied: if `True`, will ignore permission denied errors, otherwise will raise them by default.
             Setting the `WATCHFILES_IGNORE_PERMISSION_DENIED` environment variable will set this value too.
+        ready_event: event to signal when the watcher is ready and watching has started,
+            this can be any object with a `set()` method, e.g. `asyncio.Event()` or `anyio.Event()`.
 
     Yields:
         The generator yields sets of [`FileChange`][watchfiles.main.FileChange]s.
@@ -256,6 +267,8 @@ async def awatch(  # C901
     with RustNotify(
         [str(p) for p in paths], debug, force_polling, poll_delay_ms, recursive, ignore_permission_denied
     ) as watcher:
+        if ready_event:
+            ready_event.set()
         timeout = _calc_async_timeout(rust_timeout)
         CancelledError = anyio.get_cancelled_exc_class()
 
