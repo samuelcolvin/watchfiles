@@ -1,4 +1,5 @@
 usage: watchfiles [-h] [--ignore-paths [IGNORE_PATHS]]
+                  [--extensions [EXTENSIONS]]
                   [--target-type [{command,function,auto}]]
                   [--filter [FILTER]] [--args [ARGS]] [--verbose]
                   [--non-recursive] [--verbosity [{warning,info,debug}]]
@@ -28,6 +29,8 @@ options:
   -h, --help            show this help message and exit
   --ignore-paths [IGNORE_PATHS]
                         Specify directories to ignore, to ignore multiple paths use a comma as separator, e.g. "env" or "env,node_modules"
+  --extensions [EXTENSIONS]
+                        Specify extra extensions to watch, to specify multiple extensions use a comma as separator, e.g. ".jinja" or ".html,.jinja"
   --target-type [{command,function,auto}]
                         Whether the target should be intercepted as a shell command or a python function, defaults to "auto" which infers the target type from the target string
   --filter [FILTER]     Which files to watch, defaults to "default" which uses the "DefaultFilter", "python" uses the "PythonFilter", "all" uses no filter, any other value is interpreted as a python function/class path which is imported
