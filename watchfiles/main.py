@@ -2,10 +2,10 @@ import logging
 import os
 import sys
 import warnings
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import AsyncGenerator, Callable, Generator
 from enum import IntEnum
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, Optional, Union
+from typing import TYPE_CHECKING, Optional
 
 import anyio
 
@@ -44,26 +44,26 @@ if TYPE_CHECKING:
 
     import trio
 
-    AnyEvent = Union[anyio.Event, asyncio.Event, trio.Event]
+    AnyEvent = anyio.Event | asyncio.Event | trio.Event
 
     class AbstractEvent(Protocol):
         def is_set(self) -> bool: ...
 
 
 def watch(
-    *paths: Union[Path, str],
-    watch_filter: Optional[Callable[['Change', str], bool]] = DefaultFilter(),
+    *paths: Path | str,
+    watch_filter: Callable[['Change', str], bool] | None = DefaultFilter(),
     debounce: int = 1_600,
     step: int = 50,
     stop_event: Optional['AbstractEvent'] = None,
     rust_timeout: int = 5_000,
     yield_on_timeout: bool = False,
-    debug: Optional[bool] = None,
+    debug: bool | None = None,
     raise_interrupt: bool = True,
-    force_polling: Optional[bool] = None,
+    force_polling: bool | None = None,
     poll_delay_ms: int = 300,
     recursive: bool = True,
-    ignore_permission_denied: Optional[bool] = None,
+    ignore_permission_denied: bool | None = None,
 ) -> Generator[set[FileChange], None, None]:
     """
     Watch one or more paths and yield a set of changes whenever files change.
@@ -152,19 +152,19 @@ def watch(
 
 
 async def awatch(  # C901
-    *paths: Union[Path, str],
-    watch_filter: Optional[Callable[[Change, str], bool]] = DefaultFilter(),
+    *paths: Path | str,
+    watch_filter: Callable[[Change, str], bool] | None = DefaultFilter(),
     debounce: int = 1_600,
     step: int = 50,
     stop_event: Optional['AnyEvent'] = None,
-    rust_timeout: Optional[int] = None,
+    rust_timeout: int | None = None,
     yield_on_timeout: bool = False,
-    debug: Optional[bool] = None,
-    raise_interrupt: Optional[bool] = None,
-    force_polling: Optional[bool] = None,
+    debug: bool | None = None,
+    raise_interrupt: bool | None = None,
+    force_polling: bool | None = None,
     poll_delay_ms: int = 300,
     recursive: bool = True,
-    ignore_permission_denied: Optional[bool] = None,
+    ignore_permission_denied: bool | None = None,
 ) -> AsyncGenerator[set[FileChange], None]:
     """
     Asynchronous equivalent of [`watch`][watchfiles.watch] using threads to wait for changes.
@@ -290,7 +290,7 @@ async def awatch(  # C901
 
 
 def _prep_changes(
-    raw_changes: set[tuple[int, str]], watch_filter: Optional[Callable[[Change, str], bool]]
+    raw_changes: set[tuple[int, str]], watch_filter: Callable[[Change, str], bool] | None
 ) -> set[FileChange]:
     # if we wanted to be really snazzy, we could move this into rust
     changes = {(Change(change), path) for change, path in raw_changes}
@@ -309,7 +309,7 @@ def _log_changes(changes: set[FileChange]) -> None:
             logger.info('%d change%s detected', count, plural)
 
 
-def _calc_async_timeout(timeout: Optional[int]) -> int:
+def _calc_async_timeout(timeout: int | None) -> int:
     """
     see https://github.com/samuelcolvin/watchfiles/issues/110
     """
@@ -322,7 +322,7 @@ def _calc_async_timeout(timeout: Optional[int]) -> int:
         return timeout
 
 
-def _default_force_polling(force_polling: Optional[bool]) -> bool:
+def _default_force_polling(force_polling: bool | None) -> bool:
     """
     See docstring for `watch` above for details.
 
@@ -348,7 +348,7 @@ def _default_poll_delay_ms(poll_delay_ms: int) -> int:
         return poll_delay_ms
 
 
-def _default_debug(debug: Optional[bool]) -> bool:
+def _default_debug(debug: bool | None) -> bool:
     if debug is not None:
         return debug
     env_var = os.getenv('WATCHFILES_DEBUG')
@@ -367,7 +367,7 @@ def _auto_force_polling() -> bool:
     return 'microsoft-standard' in uname.release.lower() and uname.system.lower() == 'linux'
 
 
-def _default_ignore_permission_denied(ignore_permission_denied: Optional[bool]) -> bool:
+def _default_ignore_permission_denied(ignore_permission_denied: bool | None) -> bool:
     if ignore_permission_denied is not None:
         return ignore_permission_denied
     env_var = os.getenv('WATCHFILES_IGNORE_PERMISSION_DENIED')

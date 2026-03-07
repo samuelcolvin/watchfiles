@@ -3,7 +3,7 @@ import os
 import re
 from collections.abc import Sequence
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING
 
 __all__ = 'BaseFilter', 'DefaultFilter', 'PythonFilter'
 logger = logging.getLogger('watchfiles.watcher')
@@ -31,7 +31,7 @@ class BaseFilter:
     "entity" here refers to the specific file or directory - basically the result of `path.split(os.sep)[-1]`,
     an obvious example would be `r'\\.py[cod]$'`.
     """
-    ignore_paths: Sequence[Union[str, Path]] = ()
+    ignore_paths: Sequence[str | Path] = ()
     """
     Full paths to ignore, e.g. `/home/users/.cache` or `C:\\Users\\user\\.cache`.
     """
@@ -102,9 +102,9 @@ class DefaultFilter(BaseFilter):
     def __init__(
         self,
         *,
-        ignore_dirs: Optional[Sequence[str]] = None,
-        ignore_entity_patterns: Optional[Sequence[str]] = None,
-        ignore_paths: Optional[Sequence[Union[str, Path]]] = None,
+        ignore_dirs: Sequence[str] | None = None,
+        ignore_entity_patterns: Sequence[str] | None = None,
+        ignore_paths: Sequence[str | Path] | None = None,
     ) -> None:
         """
         Args:
@@ -132,7 +132,7 @@ class PythonFilter(DefaultFilter):
     def __init__(
         self,
         *,
-        ignore_paths: Optional[Sequence[Union[str, Path]]] = None,
+        ignore_paths: Sequence[str | Path] | None = None,
         extra_extensions: Sequence[str] = (),
     ) -> None:
         """
