@@ -89,7 +89,7 @@ omit = ["*/__main__.py"]
 
 [tool.ruff]
 line-length = 120
-target-version = "py38"
+target-version = "py39"
 lint.mccabe = { max-complexity = 14 }
 lint.extend-select = ["Q", "RUF100", "C90", "UP", "I"]
 lint.flake8-quotes = { inline-quotes = "single", multiline-quotes = "double" }

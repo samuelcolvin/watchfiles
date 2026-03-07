@@ -1,8 +1,9 @@
 import logging
 import os
 import re
+from collections.abc import Sequence
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 __all__ = 'BaseFilter', 'DefaultFilter', 'PythonFilter'
 logger = logging.getLogger('watchfiles.watcher')
