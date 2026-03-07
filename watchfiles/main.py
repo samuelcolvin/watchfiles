@@ -2,9 +2,10 @@ import logging
 import os
 import sys
 import warnings
+from collections.abc import AsyncGenerator, Generator
 from enum import IntEnum
 from pathlib import Path
-from typing import TYPE_CHECKING, AsyncGenerator, Callable, Generator, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Callable, Optional, Union
 
 import anyio
 
@@ -31,7 +32,7 @@ class Change(IntEnum):
         return self.name
 
 
-FileChange = Tuple[Change, str]
+FileChange = tuple[Change, str]
 """
 A tuple representing a file change, first element is a [`Change`][watchfiles.Change] member, second is the path
 of the file or directory that changed.
@@ -63,7 +64,7 @@ def watch(
     poll_delay_ms: int = 300,
     recursive: bool = True,
     ignore_permission_denied: Optional[bool] = None,
-) -> Generator[Set[FileChange], None, None]:
+) -> Generator[set[FileChange], None, None]:
     """
     Watch one or more paths and yield a set of changes whenever files change.
 
@@ -164,7 +165,7 @@ async def awatch(  # C901
     poll_delay_ms: int = 300,
     recursive: bool = True,
     ignore_permission_denied: Optional[bool] = None,
-) -> AsyncGenerator[Set[FileChange], None]:
+) -> AsyncGenerator[set[FileChange], None]:
     """
     Asynchronous equivalent of [`watch`][watchfiles.watch] using threads to wait for changes.
     Arguments match those of [`watch`][watchfiles.watch] except `stop_event`.
@@ -289,8 +290,8 @@ async def awatch(  # C901
 
 
 def _prep_changes(
-    raw_changes: Set[Tuple[int, str]], watch_filter: Optional[Callable[[Change, str], bool]]
-) -> Set[FileChange]:
+    raw_changes: set[tuple[int, str]], watch_filter: Optional[Callable[[Change, str], bool]]
+) -> set[FileChange]:
     # if we wanted to be really snazzy, we could move this into rust
     changes = {(Change(change), path) for change, path in raw_changes}
     if watch_filter:
@@ -298,7 +299,7 @@ def _prep_changes(
     return changes
 
 
-def _log_changes(changes: Set[FileChange]) -> None:
+def _log_changes(changes: set[FileChange]) -> None:
     if logger.isEnabledFor(logging.INFO):  # pragma: no branch
         count = len(changes)
         plural = '' if count == 1 else 's'

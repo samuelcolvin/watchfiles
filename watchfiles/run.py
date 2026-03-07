@@ -7,12 +7,13 @@ import shlex
 import signal
 import subprocess
 import sys
+from collections.abc import Generator
 from importlib import import_module
 from multiprocessing import get_context
 from multiprocessing.context import SpawnProcess
 from pathlib import Path
 from time import sleep
-from typing import TYPE_CHECKING, Any, Callable, Dict, Generator, List, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, Callable, Optional, Union
 
 import anyio
 
@@ -29,10 +30,10 @@ logger = logging.getLogger('watchfiles.main')
 def run_process(
     *paths: Union[Path, str],
     target: Union[str, Callable[..., Any]],
-    args: Tuple[Any, ...] = (),
-    kwargs: Optional[Dict[str, Any]] = None,
+    args: tuple[Any, ...] = (),
+    kwargs: Optional[dict[str, Any]] = None,
     target_type: "Literal['function', 'command', 'auto']" = 'auto',
-    callback: Optional[Callable[[Set[FileChange]], None]] = None,
+    callback: Optional[Callable[[set[FileChange]], None]] = None,
     watch_filter: Optional[Callable[[Change, str], bool]] = DefaultFilter(),
     grace_period: float = 0,
     debounce: int = 1_600,
@@ -157,10 +158,10 @@ def run_process(
 async def arun_process(
     *paths: Union[Path, str],
     target: Union[str, Callable[..., Any]],
-    args: Tuple[Any, ...] = (),
-    kwargs: Optional[Dict[str, Any]] = None,
+    args: tuple[Any, ...] = (),
+    kwargs: Optional[dict[str, Any]] = None,
     target_type: "Literal['function', 'command', 'auto']" = 'auto',
-    callback: Optional[Callable[[Set[FileChange]], Any]] = None,
+    callback: Optional[Callable[[set[FileChange]], Any]] = None,
     watch_filter: Optional[Callable[[Change, str], bool]] = DefaultFilter(),
     grace_period: float = 0,
     debounce: int = 1_600,
@@ -239,7 +240,7 @@ async def arun_process(
 spawn_context = get_context('spawn')
 
 
-def split_cmd(cmd: str) -> List[str]:
+def split_cmd(cmd: str) -> list[str]:
     import platform
 
     posix = platform.uname().system.lower() != 'windows'
@@ -249,9 +250,9 @@ def split_cmd(cmd: str) -> List[str]:
 def start_process(
     target: Union[str, Callable[..., Any]],
     target_type: "Literal['function', 'command']",
-    args: Tuple[Any, ...],
-    kwargs: Optional[Dict[str, Any]],
-    changes: Optional[Set[FileChange]] = None,
+    args: tuple[Any, ...],
+    kwargs: Optional[dict[str, Any]],
+    changes: Optional[set[FileChange]] = None,
 ) -> 'CombinedProcess':
     if changes is None:
         changes_env_var = '[]'
@@ -368,7 +369,7 @@ class CombinedProcess:
             return self._p.returncode
 
 
-def run_function(function: str, tty_path: Optional[str], args: Tuple[Any, ...], kwargs: Dict[str, Any]) -> None:
+def run_function(function: str, tty_path: Optional[str], args: tuple[Any, ...], kwargs: dict[str, Any]) -> None:
     with set_tty(tty_path):
         func = import_string(function)
         func(*args, **kwargs)
