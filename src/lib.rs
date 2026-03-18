@@ -6,7 +6,7 @@ use std::io::ErrorKind as IOErrorKind;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 use std::thread::sleep;
-use std::time::{Duration, SystemTime};
+use std::time::{Duration, Instant};
 
 use pyo3::exceptions::{PyFileNotFoundError, PyOSError, PyPermissionError, PyRuntimeError};
 use pyo3::prelude::*;
@@ -274,12 +274,12 @@ impl RustNotify {
             false => Some(stop_event.getattr(py, intern!(py, "is_set"))?.into_bound(py)),
         };
 
-        let mut max_debounce_time: Option<SystemTime> = None;
+        let mut max_debounce_time: Option<Instant> = None;
         let step_time = Duration::from_millis(step_ms);
         let mut last_size: usize = 0;
-        let max_timeout_time: Option<SystemTime> = match timeout_ms {
+        let max_timeout_time: Option<Instant> = match timeout_ms {
             0 => None,
-            _ => Some(SystemTime::now() + Duration::from_millis(timeout_ms)),
+            _ => Some(Instant::now() + Duration::from_millis(timeout_ms)),
         };
         loop {
             py.detach(|| sleep(step_time));
@@ -313,7 +313,7 @@ impl RustNotify {
                 }
                 last_size = size;
 
-                let now = SystemTime::now();
+                let now = Instant::now();
                 if let Some(max_time) = max_debounce_time {
                     if now > max_time {
                         break;
@@ -322,7 +322,7 @@ impl RustNotify {
                     max_debounce_time = Some(now + Duration::from_millis(debounce_ms));
                 }
             } else if let Some(max_time) = max_timeout_time {
-                if SystemTime::now() > max_time {
+                if Instant::now() > max_time {
                     slf.borrow().clear();
                     return Ok(intern!(py, "timeout").as_any().to_owned().unbind());
                 }
