@@ -350,8 +350,7 @@ def _default_poll_delay_ms(poll_delay_ms: int) -> int:
 def _default_debug(debug: Optional[bool]) -> bool:
     if debug is not None:
         return debug
-    env_var = os.getenv('WATCHFILES_DEBUG')
-    return bool(env_var)
+    return _default_env_var('WATCHFILES_DEBUG')
 
 
 def _auto_force_polling() -> bool:
@@ -369,5 +368,9 @@ def _auto_force_polling() -> bool:
 def _default_ignore_permission_denied(ignore_permission_denied: Optional[bool]) -> bool:
     if ignore_permission_denied is not None:
         return ignore_permission_denied
-    env_var = os.getenv('WATCHFILES_IGNORE_PERMISSION_DENIED')
-    return bool(env_var)
+    return _default_env_var('WATCHFILES_IGNORE_PERMISSION_DENIED')
+
+
+def _default_env_var(env_name: str) -> bool:
+    env_var = os.getenv(env_name)
+    return bool(env_var) and env_var.lower() not in {'false', 'disable', 'disabled'}

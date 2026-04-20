@@ -334,6 +334,15 @@ def test_ignore_permission_denied():
         ('1', True, True),
         ('1', False, False),
         ('1', None, True),
+        ('false', True, True),
+        ('false', False, False),
+        ('false', None, False),
+        ('disable', True, True),
+        ('disable', False, False),
+        ('disable', None, False),
+        ('disabled', True, True),
+        ('disabled', False, False),
+        ('disabled', None, False),
     ],
 )
 def test_default_ignore_permission_denied(env: 'SetEnv', env_var, arg, expected):
