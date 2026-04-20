@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from watchfiles import watch
-from watchfiles.main import _default_force_polling
+from watchfiles.main import _default_debug, _default_force_polling
 
 if TYPE_CHECKING:
     from .conftest import SetEnv
@@ -102,3 +102,32 @@ def test_default_force_polling_wsl(mocker, env: SetEnv, env_var, arg, expected, 
         env('WATCHFILES_FORCE_POLLING', env_var)
     assert _default_force_polling(arg) == expected
     assert m.call_count == call_count
+
+
+@pytest.mark.parametrize(
+    'env_var,arg,expected',
+    [
+        (None, True, True),
+        (None, False, False),
+        (None, None, False),
+        ('', True, True),
+        ('', False, False),
+        ('', None, False),
+        ('1', True, True),
+        ('1', False, False),
+        ('1', None, True),
+        ('false', True, True),
+        ('false', False, False),
+        ('false', None, False),
+        ('disable', True, True),
+        ('disable', False, False),
+        ('disable', None, False),
+        ('disabled', True, True),
+        ('disabled', False, False),
+        ('disabled', None, False),
+    ],
+)
+def test_default_debug(env: SetEnv, env_var, arg, expected):
+    if env_var is not None:
+        env('WATCHFILES_DEBUG', env_var)
+    assert _default_debug(arg) == expected
