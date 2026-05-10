@@ -4,7 +4,7 @@ import sys
 import warnings
 from enum import IntEnum
 from pathlib import Path
-from typing import TYPE_CHECKING, AsyncGenerator, Callable, Generator, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, AsyncGenerator, Callable, Generator, Optional, Set, Tuple, Union, cast
 
 import anyio
 
@@ -155,7 +155,7 @@ async def awatch(  # C901
     watch_filter: Optional[Callable[[Change, str], bool]] = DefaultFilter(),
     debounce: int = 1_600,
     step: int = 50,
-    stop_event: Optional['AnyEvent'] = None,
+    stop_event: Optional['AbstractEvent'] = None,
     rust_timeout: Optional[int] = None,
     yield_on_timeout: bool = False,
     debug: Optional[bool] = None,
@@ -247,7 +247,7 @@ async def awatch(  # C901
     if stop_event is None:
         stop_event_: AnyEvent = anyio.Event()
     else:
-        stop_event_ = stop_event
+        stop_event_ = cast('AnyEvent', stop_event)
 
     force_polling = _default_force_polling(force_polling)
     poll_delay_ms = _default_poll_delay_ms(poll_delay_ms)
