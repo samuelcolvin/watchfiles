@@ -3,9 +3,10 @@ import logging
 import os
 import shlex
 import sys
+from collections.abc import Callable
 from pathlib import Path
 from textwrap import dedent
-from typing import Any, Callable, List, Optional, Tuple, Union, cast
+from typing import Any, cast
 
 from . import Change
 from .filters import BaseFilter, DefaultFilter, PythonFilter
@@ -195,9 +196,9 @@ def import_exit(function_path: str) -> Any:
 
 
 def build_filter(
-    filter_name: str, ignore_paths_str: Optional[str]
-) -> Tuple[Union[None, DefaultFilter, Callable[[Change, str], bool]], str]:
-    ignore_paths: List[Path] = []
+    filter_name: str, ignore_paths_str: str | None
+) -> tuple[None | DefaultFilter | Callable[[Change, str], bool], str]:
+    ignore_paths: list[Path] = []
     if ignore_paths_str:
         ignore_paths = [Path(p).resolve() for p in ignore_paths_str.split(',')]
 
