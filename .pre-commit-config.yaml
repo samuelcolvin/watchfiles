@@ -17,13 +17,17 @@ repos:
     entry: make lint-python
     types: [python]
     language: system
+    pass_filenames: false
   - id: lint-rust
     name: Lint Rust
     entry: make lint-rust
     types: [rust]
     language: system
+    pass_filenames: false
   - id: mypy
     name: Mypy
     entry: make mypy
     types: [python]
     language: system
+    pass_filenames: false
+    require_serial: true
