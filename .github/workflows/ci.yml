@@ -152,19 +152,24 @@ jobs:
             pypy: true
           - os: windows
             ls: dir
+          # 3.15 is omitted from the Windows interpreter lists: pyo3's `generate-import-lib`
+          # feature uses python3-dll-a, which (as bundled by pyo3 0.28.3) only supports
+          # CPython up to 3.14, so generating the 3.15 import library fails. Restore 3.15
+          # once pyo3 ships python3-dll-a >= 0.2.15. See:
+          # https://github.com/samuelcolvin/watchfiles/pull/369#issuecomment-4474026284
           - os: windows
             ls: dir
             target: i686
             python-architecture: x86
-            interpreter: 3.10 3.11 3.12 3.13 3.14 3.15
+            interpreter: 3.10 3.11 3.12 3.13 3.14
           - os: windows
             ls: dir
             target: x86_64
-            interpreter: 3.10 3.11 3.12 3.13 3.14 3.15
+            interpreter: 3.10 3.11 3.12 3.13 3.14
           - os: windows
             ls: dir
             target: aarch64
-            interpreter: 3.11 3.12 3.13 3.14 3.15
+            interpreter: 3.11 3.12 3.13 3.14
           - os: ubuntu
             platform: linux
             target: i686
