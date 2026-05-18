@@ -50,11 +50,9 @@ fn map_watch_error(error: notify::Error) -> PyErr {
     let err_string = error.to_string();
     match error.kind {
         NotifyErrorKind::PathNotFound => return PyFileNotFoundError::new_err(err_string),
-        NotifyErrorKind::Generic(ref err) => {
-            // on Windows, we get a Generic with this message when the path does not exist
-            if err.as_str() == "Input watch path is neither a file nor a directory." {
-                return PyFileNotFoundError::new_err(err_string);
-            }
+        // on Windows, we get a Generic with this message when the path does not exist
+        NotifyErrorKind::Generic(ref err) if err.as_str() == "Input watch path is neither a file nor a directory." => {
+            return PyFileNotFoundError::new_err(err_string);
         }
         NotifyErrorKind::Io(ref io_error) => match io_error.kind() {
             IOErrorKind::NotFound => return PyFileNotFoundError::new_err(err_string),
@@ -226,20 +224,16 @@ impl RustNotify {
                     }
                     Err(error) => {
                         match &error.kind {
-                            NotifyErrorKind::Io(io_error) => {
-                                if io_error.raw_os_error() == Some(38) {
-                                    // see https://github.com/samuelcolvin/watchfiles/issues/167
-                                    // we callback to PollWatcher
-                                    if debug {
-                                        eprintln!(
-                                            "IO error using recommend watcher: {:?}, falling back to PollWatcher",
-                                            io_error
-                                        );
-                                    }
-                                    create_poll_watcher!("Error creating fallback poll watcher: {}")
-                                } else {
-                                    wf_error!("Error creating recommended watcher: {}", error)
+                            // see https://github.com/samuelcolvin/watchfiles/issues/167
+                            // we callback to PollWatcher
+                            NotifyErrorKind::Io(io_error) if io_error.raw_os_error() == Some(38) => {
+                                if debug {
+                                    eprintln!(
+                                        "IO error using recommend watcher: {:?}, falling back to PollWatcher",
+                                        io_error
+                                    );
                                 }
+                                create_poll_watcher!("Error creating fallback poll watcher: {}")
                             }
                             _ => {
                                 wf_error!("Error creating recommended watcher: {}", error)
