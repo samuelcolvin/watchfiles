@@ -54,7 +54,8 @@ dev = [
     "pytest-pretty>=1.2.0",
     "pytest-timeout>=2.3.1",
 ]
-lint = ["mypy>=1.14.1", "ruff>=0.9.0", "trio>=0.28.0"]
+# mpy 2.1.0 is failing in CI, hence constraint
+lint = ["mypy>=1.14.1,<2", "ruff>=0.9.0", "trio>=0.28.0"]
 docs = [
     "mdx-include>=1.4.2",
     "mkdocs>=1.6.1",
