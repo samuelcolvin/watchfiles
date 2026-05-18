@@ -20,7 +20,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu, macos, windows]
-        rust-version: [stable, "1.77"]
+        rust-version: [stable, "1.83"]
         python-version:
           - "3.10"
           - "3.11"
@@ -33,9 +33,9 @@ jobs:
           - "pypy3.10"
           - "pypy3.11"
         exclude:
-          - rust-version: "1.77"
+          - rust-version: "1.83"
             os: macos
-          - rust-version: "1.77"
+          - rust-version: "1.83"
             os: windows
 
     runs-on: ${{ matrix.os }}-latest
