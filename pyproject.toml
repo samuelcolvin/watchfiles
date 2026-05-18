@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "watchfiles"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 description = "Simple, modern and high performance file watching and code reload in python."
 authors = [{ name = "Samuel Colvin", email = "s@muelcolvin.com" }]
 dependencies = ["anyio>=3.0.0"]
