@@ -7,12 +7,13 @@ import shlex
 import signal
 import subprocess
 import sys
+from collections.abc import Callable, Generator
 from importlib import import_module
 from multiprocessing import get_context
 from multiprocessing.context import SpawnProcess
 from pathlib import Path
 from time import sleep
-from typing import TYPE_CHECKING, Any, Callable, Dict, Generator, List, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any
 
 import anyio
 
@@ -27,17 +28,17 @@ logger = logging.getLogger('watchfiles.main')
 
 
 def run_process(
-    *paths: Union[Path, str],
-    target: Union[str, Callable[..., Any]],
-    args: Tuple[Any, ...] = (),
-    kwargs: Optional[Dict[str, Any]] = None,
+    *paths: Path | str,
+    target: str | Callable[..., Any],
+    args: tuple[Any, ...] = (),
+    kwargs: dict[str, Any] | None = None,
     target_type: "Literal['function', 'command', 'auto']" = 'auto',
-    callback: Optional[Callable[[Set[FileChange]], None]] = None,
-    watch_filter: Optional[Callable[[Change, str], bool]] = DefaultFilter(),
+    callback: Callable[[set[FileChange]], None] | None = None,
+    watch_filter: Callable[[Change, str], bool] | None = DefaultFilter(),
     grace_period: float = 0,
     debounce: int = 1_600,
     step: int = 50,
-    debug: Optional[bool] = None,
+    debug: bool | None = None,
     sigint_timeout: int = 5,
     sigkill_timeout: int = 1,
     recursive: bool = True,
@@ -155,17 +156,17 @@ def run_process(
 
 
 async def arun_process(
-    *paths: Union[Path, str],
-    target: Union[str, Callable[..., Any]],
-    args: Tuple[Any, ...] = (),
-    kwargs: Optional[Dict[str, Any]] = None,
+    *paths: Path | str,
+    target: str | Callable[..., Any],
+    args: tuple[Any, ...] = (),
+    kwargs: dict[str, Any] | None = None,
     target_type: "Literal['function', 'command', 'auto']" = 'auto',
-    callback: Optional[Callable[[Set[FileChange]], Any]] = None,
-    watch_filter: Optional[Callable[[Change, str], bool]] = DefaultFilter(),
+    callback: Callable[[set[FileChange]], Any] | None = None,
+    watch_filter: Callable[[Change, str], bool] | None = DefaultFilter(),
     grace_period: float = 0,
     debounce: int = 1_600,
     step: int = 50,
-    debug: Optional[bool] = None,
+    debug: bool | None = None,
     recursive: bool = True,
     ignore_permission_denied: bool = False,
 ) -> int:
@@ -239,7 +240,7 @@ async def arun_process(
 spawn_context = get_context('spawn')
 
 
-def split_cmd(cmd: str) -> List[str]:
+def split_cmd(cmd: str) -> list[str]:
     import platform
 
     posix = platform.uname().system.lower() != 'windows'
@@ -247,11 +248,11 @@ def split_cmd(cmd: str) -> List[str]:
 
 
 def start_process(
-    target: Union[str, Callable[..., Any]],
+    target: str | Callable[..., Any],
     target_type: "Literal['function', 'command']",
-    args: Tuple[Any, ...],
-    kwargs: Optional[Dict[str, Any]],
-    changes: Optional[Set[FileChange]] = None,
+    args: tuple[Any, ...],
+    kwargs: dict[str, Any] | None,
+    changes: set[FileChange] | None = None,
 ) -> 'CombinedProcess':
     if changes is None:
         changes_env_var = '[]'
@@ -260,7 +261,7 @@ def start_process(
 
     os.environ['WATCHFILES_CHANGES'] = changes_env_var
 
-    process: Union[SpawnProcess, subprocess.Popen[bytes]]
+    process: SpawnProcess | subprocess.Popen[bytes]
     if target_type == 'function':
         kwargs = kwargs or {}
         if isinstance(target, str):
@@ -282,7 +283,7 @@ def start_process(
     return CombinedProcess(process)
 
 
-def detect_target_type(target: Union[str, Callable[..., Any]]) -> "Literal['function', 'command']":
+def detect_target_type(target: str | Callable[..., Any]) -> "Literal['function', 'command']":
     """
     Used by [`run_process`][watchfiles.run_process], [`arun_process`][watchfiles.arun_process]
     and indirectly the CLI to determine the target type with `target_type` is `auto`.
@@ -315,7 +316,7 @@ def detect_target_type(target: Union[str, Callable[..., Any]]) -> "Literal['func
 
 
 class CombinedProcess:
-    def __init__(self, p: 'Union[SpawnProcess, subprocess.Popen[bytes]]'):
+    def __init__(self, p: 'SpawnProcess | subprocess.Popen[bytes]'):
         self._p = p
         assert self.pid is not None, 'process not yet spawned'
 
@@ -361,14 +362,14 @@ class CombinedProcess:
             self._p.wait(timeout)
 
     @property
-    def exitcode(self) -> Optional[int]:
+    def exitcode(self) -> int | None:
         if isinstance(self._p, SpawnProcess):
             return self._p.exitcode
         else:
             return self._p.returncode
 
 
-def run_function(function: str, tty_path: Optional[str], args: Tuple[Any, ...], kwargs: Dict[str, Any]) -> None:
+def run_function(function: str, tty_path: str | None, args: tuple[Any, ...], kwargs: dict[str, Any]) -> None:
     with set_tty(tty_path):
         func = import_string(function)
         func(*args, **kwargs)
@@ -391,7 +392,7 @@ def import_string(dotted_path: str) -> Any:
         raise ImportError(f'Module "{module_path}" does not define a "{class_name}" attribute') from e
 
 
-def get_tty_path() -> Optional[str]:  # pragma: no cover
+def get_tty_path() -> str | None:  # pragma: no cover
     """
     Return the path to the current TTY, if any.
 
@@ -408,7 +409,7 @@ def get_tty_path() -> Optional[str]:  # pragma: no cover
 
 
 @contextlib.contextmanager
-def set_tty(tty_path: Optional[str]) -> Generator[None, None, None]:
+def set_tty(tty_path: str | None) -> Generator[None, None, None]:
     if tty_path:
         try:
             with open(tty_path) as tty:  # pragma: no cover

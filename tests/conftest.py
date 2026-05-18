@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 from threading import Thread
 from time import sleep, time
-from typing import TYPE_CHECKING, Any, List, Set, Tuple
+from typing import TYPE_CHECKING, Any
 
 import pytest
 
@@ -61,7 +61,7 @@ def write_soon():
         t.join()
 
 
-ChangesType = List[Set[Tuple[int, str]]]
+ChangesType = list[set[tuple[int, str]]]
 
 
 class MockRustNotify:
