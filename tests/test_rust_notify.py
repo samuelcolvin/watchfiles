@@ -184,6 +184,41 @@ def test_rename(test_dir: Path):
     }
 
 
+@pytest.mark.skipif(sys.platform != 'darwin', reason='macOS-specific case-insensitive APFS behaviour')
+def test_rename_case_only(test_dir: Path):
+    """Regression test for https://github.com/samuelcolvin/watchfiles/issues/368.
+
+    On the default case-insensitive APFS the rename emits two ``Modify(Name(Any))``
+    events whose paths only differ in case, both pointing at a file that ``Path::exists``
+    treats as present. Previously both events were misclassified as ADDED instead of a
+    DELETED/ADDED pair.
+    """
+    src = test_dir / 'case_rename.txt'
+    if not src.exists():
+        pytest.skip('case_rename.txt fixture missing')
+
+    # Skip if test_dir happens to live on a case-sensitive filesystem (e.g. APFS configured
+    # case-sensitive, or a UFS volume). The bug only manifests when the FS case-folds at
+    # lookup time.
+    if not (test_dir / 'CASE_RENAME.TXT').exists():
+        pytest.skip('test_dir is on a case-sensitive filesystem')
+
+    dst = test_dir / 'CASE_RENAME.txt'
+    watcher = RustNotify([str(test_dir)], False, False, 0, True, False)
+    try:
+        src.rename(dst)
+
+        assert watcher.watch(200, 50, 500, None) == {
+            (3, str(src)),
+            (1, str(dst)),
+        }
+    finally:
+        # Restore so the fixture's session-level snapshot stays consistent if this test
+        # runs before other tests that scan test_dir.
+        if dst.exists():
+            dst.rename(src)
+
+
 def test_watch_multiple(tmp_path: Path):
     foo = tmp_path / 'foo'
     foo.mkdir()
