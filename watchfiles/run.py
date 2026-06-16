@@ -151,7 +151,7 @@ def run_process(
             process = start_process(target, target_type, args, kwargs, changes)
             reloads += 1
     finally:
-        process.stop()
+        process.stop(sigint_timeout=sigint_timeout, sigkill_timeout=sigkill_timeout)
     return reloads
 
 
