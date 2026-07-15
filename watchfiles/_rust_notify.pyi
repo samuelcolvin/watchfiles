@@ -55,8 +55,8 @@ class RustNotify:
 
         Args:
             debounce_ms: maximum time in milliseconds to group changes over before returning.
-            step_ms: time to wait for new changes in milliseconds, if no changes are detected
-                in this time, and at least one change has been detected, the changes are yielded.
+            step_ms: interval in milliseconds between checks for new changes; once at least one change
+                has been detected, changes are yielded if no further changes are detected within this interval.
             timeout_ms: maximum time in milliseconds to wait for changes before returning,
                 `0` means wait indefinitely, `debounce_ms` takes precedence over `timeout_ms` once
                 a change is detected.
