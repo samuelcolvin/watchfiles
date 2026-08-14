@@ -203,7 +203,12 @@ impl RustNotify {
                     return Err(PyFileNotFoundError::new_err("No such file or directory"));
                 }
                 let delay = Duration::from_millis(poll_delay_ms);
-                let config = NotifyConfig::default().with_poll_interval(delay);
+                // notify::PollWatcher stores mtime as whole seconds, so same-second
+                // content edits are invisible unless we also hash file contents.
+                // See https://github.com/samuelcolvin/watchfiles/issues/319
+                let config = NotifyConfig::default()
+                    .with_poll_interval(delay)
+                    .with_compare_contents(true);
                 let mut watcher = match PollWatcher::new(event_handler, config) {
                     Ok(watcher) => watcher,
                     Err(e) => return wf_error!($msg_template, e),
