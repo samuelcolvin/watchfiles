@@ -1,3 +1,4 @@
+import os
 import re
 import sys
 from pathlib import Path
@@ -71,6 +72,8 @@ def test_simple_function(mock_rust_notify: 'MockRustType'):
         (Path('x/y/z/foo.txt'), True),
         (Path.home() / 'ignore' / 'foo.txt', False),
         (Path.home() / 'ignore', False),
+        (Path.home() / 'ignore-other' / 'foo.txt', True),
+        (Path.home() / 'ignore.txt', True),
         (Path.home() / '.git' / 'foo.txt', False),
         (Path.home() / 'foo' / 'foo.txt', True),
         (Path('.git') / 'foo.txt', False),
@@ -79,6 +82,14 @@ def test_simple_function(mock_rust_notify: 'MockRustType'):
 def test_default_filter(path, expected):
     f = DefaultFilter(ignore_paths=[Path.home() / 'ignore'])
     assert f(Change.added, str(path)) == expected
+
+
+def test_ignore_path_with_trailing_separator():
+    ignored_path = Path.home() / 'ignore'
+    f = DefaultFilter(ignore_paths=[f'{ignored_path}{os.sep}'])
+
+    assert f(Change.added, str(ignored_path)) is False
+    assert f(Change.added, str(ignored_path / 'foo.txt')) is False
 
 
 @pytest.mark.skipif(sys.platform == 'win32', reason='paths are different on windows')

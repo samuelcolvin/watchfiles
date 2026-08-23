@@ -9,6 +9,15 @@ __all__ = 'BaseFilter', 'DefaultFilter', 'PythonFilter'
 logger = logging.getLogger('watchfiles.watcher')
 
 
+def _is_path_or_descendant(path: str, ignore_path: str) -> bool:
+    normalized_path = os.path.normcase(os.path.normpath(path))
+    normalized_ignore_path = os.path.normcase(os.path.normpath(ignore_path))
+    try:
+        return os.path.commonpath((normalized_path, normalized_ignore_path)) == normalized_ignore_path
+    except ValueError:
+        return False
+
+
 if TYPE_CHECKING:
     from .main import Change
 
@@ -58,7 +67,9 @@ class BaseFilter:
         entity_name = parts[-1]
         if any(r.search(entity_name) for r in self._ignore_entity_regexes):
             return False
-        elif self._ignore_paths and path.startswith(self._ignore_paths):
+        elif self._ignore_paths and any(
+            _is_path_or_descendant(path, ignore_path) for ignore_path in self._ignore_paths
+        ):
             return False
         else:
             return True
