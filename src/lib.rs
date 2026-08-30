@@ -277,9 +277,7 @@ impl RustNotify {
         };
         loop {
             let sleep_for = if let Some(max_time) = max_debounce_time {
-                max_time
-                    .saturating_duration_since(Instant::now())
-                    .min(step_time)
+                max_time.saturating_duration_since(Instant::now()).min(step_time)
             } else {
                 step_time
             };
