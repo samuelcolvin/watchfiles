@@ -42,6 +42,7 @@ def run_process(
     sigint_timeout: int = 5,
     sigkill_timeout: int = 1,
     recursive: bool = True,
+    follow_links: bool = True,
     ignore_permission_denied: bool = False,
 ) -> int:
     """
@@ -76,6 +77,7 @@ def run_process(
         sigint_timeout: the number of seconds to wait after sending sigint before sending sigkill
         sigkill_timeout: the number of seconds to wait after sending sigkill before raising an exception
         recursive: matches the same argument of [`watch`][watchfiles.watch]
+        follow_links: matches the same argument of [`watch`][watchfiles.watch]
 
     Returns:
         number of times the function was reloaded.
@@ -144,6 +146,7 @@ def run_process(
             debug=debug,
             raise_interrupt=False,
             recursive=recursive,
+            follow_links=follow_links,
             ignore_permission_denied=ignore_permission_denied,
         ):
             callback and callback(changes)
@@ -168,6 +171,7 @@ async def arun_process(
     step: int = 50,
     debug: bool | None = None,
     recursive: bool = True,
+    follow_links: bool = True,
     ignore_permission_denied: bool = False,
 ) -> int:
     """
@@ -221,6 +225,7 @@ async def arun_process(
         step=step,
         debug=debug,
         recursive=recursive,
+        follow_links=follow_links,
         ignore_permission_denied=ignore_permission_denied,
     ):
         if callback is not None:

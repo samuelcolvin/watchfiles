@@ -22,6 +22,7 @@ class RustNotify:
         poll_delay_ms: int,
         recursive: bool,
         ignore_permission_denied: bool,
+        follow_links: bool = True,
     ) -> None:
         """
         Create a new `RustNotify` instance and start a thread to watch for changes.
@@ -36,6 +37,7 @@ class RustNotify:
             recursive: if `True`, watch for changes in sub-directories recursively, otherwise watch only for changes in
                 the top-level directory, default is `True`.
             ignore_permission_denied: if `True`, permission denied errors are ignored while watching changes.
+            follow_links: if `True`, recursively follow symbolic links while watching directories.
         """
     def watch(
         self,

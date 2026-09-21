@@ -103,6 +103,15 @@ macro_rules! wf_error {
 #[pymethods]
 impl RustNotify {
     #[new]
+    #[pyo3(signature = (
+        watch_paths,
+        debug,
+        force_polling,
+        poll_delay_ms,
+        recursive,
+        ignore_permission_denied,
+        follow_links = true
+    ))]
     fn py_new(
         watch_paths: Vec<String>,
         debug: bool,
@@ -110,6 +119,7 @@ impl RustNotify {
         poll_delay_ms: u64,
         recursive: bool,
         ignore_permission_denied: bool,
+        follow_links: bool,
     ) -> PyResult<Self> {
         let changes: Arc<Mutex<HashSet<(u8, String)>>> = Arc::new(Mutex::new(HashSet::<(u8, String)>::new()));
         let error: Arc<Mutex<Option<String>>> = Arc::new(Mutex::new(None));
@@ -203,7 +213,9 @@ impl RustNotify {
                     return Err(PyFileNotFoundError::new_err("No such file or directory"));
                 }
                 let delay = Duration::from_millis(poll_delay_ms);
-                let config = NotifyConfig::default().with_poll_interval(delay);
+                let config = NotifyConfig::default()
+                    .with_poll_interval(delay)
+                    .with_follow_symlinks(follow_links);
                 let mut watcher = match PollWatcher::new(event_handler, config) {
                     Ok(watcher) => watcher,
                     Err(e) => return wf_error!($msg_template, e),
@@ -216,7 +228,8 @@ impl RustNotify {
         let watcher: WatcherEnum = match force_polling {
             true => create_poll_watcher!("Error creating poll watcher: {}"),
             false => {
-                match RecommendedWatcher::new(event_handler.clone(), NotifyConfig::default()) {
+                let config = NotifyConfig::default().with_follow_symlinks(follow_links);
+                match RecommendedWatcher::new(event_handler.clone(), config) {
                     Ok(watcher) => {
                         let mut watcher = watcher;
                         watcher_paths!(watcher, watch_paths, debug, recursive, ignore_permission_denied);

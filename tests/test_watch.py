@@ -21,6 +21,17 @@ except ImportError:
     pass
 
 
+def test_watch_follow_links_forwarded(mocker):
+    watcher = mocker.MagicMock()
+    watcher.__enter__.return_value = watcher
+    watcher.watch.return_value = 'stop'
+    rust_notify = mocker.patch('watchfiles.main.RustNotify', return_value=watcher)
+
+    assert list(watch('.', follow_links=False)) == []
+
+    assert rust_notify.call_args.args[-1] is False
+
+
 def test_watch(tmp_path: Path, write_soon):
     sleep(0.05)
     write_soon(tmp_path / 'foo.txt')
