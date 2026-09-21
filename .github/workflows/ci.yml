@@ -8,6 +8,8 @@ on:
       - "**"
   pull_request: {}
 
+permissions: {}
+
 env:
   COLUMNS: 120
   UV_PYTHON: 3.12
@@ -38,27 +40,38 @@ jobs:
 
     runs-on: ${{ matrix.os }}-latest
 
+    # codecov authenticates via OIDC instead of a repository token
+    permissions:
+      id-token: write
+
     env:
       UV_PYTHON: ${{ matrix.python-version }}
       RUST: ${{ matrix.rust-version }}
       OS: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          enable-cache: true
+          persist-credentials: false
 
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          enable-cache: true # zizmor: ignore[cache-poisoning] -- Job does not produce release artifacts and does not have sensitive permissions
+
+      # no release versioning, see https://github.com/dtolnay/rust-toolchain/issues/180
       - name: install rust
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # v1
         with:
-          profile: minimal
           toolchain: ${{ matrix.rust-version }}
-          override: true
 
       - name: cache rust
-        uses: Swatinem/rust-cache@v1
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          # pyo3's build output depends on the interpreter it was built against (free-threaded
+          # and PyPy builds differ), so keep one cache per matrix entry
+          key: ${{ matrix.python-version }}
+          lookup-only: false # zizmor: ignore[cache-poisoning] -- Job does not produce release artifacts and does not have sensitive permissions
+          cache-on-failure: true
 
       - if: matrix.os == 'ubuntu'
         run: |
@@ -75,31 +88,36 @@ jobs:
 
       - run: uv run coverage xml
 
-      - uses: codecov/codecov-action@v1.0.13
+      - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
-          file: ./coverage.xml
+          files: ./coverage.xml
           env_vars: UV_PYTHON,RUST,OS
+          use_oidc: true
 
   lint:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          enable-cache: true
+          persist-credentials: false
 
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          enable-cache: true # zizmor: ignore[cache-poisoning] -- Job does not produce release artifacts and does not have sensitive permissions
+
+      # no release versioning, see https://github.com/dtolnay/rust-toolchain/issues/180
       - name: install rust
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # v1
         with:
-          profile: minimal
           toolchain: stable
-          override: true
           components: rustfmt, clippy
 
       - name: cache rust
-        uses: Swatinem/rust-cache@v1
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          lookup-only: false # zizmor: ignore[cache-poisoning] -- Job does not produce release artifacts and does not have sensitive permissions
+          cache-on-failure: true
 
       - run: uv sync --group lint
 
@@ -110,18 +128,20 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          enable-cache: true
+          persist-credentials: false
+
+      # the built site is published on tag pushes, so leave setup-uv's cache on its `auto`
+      # default, which disables caching for tag push events
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
 
       - run: uv sync --group docs
 
       - run: make docs
 
       - name: store docs site
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: docs
           path: site
@@ -181,23 +201,25 @@ jobs:
     runs-on: ${{ matrix.os }}-latest
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: set up python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.13"
           architecture: ${{ matrix.python-architecture || 'x64' }}
 
       - name: check GITHUB_REF matches package version
-        uses: samuelcolvin/check-python-version@v4.1
+        uses: samuelcolvin/check-python-version@ee87cddb8049d2694cc03badc8569765a05cef00 # v5
         if: ${{ startsWith(github.ref, 'refs/tags/') && matrix.os == 'ubuntu' }}
         with:
           version_file_path: Cargo.toml
 
       - name: build sdist
         if: ${{ matrix.os == 'ubuntu' && matrix.target == 'x86_64' && matrix.manylinux == 'auto' }}
-        uses: PyO3/maturin-action@v1.49.3
+        uses: PyO3/maturin-action@e83996d129638aa358a18fbd1dfb82f0b0fb5d3b # v1.51.0
         with:
           command: sdist
           args: --out dist
@@ -206,7 +228,7 @@ jobs:
       # every CPython version >= 3.10. Free-threaded builds don't support abi3, so maturin
       # builds a separate version-specific wheel for each one listed here.
       - name: build wheels
-        uses: PyO3/maturin-action@v1.49.3
+        uses: PyO3/maturin-action@e83996d129638aa358a18fbd1dfb82f0b0fb5d3b # v1.51.0
         with:
           target: ${{ matrix.target }}
           manylinux: ${{ matrix.manylinux || 'auto' }}
@@ -214,7 +236,7 @@ jobs:
 
       - name: build pypy wheels
         if: ${{ matrix.pypy }}
-        uses: PyO3/maturin-action@v1.49.3
+        uses: PyO3/maturin-action@e83996d129638aa358a18fbd1dfb82f0b0fb5d3b # v1.51.0
         with:
           target: ${{ matrix.target }}
           manylinux: ${{ matrix.manylinux || 'auto' }}
@@ -222,7 +244,7 @@ jobs:
 
       - run: ${{ matrix.ls || 'ls -lh' }} dist/
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: pypi_files_${{ matrix.os }}_${{ matrix.target }}_${{ matrix.manylinux }}
           path: dist
@@ -232,10 +254,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: get dist artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           pattern: pypi_files_*
           merge-multiple: true
@@ -265,7 +289,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Decide whether the needed jobs succeeded or failed
-        uses: re-actors/alls-green@release/v1
+        uses: re-actors/alls-green@b5b5b37504aa4183270bd3d855c52a67f212be35 # v1.3.0
         with:
           jobs: ${{ toJSON(needs) }}
 
@@ -280,21 +304,22 @@ jobs:
       contents: write
 
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          enable-cache: true
+          persist-credentials: false
+
+      # this job only runs on tag pushes, where setup-uv's `auto` default disables caching
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
 
       - name: get dist artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           pattern: pypi_files_*
           merge-multiple: true
           path: dist
 
       - name: get docs
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: docs
           path: site
@@ -303,7 +328,7 @@ jobs:
         run: "uv publish --trusted-publishing always dist/*"
 
       - name: publish docs
-        uses: JamesIves/github-pages-deploy-action@v4.7.2
+        uses: JamesIves/github-pages-deploy-action@fa24774553152dd7873cd16ebd8d959b010c5445 # v4.9.0
         with:
           branch: gh-pages
           folder: site
