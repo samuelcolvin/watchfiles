@@ -29,6 +29,7 @@ notify = { version = "8.0.0" }
 pyo3 = { version = "0.29.0", features = [
     "extension-module",
     "generate-import-lib",
+    "abi3-py310",
 ] }
 
 [lib]

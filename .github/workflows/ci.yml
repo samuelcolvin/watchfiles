@@ -151,24 +151,10 @@ jobs:
             pypy: true
           - os: windows
             ls: dir
-          # 3.15 is omitted from the Windows interpreter lists: pyo3's `generate-import-lib`
-          # feature uses python3-dll-a, which (as bundled by pyo3 0.28.3) only supports
-          # CPython up to 3.14, so generating the 3.15 import library fails. Restore 3.15
-          # once pyo3 ships python3-dll-a >= 0.2.15. See:
-          # https://github.com/samuelcolvin/watchfiles/pull/369#issuecomment-4474026284
           - os: windows
             ls: dir
             target: i686
             python-architecture: x86
-            interpreter: 3.10 3.11 3.12 3.13 3.14 3.14t
-          - os: windows
-            ls: dir
-            target: x86_64
-            interpreter: 3.10 3.11 3.12 3.13 3.14 3.14t
-          - os: windows
-            ls: dir
-            target: aarch64
-            interpreter: 3.11 3.12 3.13 3.14 3.14t
           - os: ubuntu
             platform: linux
             target: i686
@@ -218,12 +204,15 @@ jobs:
           command: sdist
           args: --out dist
 
+      # CPython wheels use the stable ABI (`abi3-py310` in Cargo.toml), so one wheel covers
+      # every CPython version >= 3.10. Free-threaded builds don't support abi3, so maturin
+      # builds a separate version-specific wheel for each one listed here.
       - name: build wheels
         uses: PyO3/maturin-action@v1.49.3
         with:
           target: ${{ matrix.target }}
           manylinux: ${{ matrix.manylinux || 'auto' }}
-          args: --release --out dist --interpreter ${{ matrix.interpreter || '3.10 3.11 3.12 3.13 3.14 3.14t 3.15' }}
+          args: --release --out dist --interpreter 3.10 3.14t
 
       - name: build pypy wheels
         if: ${{ matrix.pypy }}
@@ -237,7 +226,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: pypi_files_${{ matrix.os }}_${{ matrix.target }}_${{ matrix.interpreter || 'all' }}_${{ matrix.manylinux }}
+          name: pypi_files_${{ matrix.os }}_${{ matrix.target }}_${{ matrix.manylinux }}
           path: dist
 
   list-pypi-files:
@@ -266,10 +255,10 @@ jobs:
           tree -a sdist-files
 
       - name: extract and list wheel file
-        run: ls dist/*cp312-manylinux_2_17_x86_64*.whl | head -n 1
+        run: ls dist/*cp310-abi3-manylinux_2_17_x86_64*.whl | head -n 1
 
       - name: extract and list wheel file
-        run: python -m zipfile --list `ls dist/*cp312-manylinux_2_17_x86_64*.whl | head -n 1`
+        run: python -m zipfile --list `ls dist/*cp310-abi3-manylinux_2_17_x86_64*.whl | head -n 1`
 
   # Used for branch protection checks, see https://github.com/marketplace/actions/alls-green#why
   check:
