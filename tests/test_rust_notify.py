@@ -290,6 +290,25 @@ def test_rename_multiple_inside(tmp_path: Path):
     }
 
 
+@skip_unless_linux
+def test_follow_links_can_be_disabled(tmp_path: Path):
+    watched = tmp_path / 'watched'
+    watched.mkdir()
+    target = tmp_path / 'target'
+    target.mkdir()
+    (watched / 'linked').symlink_to(target, target_is_directory=True)
+
+    no_follow = RustNotify([str(watched)], False, False, 0, True, False, False)
+    (target / 'ignored.txt').write_text('ignored')
+    assert no_follow.watch(50, 10, 150, None) == 'timeout'
+
+    follow = RustNotify([str(watched)], False, False, 0, True, False, True)
+    (target / 'detected.txt').write_text('detected')
+    changes = follow.watch(100, 10, 500, None)
+    assert changes != 'timeout'
+    assert any(path.endswith('detected.txt') for _, path in changes)
+
+
 @skip_windows
 def test_polling(test_dir: Path):
     watcher = RustNotify([str(test_dir)], True, True, 100, True, False)
