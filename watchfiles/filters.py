@@ -58,10 +58,7 @@ class BaseFilter:
         entity_name = parts[-1]
         if any(r.search(entity_name) for r in self._ignore_entity_regexes):
             return False
-        elif self._ignore_paths and path.startswith(self._ignore_paths):
-            return False
-        else:
-            return True
+        return not (self._ignore_paths and path.startswith(self._ignore_paths))
 
     def __repr__(self) -> str:
         args = ', '.join(f'{k}={getattr(self, k, None)!r}' for k in self.__slots__)

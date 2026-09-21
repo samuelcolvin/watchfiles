@@ -23,7 +23,7 @@ from .main import Change, FileChange, awatch, watch
 if TYPE_CHECKING:
     from typing import Literal
 
-__all__ = 'run_process', 'arun_process', 'detect_target_type', 'import_string'
+__all__ = 'arun_process', 'detect_target_type', 'import_string', 'run_process'
 logger = logging.getLogger('watchfiles.main')
 
 
@@ -34,7 +34,7 @@ def run_process(
     kwargs: dict[str, Any] | None = None,
     target_type: "Literal['function', 'command', 'auto']" = 'auto',
     callback: Callable[[set[FileChange]], None] | None = None,
-    watch_filter: Callable[[Change, str], bool] | None = DefaultFilter(),
+    watch_filter: Callable[[Change, str], bool] | None = DefaultFilter(),  # noqa: B008
     grace_period: float = 0,
     debounce: int = 1_600,
     step: int = 50,
@@ -83,11 +83,14 @@ def run_process(
     ```py title="Example of run_process running a function"
     from watchfiles import run_process
 
+
     def callback(changes):
         print('changes detected:', changes)
 
+
     def foobar(a, b):
         print('foobar called with:', a, b)
+
 
     if __name__ == '__main__':
         run_process('./path/to/dir', target=foobar, args=(1, 2), callback=callback)
@@ -99,11 +102,13 @@ def run_process(
     ```py title="Example of run_process accessing changes"
     from watchfiles import run_process
 
+
     def foobar(a, b, c):
         # changes will be an empty list "[]" the first time the function is called
         changes = os.getenv('WATCHFILES_CHANGES')
         changes = json.loads(changes)
         print('foobar called due to changes:', changes)
+
 
     if __name__ == '__main__':
         run_process('./path/to/dir', target=foobar, args=(1, 2, 3))
@@ -162,7 +167,7 @@ async def arun_process(
     kwargs: dict[str, Any] | None = None,
     target_type: "Literal['function', 'command', 'auto']" = 'auto',
     callback: Callable[[set[FileChange]], Any] | None = None,
-    watch_filter: Callable[[Change, str], bool] | None = DefaultFilter(),
+    watch_filter: Callable[[Change, str], bool] | None = DefaultFilter(),  # noqa: B008
     grace_period: float = 0,
     debounce: int = 1_600,
     step: int = 50,
@@ -183,15 +188,19 @@ async def arun_process(
     import asyncio
     from watchfiles import arun_process
 
+
     async def callback(changes):
         await asyncio.sleep(0.1)
         print('changes detected:', changes)
 
+
     def foobar(a, b):
         print('foobar called with:', a, b)
 
+
     async def main():
         await arun_process('.', target=foobar, args=(1, 2), callback=callback)
+
 
     if __name__ == '__main__':
         try:
@@ -333,7 +342,6 @@ class CombinedProcess:
                 # Capture this exception to allow the self.exitcode to be reached.
                 # This will allow the SIGKILL to be sent, otherwise it is swallowed up.
                 logger.warning('SIGINT timed out after %r seconds', sigint_timeout)
-                pass
 
             if self.exitcode is None:
                 logger.warning('process has not terminated, sending SIGKILL')

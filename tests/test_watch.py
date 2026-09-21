@@ -42,7 +42,7 @@ def test_wait_stop_event(tmp_path: Path, write_soon):
 
 
 async def test_awatch(tmp_path: Path, write_soon):
-    sleep(0.05)
+    await anyio.sleep(0.05)
     write_soon(tmp_path / 'foo.txt')
     async for changes in awatch(tmp_path, debounce=50, step=10, watch_filter=None):
         assert changes == {(Change.added, str(tmp_path / 'foo.txt'))}
@@ -51,7 +51,7 @@ async def test_awatch(tmp_path: Path, write_soon):
 
 @pytest.mark.filterwarnings('ignore::DeprecationWarning')
 async def test_await_stop_event(tmp_path: Path, write_soon):
-    sleep(0.05)
+    await anyio.sleep(0.05)
     write_soon(tmp_path / 'foo.txt')
     stop_event = anyio.Event()
     async for changes in awatch(tmp_path, debounce=50, step=10, watch_filter=None, stop_event=stop_event):
@@ -102,12 +102,10 @@ async def test_awatch_unexpected_signal(mock_rust_notify: 'MockRustType'):
 async def test_awatch_interrupt_warning(mock_rust_notify: 'MockRustType', caplog):
     mock_rust_notify([{(1, 'foo.txt')}])
 
-    count = 0
     with pytest.warns(DeprecationWarning, match='raise_interrupt is deprecated, KeyboardInterrupt will cause this'):
-        async for _ in awatch('.', raise_interrupt=False):
-            count += 1
+        changes = [c async for c in awatch('.', raise_interrupt=False)]
 
-    assert count == 1
+    assert len(changes) == 1
 
 
 def test_watch_no_yield(mock_rust_notify: 'MockRustType', caplog):
@@ -139,9 +137,7 @@ def test_watch_timeout(mock_rust_notify: 'MockRustType', caplog):
     mock = mock_rust_notify(['timeout', {(1, 'spam.py')}])
 
     caplog.set_level('DEBUG', 'watchfiles')
-    change_list = []
-    for changes in watch('.'):
-        change_list.append(changes)
+    change_list = list(watch('.'))
 
     assert change_list == [{(Change.added, 'spam.py')}]
     assert mock.watch_count == 2
@@ -154,9 +150,7 @@ def test_watch_timeout(mock_rust_notify: 'MockRustType', caplog):
 def test_watch_yield_on_timeout(mock_rust_notify: 'MockRustType'):
     mock = mock_rust_notify(['timeout', {(1, 'spam.py')}])
 
-    change_list = []
-    for changes in watch('.', yield_on_timeout=True):
-        change_list.append(changes)
+    change_list = list(watch('.', yield_on_timeout=True))
 
     assert change_list == [set(), {(Change.added, 'spam.py')}]
     assert mock.watch_count == 2
