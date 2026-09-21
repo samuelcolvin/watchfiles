@@ -94,8 +94,8 @@ def watch(
             or a [`BaseFilter`][watchfiles.BaseFilter] instance,
             defaults to an instance of [`DefaultFilter`][watchfiles.DefaultFilter]. To keep all changes, use `None`.
         debounce: maximum time in milliseconds to group changes over before yielding them.
-        step: time to wait for new changes in milliseconds, if no changes are detected in this time, and
-            at least one change has been detected, the changes are yielded.
+        step: interval in milliseconds between checks for new changes; once at least one change has been
+            detected, changes are yielded if no further changes are detected within this interval.
         stop_event: event to stop watching, if this is set, the generator will stop iteration,
             this can be anything with an `is_set()` method which returns a bool, e.g. `threading.Event()`.
         rust_timeout: maximum time in milliseconds to wait in the rust code for changes, `0` means no timeout.
