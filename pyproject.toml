@@ -91,7 +91,9 @@ omit = ["*/__main__.py"]
 line-length = 120
 target-version = "py310"
 lint.mccabe = { max-complexity = 14 }
-lint.extend-select = ["Q", "RUF100", "C90", "UP", "I"]
+# ruff 0.16 expanded its default rule set from 59 to 413 rules, so pin the previous
+# defaults (E4, E7, E9, F) explicitly to keep the rule set stable
+lint.select = ["E4", "E7", "E9", "F", "Q", "RUF100", "C90", "UP", "I"]
 lint.flake8-quotes = { inline-quotes = "single", multiline-quotes = "double" }
 lint.pydocstyle = { convention = "google" }
 format.quote-style = "single"
