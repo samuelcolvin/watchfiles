@@ -1,4 +1,6 @@
-from typing import Any, Literal, Protocol
+from typing import Literal, Protocol
+
+from typing_extensions import Self
 
 __all__ = 'RustNotify', 'WatchfilesRustInternalError'
 
@@ -74,7 +76,7 @@ class RustNotify:
         * `'stop'` string, if the `stop_event` was set
         * `'timeout'` string, if `timeout_ms` was exceeded
         """
-    def __enter__(self) -> RustNotify:
+    def __enter__(self) -> Self:
         """
         Does nothing, but allows `RustNotify` to be used as a context manager.
 
@@ -82,7 +84,7 @@ class RustNotify:
 
             The watching thead is created when an instance is initiated, not on `__enter__`.
         """
-    def __exit__(self, *args: Any) -> None:
+    def __exit__(self, *args: object) -> None:
         """
         Calls [`close`][watchfiles._rust_notify.RustNotify.close].
         """

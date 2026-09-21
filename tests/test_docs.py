@@ -48,7 +48,7 @@ def import_execute(request, tmp_work_path: Path):
 
 def extract_code_chunks(path: Path, text: str, offset: int):
     rel_path = path.relative_to(ROOT_DIR)
-    for m_code in re.finditer(r'^```(.*?)$\n(.*?)^```', text, flags=re.M | re.S):
+    for m_code in re.finditer(r'^```(.*?)$\n(.*?)^```', text, flags=re.MULTILINE | re.DOTALL):
         prefix = m_code.group(1).lower()
         if not prefix.startswith(('py', '{.py')):
             continue
@@ -67,7 +67,7 @@ def generate_code_chunks(*directories: str):
         for path in (ROOT_DIR / d).glob('**/*'):
             if path.suffix == '.py':
                 code = path.read_text()
-                for m_docstring in re.finditer(r'(^\s*)r?"""$(.*?)\1"""', code, flags=re.M | re.S):
+                for m_docstring in re.finditer(r'(^\s*)r?"""$(.*?)\1"""', code, flags=re.MULTILINE | re.DOTALL):
                     start_line = code[: m_docstring.start()].count('\n')
                     docstring = dedent(m_docstring.group(2))
                     yield from extract_code_chunks(path, docstring, start_line)

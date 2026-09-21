@@ -12,7 +12,7 @@ import anyio
 from ._rust_notify import RustNotify
 from .filters import DefaultFilter
 
-__all__ = 'watch', 'awatch', 'Change', 'FileChange'
+__all__ = 'Change', 'FileChange', 'awatch', 'watch'
 logger = logging.getLogger('watchfiles.main')
 
 
@@ -52,7 +52,7 @@ if TYPE_CHECKING:
 
 def watch(
     *paths: Path | str,
-    watch_filter: Callable[['Change', str], bool] | None = DefaultFilter(),
+    watch_filter: Callable[['Change', str], bool] | None = DefaultFilter(),  # noqa: B008
     debounce: int = 1_600,
     step: int = 50,
     stop_event: 'AbstractEvent | None' = None,
@@ -153,7 +153,7 @@ def watch(
 
 async def awatch(  # C901
     *paths: Path | str,
-    watch_filter: Callable[[Change, str], bool] | None = DefaultFilter(),
+    watch_filter: Callable[[Change, str], bool] | None = DefaultFilter(),  # noqa: B008
     debounce: int = 1_600,
     step: int = 50,
     stop_event: 'AnyEvent | None' = None,
@@ -205,9 +205,11 @@ async def awatch(  # C901
     import asyncio
     from watchfiles import awatch
 
+
     async def main():
         async for changes in awatch('./first/dir', './second/dir'):
             print(changes)
+
 
     if __name__ == '__main__':
         try:
@@ -219,6 +221,7 @@ async def awatch(  # C901
     ```py title="Example of awatch usage with a stop event"
     import asyncio
     from watchfiles import awatch
+
 
     async def main():
         stop_event = asyncio.Event()
@@ -234,6 +237,7 @@ async def awatch(  # C901
 
         # cleanup by awaiting the (now complete) stop_soon_task
         await stop_soon_task
+
 
     asyncio.run(main())
     ```

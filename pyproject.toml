@@ -89,12 +89,23 @@ omit = ["*/__main__.py"]
 
 [tool.ruff]
 line-length = 120
-target-version = "py310"
-lint.mccabe = { max-complexity = 14 }
-lint.extend-select = ["Q", "RUF100", "C90", "UP", "I"]
-lint.flake8-quotes = { inline-quotes = "single", multiline-quotes = "double" }
-lint.pydocstyle = { convention = "google" }
-format.quote-style = "single"
+
+[tool.ruff.lint]
+extend-select = [
+    "Q",      # https://docs.astral.sh/ruff/rules/#flake8-quotes-q
+    "RUF100", # https://docs.astral.sh/ruff/rules/unused-noqa/
+    "I",      # https://docs.astral.sh/ruff/rules/#isort-i
+    "FA",     # https://docs.astral.sh/ruff/rules/#flake8-future-annotations-fa
+]
+flake8-quotes = { inline-quotes = "single", multiline-quotes = "double" }
+mccabe = { max-complexity = 14 }
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+
+[tool.ruff.format]
+docstring-code-format = true
+quote-style = "single"
 
 [tool.mypy]
 strict = true
