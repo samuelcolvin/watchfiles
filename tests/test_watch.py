@@ -9,7 +9,7 @@ import anyio
 import pytest
 
 from watchfiles import Change, awatch, watch
-from watchfiles.main import _calc_async_timeout
+from watchfiles.main import _calc_async_timeout, _StopEvent
 
 if TYPE_CHECKING:
     from conftest import MockRustType
@@ -57,6 +57,36 @@ async def test_await_stop_event(tmp_path: Path, write_soon):
     async for changes in awatch(tmp_path, debounce=50, step=10, watch_filter=None, stop_event=stop_event):
         assert changes == {(Change.added, str(tmp_path / 'foo.txt'))}
         stop_event.set()
+
+
+def test_stop_event_wrapper():
+    internal_only = _StopEvent(None)
+    assert not internal_only.is_set()
+    internal_only.set()
+    assert internal_only.is_set()
+
+    class PollOnlyEvent:
+        def __init__(self):
+            self.value = False
+
+        def is_set(self):
+            return self.value
+
+    external_event = PollOnlyEvent()
+    stop_event = _StopEvent(external_event)
+
+    assert not stop_event.is_set()
+    external_event.value = True
+    assert stop_event.is_set()
+
+    external_event.value = False
+    stop_event.set()
+    assert stop_event.is_set()
+
+    settable_event = threading.Event()
+    settable_stop_event = _StopEvent(settable_event)
+    settable_stop_event.set()
+    assert settable_event.is_set()
 
 
 def test_watch_raise_interrupt(mock_rust_notify: 'MockRustType'):
@@ -231,4 +261,24 @@ async def test_awatch_interrupt_raise(mocker):
 
     # event is set because it's set while handling the KeyboardInterrupt
     assert stop_event.is_set()
+    assert count == 1
+
+
+class PollOnlyEvent:
+    def is_set(self) -> bool:
+        return False
+
+
+async def test_awatch_interrupt_raise_with_poll_only_event(mocker):
+    mocker.patch('watchfiles.main.RustNotify', return_value=MockRustNotifyRaise())
+
+    count = 0
+    with pytest.raises(BaseExceptionGroup) as exc_info:
+        async for _ in awatch('.', stop_event=PollOnlyEvent()):
+            count += 1
+
+    assert len(exc_info.value.exceptions) == 1
+    exc = exc_info.value.exceptions[0]
+    assert isinstance(exc, KeyboardInterrupt)
+    assert exc.args == ('test error',)
     assert count == 1
