@@ -276,7 +276,14 @@ impl RustNotify {
             _ => Some(Instant::now() + Duration::from_millis(timeout_ms)),
         };
         loop {
-            py.detach(|| sleep(step_time));
+            let sleep_for = if let Some(max_time) = max_debounce_time {
+                max_time.saturating_duration_since(Instant::now()).min(step_time)
+            } else {
+                step_time
+            };
+            if !sleep_for.is_zero() {
+                py.detach(|| sleep(sleep_for));
+            }
             match py.check_signals() {
                 Ok(_) => (),
                 Err(_) => {
@@ -309,7 +316,7 @@ impl RustNotify {
 
                 let now = Instant::now();
                 if let Some(max_time) = max_debounce_time {
-                    if now > max_time {
+                    if now >= max_time {
                         break;
                     }
                 } else {
