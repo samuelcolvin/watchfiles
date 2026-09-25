@@ -1,4 +1,5 @@
 import os
+import signal
 import subprocess
 import sys
 from multiprocessing.context import SpawnProcess
@@ -10,7 +11,15 @@ from dirty_equals import IsStr
 
 from watchfiles import arun_process, run_process
 from watchfiles.main import Change
-from watchfiles.run import detect_target_type, import_string, run_function, set_tty, split_cmd, start_process
+from watchfiles.run import (
+    CombinedProcess,
+    detect_target_type,
+    import_string,
+    run_function,
+    set_tty,
+    split_cmd,
+    start_process,
+)
 
 if TYPE_CHECKING:
     from conftest import MockRustType
@@ -53,6 +62,18 @@ def test_alive_terminates(mocker, mock_rust_notify: 'MockRustType', caplog):
     assert mock_kill.call_count == 2  # kill in loop + final kill
     assert 'watchfiles.main DEBUG: running "<built-in function getcwd>" as function\n' in caplog.text
     assert 'sleeping for 0.01 seconds before watching for changes' in caplog.text
+
+
+def test_stop_uses_ctrl_c_event_on_windows(mocker):
+    process = CombinedProcess(FakeProcess())
+    mocker.patch('watchfiles.run.sys.platform', 'win32')
+    ctrl_c_event = 123
+    mocker.patch.object(signal, 'CTRL_C_EVENT', ctrl_c_event, create=True)
+    mock_kill = mocker.patch('watchfiles.run.os.kill')
+
+    process.stop()
+
+    mock_kill.assert_called_once_with(process.pid, ctrl_c_event)
 
 
 def test_dead_callback(mocker, mock_rust_notify: 'MockRustType'):

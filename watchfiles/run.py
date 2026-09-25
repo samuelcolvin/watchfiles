@@ -334,7 +334,10 @@ class CombinedProcess:
         if self.is_alive():
             logger.debug('stopping process...')
 
-            os.kill(self.pid, signal.SIGINT)
+            interrupt_signal = (
+                getattr(signal, 'CTRL_C_EVENT', signal.SIGINT) if sys.platform == 'win32' else signal.SIGINT
+            )
+            os.kill(self.pid, interrupt_signal)
 
             try:
                 self.join(sigint_timeout)
