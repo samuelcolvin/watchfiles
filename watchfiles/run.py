@@ -288,7 +288,10 @@ def start_process(
 
         assert isinstance(target, str), 'target must be a string to run as a command'
         popen_args = split_cmd(target)
-        process = subprocess.Popen(popen_args)
+        if sys.platform == 'win32':
+            process = subprocess.Popen(popen_args, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+        else:
+            process = subprocess.Popen(popen_args)
     return CombinedProcess(process)
 
 
@@ -334,18 +337,26 @@ class CombinedProcess:
         if self.is_alive():
             logger.debug('stopping process...')
 
-            os.kill(self.pid, signal.SIGINT)
+            if sys.platform == 'win32':
+                if isinstance(self._p, SpawnProcess):
+                    # multiprocessing does not expose Windows process-group creation,
+                    # so a targeted console control event cannot be sent safely.
+                    self._p.terminate()
+                else:
+                    os.kill(self.pid, signal.CTRL_BREAK_EVENT)
+            else:
+                os.kill(self.pid, signal.SIGINT)
 
             try:
                 self.join(sigint_timeout)
             except subprocess.TimeoutExpired:
                 # Capture this exception to allow the self.exitcode to be reached.
-                # This will allow the SIGKILL to be sent, otherwise it is swallowed up.
-                logger.warning('SIGINT timed out after %r seconds', sigint_timeout)
+                # This will allow forced termination below, otherwise it is swallowed up.
+                logger.warning('graceful stop timed out after %r seconds', sigint_timeout)
 
             if self.exitcode is None:
-                logger.warning('process has not terminated, sending SIGKILL')
-                os.kill(self.pid, signal.SIGKILL)
+                logger.warning('process has not terminated, forcing termination')
+                self._p.kill()
                 self.join(sigkill_timeout)
             else:
                 logger.debug('process stopped')
