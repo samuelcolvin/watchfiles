@@ -83,6 +83,9 @@ jobs:
 
       - run: uv run python -c 'import sys; print("free threading enable:", hasattr(sys, "_is_gil_enabled") and not sys._is_gil_enabled())'
 
+      - if: endsWith(matrix.python-version, 't')
+        run: uv run python -c 'import sys, watchfiles; assert not sys._is_gil_enabled()'
+
       - run: make test
         env:
           WATCHFILES_TEST_PERMISSION_DENIED_PATH: ${{ github.workspace }}/protected
@@ -225,15 +228,27 @@ jobs:
           command: sdist
           args: --out dist
 
-      # CPython wheels use the stable ABI (`abi3-py310` in Cargo.toml), so one wheel covers
-      # every CPython version >= 3.10. Free-threaded builds don't support abi3, so maturin
-      # builds a separate version-specific wheel for each one listed here.
-      - name: build wheels
+      # Maturin selects one stable ABI family per invocation.
+      - name: build abi3 wheel for regular CPython >= 3.10
         uses: PyO3/maturin-action@e83996d129638aa358a18fbd1dfb82f0b0fb5d3b # v1.51.0
         with:
           target: ${{ matrix.target }}
           manylinux: ${{ matrix.manylinux || 'auto' }}
-          args: --release --out dist --interpreter 3.10 3.14t 3.15t
+          args: --release --out dist --interpreter 3.10
+
+      - name: build version-specific 3.14t wheel
+        uses: PyO3/maturin-action@e83996d129638aa358a18fbd1dfb82f0b0fb5d3b # v1.51.0
+        with:
+          target: ${{ matrix.target }}
+          manylinux: ${{ matrix.manylinux || 'auto' }}
+          args: --release --out dist --interpreter 3.14t
+
+      - name: build abi3t wheel for CPython >= 3.15
+        uses: PyO3/maturin-action@e83996d129638aa358a18fbd1dfb82f0b0fb5d3b # v1.51.0
+        with:
+          target: ${{ matrix.target }}
+          manylinux: ${{ matrix.manylinux || 'auto' }}
+          args: --release --out dist --interpreter 3.15t
 
       - name: build pypy wheels
         if: ${{ matrix.pypy }}
@@ -279,6 +294,9 @@ jobs:
 
       - name: extract and list wheel file
         run: ls dist/*cp310-abi3-manylinux_2_17_x86_64*.whl | head -n 1
+
+      - name: check abi3t wheel file
+        run: ls dist/*cp315-abi3.abi3t-*.whl | head -n 1
 
       - name: extract and list wheel file
         run: python -m zipfile --list `ls dist/*cp310-abi3-manylinux_2_17_x86_64*.whl | head -n 1`
