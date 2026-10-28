@@ -1,6 +1,6 @@
 import sys
 import threading
-from contextlib import contextmanager
+from contextlib import aclosing, closing, contextmanager
 from pathlib import Path
 from time import sleep
 from typing import TYPE_CHECKING
@@ -232,3 +232,57 @@ async def test_awatch_interrupt_raise(mocker):
     # event is set because it's set while handling the KeyboardInterrupt
     assert stop_event.is_set()
     assert count == 1
+
+
+@pytest.mark.parametrize('follow_symlinks', [False, True])
+def test_watch_follow_symlinks(tmp_path: Path, follow_symlinks: bool):
+    outside = tmp_path.parent / (tmp_path.name + '-outside')
+    if sys.platform == 'linux' and not follow_symlinks:
+        outside.mkdir()
+        (tmp_path / 'link').symlink_to(outside, target_is_directory=True)
+
+    with closing(
+        watch(
+            tmp_path,
+            follow_symlinks=follow_symlinks,
+            force_polling=False,
+            watch_filter=None,
+            rust_timeout=500,
+            yield_on_timeout=True,
+            debounce=100,
+            step=20,
+        )
+    ) as watcher:
+        assert next(watcher) == set()
+        local = tmp_path / 'local.txt'
+        if outside.is_dir():
+            (outside / 'external.txt').write_text('external')
+        local.write_text('local')
+        assert next(watcher) == {(Change.added, str(local))}
+
+
+@pytest.mark.parametrize('follow_symlinks', [False, True])
+async def test_awatch_follow_symlinks(tmp_path: Path, follow_symlinks: bool):
+    outside = tmp_path.parent / (tmp_path.name + '-outside')
+    if sys.platform == 'linux' and not follow_symlinks:
+        outside.mkdir()
+        (tmp_path / 'link').symlink_to(outside, target_is_directory=True)
+
+    async with aclosing(
+        awatch(
+            tmp_path,
+            follow_symlinks=follow_symlinks,
+            force_polling=False,
+            watch_filter=None,
+            rust_timeout=500,
+            yield_on_timeout=True,
+            debounce=100,
+            step=20,
+        )
+    ) as watcher:
+        assert await anext(watcher) == set()
+        local = tmp_path / 'local.txt'
+        if outside.is_dir():
+            (outside / 'external.txt').write_text('external')
+        local.write_text('local')
+        assert await anext(watcher) == {(Change.added, str(local))}
