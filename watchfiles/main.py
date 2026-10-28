@@ -64,6 +64,7 @@ def watch(
     poll_delay_ms: int = 300,
     recursive: bool = True,
     ignore_permission_denied: bool | None = None,
+    follow_symlinks: bool = True,
 ) -> Generator[set[FileChange], None, None]:
     """
     Watch one or more paths and yield a set of changes whenever files change.
@@ -109,6 +110,10 @@ def watch(
             top-level directory, default is `True`.
         ignore_permission_denied: if `True`, will ignore permission denied errors, otherwise will raise them by default.
             Setting the `WATCHFILES_IGNORE_PERMISSION_DENIED` environment variable will set this value too.
+        follow_symlinks: whether to follow symbolic links when recursively watching directories.
+            Defaults to `True`. Supported by the native inotify (Linux) and kqueue (BSD) backends;
+            other native backends ignore this setting. Does not affect polling, including automatic fallback
+            to polling, which continues to follow symbolic links.
 
     Yields:
         The generator yields sets of [`FileChange`][watchfiles.main.FileChange]s.
@@ -125,7 +130,13 @@ def watch(
     ignore_permission_denied = _default_ignore_permission_denied(ignore_permission_denied)
     debug = _default_debug(debug)
     with RustNotify(
-        [str(p) for p in paths], debug, force_polling, poll_delay_ms, recursive, ignore_permission_denied
+        [str(p) for p in paths],
+        debug,
+        force_polling,
+        poll_delay_ms,
+        recursive,
+        ignore_permission_denied,
+        follow_symlinks,
     ) as watcher:
         while True:
             raw_changes = watcher.watch(debounce, step, rust_timeout, stop_event)
@@ -165,6 +176,7 @@ async def awatch(  # C901
     poll_delay_ms: int = 300,
     recursive: bool = True,
     ignore_permission_denied: bool | None = None,
+    follow_symlinks: bool = True,
 ) -> AsyncGenerator[set[FileChange], None]:
     """
     Asynchronous equivalent of [`watch`][watchfiles.watch] using threads to wait for changes.
@@ -197,6 +209,10 @@ async def awatch(  # C901
             top-level directory, default is `True`.
         ignore_permission_denied: if `True`, will ignore permission denied errors, otherwise will raise them by default.
             Setting the `WATCHFILES_IGNORE_PERMISSION_DENIED` environment variable will set this value too.
+        follow_symlinks: whether to follow symbolic links when recursively watching directories.
+            Defaults to `True`. Supported by the native inotify (Linux) and kqueue (BSD) backends;
+            other native backends ignore this setting. Does not affect polling, including automatic fallback
+            to polling, which continues to follow symbolic links.
 
     Yields:
         The generator yields sets of [`FileChange`][watchfiles.main.FileChange]s.
@@ -259,7 +275,13 @@ async def awatch(  # C901
     ignore_permission_denied = _default_ignore_permission_denied(ignore_permission_denied)
     debug = _default_debug(debug)
     with RustNotify(
-        [str(p) for p in paths], debug, force_polling, poll_delay_ms, recursive, ignore_permission_denied
+        [str(p) for p in paths],
+        debug,
+        force_polling,
+        poll_delay_ms,
+        recursive,
+        ignore_permission_denied,
+        follow_symlinks,
     ) as watcher:
         timeout = _calc_async_timeout(rust_timeout)
         CancelledError = anyio.get_cancelled_exc_class()
