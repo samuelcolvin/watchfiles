@@ -130,7 +130,13 @@ def watch(
     ignore_permission_denied = _default_ignore_permission_denied(ignore_permission_denied)
     debug = _default_debug(debug)
     with RustNotify(
-        [str(p) for p in paths], debug, force_polling, poll_delay_ms, recursive, ignore_permission_denied, follow_symlinks
+        [str(p) for p in paths],
+        debug,
+        force_polling,
+        poll_delay_ms,
+        recursive,
+        ignore_permission_denied,
+        follow_symlinks,
     ) as watcher:
         while True:
             raw_changes = watcher.watch(debounce, step, rust_timeout, stop_event)
@@ -269,7 +275,13 @@ async def awatch(  # C901
     ignore_permission_denied = _default_ignore_permission_denied(ignore_permission_denied)
     debug = _default_debug(debug)
     with RustNotify(
-        [str(p) for p in paths], debug, force_polling, poll_delay_ms, recursive, ignore_permission_denied, follow_symlinks
+        [str(p) for p in paths],
+        debug,
+        force_polling,
+        poll_delay_ms,
+        recursive,
+        ignore_permission_denied,
+        follow_symlinks,
     ) as watcher:
         timeout = _calc_async_timeout(rust_timeout)
         CancelledError = anyio.get_cancelled_exc_class()
