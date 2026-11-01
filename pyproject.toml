@@ -62,6 +62,10 @@ docs = [
     "mkdocstrings[python]>=0.25.1",
 ]
 
+[tool.uv]
+# only use package versions that have been published for at least 7 days
+exclude-newer = "7 days"
+
 [tool.maturin]
 module-name = "watchfiles._rust_notify"
 bindings = "pyo3"
