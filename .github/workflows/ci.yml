@@ -208,7 +208,7 @@ jobs:
       - name: set up python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.13"
+          python-version: "3.15"
           architecture: ${{ matrix.python-architecture || 'x64' }}
 
       - name: check GITHUB_REF matches package version
@@ -232,7 +232,7 @@ jobs:
         with:
           target: ${{ matrix.target }}
           manylinux: ${{ matrix.manylinux || 'auto' }}
-          args: --release --out dist --interpreter 3.10 3.14t
+          args: --release --out dist --interpreter 3.10 3.14t 3.15t
 
       - name: build pypy wheels
         if: ${{ matrix.pypy }}
@@ -277,10 +277,10 @@ jobs:
           tree -a sdist-files
 
       - name: extract and list wheel file
-        run: ls dist/*cp310-abi3-manylinux_2_17_x86_64*.whl | head -n 1
+        run: ls dist/*cp315-cp315t-manylinux*x86_64*.whl | head -n 1
 
       - name: extract and list wheel file
-        run: python -m zipfile --list `ls dist/*cp310-abi3-manylinux_2_17_x86_64*.whl | head -n 1`
+        run: python -m zipfile --list `ls dist/*cp315-cp315t-manylinux*x86_64*.whl | head -n 1`
 
   # Used for branch protection checks, see https://github.com/marketplace/actions/alls-green#why
   check:

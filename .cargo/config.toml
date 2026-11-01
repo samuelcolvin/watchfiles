@@ -1,0 +1,4 @@
+[registry]
+# only use crate versions that have been published for at least 7 days,
+# equivalent to `exclude-newer` in pyproject.toml, respected by cargo 1.100+
+global-min-publish-age = "7 days"
