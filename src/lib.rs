@@ -103,6 +103,8 @@ macro_rules! wf_error {
 #[pymethods]
 impl RustNotify {
     #[new]
+    #[pyo3(signature = (watch_paths, debug, force_polling, poll_delay_ms, recursive, ignore_permission_denied, follow_symlinks=true))]
+    #[allow(clippy::too_many_arguments)]
     fn py_new(
         watch_paths: Vec<String>,
         debug: bool,
@@ -110,6 +112,7 @@ impl RustNotify {
         poll_delay_ms: u64,
         recursive: bool,
         ignore_permission_denied: bool,
+        follow_symlinks: bool,
     ) -> PyResult<Self> {
         let changes: Arc<Mutex<HashSet<(u8, String)>>> = Arc::new(Mutex::new(HashSet::<(u8, String)>::new()));
         let error: Arc<Mutex<Option<String>>> = Arc::new(Mutex::new(None));
@@ -216,7 +219,8 @@ impl RustNotify {
         let watcher: WatcherEnum = match force_polling {
             true => create_poll_watcher!("Error creating poll watcher: {}"),
             false => {
-                match RecommendedWatcher::new(event_handler.clone(), NotifyConfig::default()) {
+                let config = NotifyConfig::default().with_follow_symlinks(follow_symlinks);
+                match RecommendedWatcher::new(event_handler.clone(), config) {
                     Ok(watcher) => {
                         let mut watcher = watcher;
                         watcher_paths!(watcher, watch_paths, debug, recursive, ignore_permission_denied);
