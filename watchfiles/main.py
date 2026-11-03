@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+import threading
 import warnings
 from collections.abc import AsyncGenerator, Callable, Generator
 from enum import IntEnum
@@ -39,15 +40,26 @@ of the file or directory that changed.
 """
 
 if TYPE_CHECKING:
-    import asyncio
     from typing import Protocol
-
-    import trio
-
-    AnyEvent = anyio.Event | asyncio.Event | trio.Event
 
     class AbstractEvent(Protocol):
         def is_set(self) -> bool: ...
+
+
+class _StopEvent:
+    def __init__(self, external_event: 'AbstractEvent | None') -> None:
+        self._internal_event = threading.Event()
+        self._external_event = external_event
+
+    def is_set(self) -> bool:
+        return self._internal_event.is_set() or (self._external_event is not None and self._external_event.is_set())
+
+    def set(self) -> None:
+        self._internal_event.set()
+        if self._external_event is not None:
+            external_set = getattr(self._external_event, 'set', None)
+            if callable(external_set):
+                external_set()
 
 
 def watch(
@@ -156,7 +168,7 @@ async def awatch(  # C901
     watch_filter: Callable[[Change, str], bool] | None = DefaultFilter(),  # noqa: B008
     debounce: int = 1_600,
     step: int = 50,
-    stop_event: 'AnyEvent | None' = None,
+    stop_event: 'AbstractEvent | None' = None,
     rust_timeout: int | None = None,
     yield_on_timeout: bool = False,
     debug: bool | None = None,
@@ -180,7 +192,7 @@ async def awatch(  # C901
         watch_filter: matches the same argument of [`watch`][watchfiles.watch].
         debounce: matches the same argument of [`watch`][watchfiles.watch].
         step: matches the same argument of [`watch`][watchfiles.watch].
-        stop_event: `anyio.Event` which can be used to stop iteration, see example below.
+        stop_event: event to stop watching. This can be anything with an `is_set()` method returning a bool.
         rust_timeout: matches the same argument of [`watch`][watchfiles.watch], except that `None` means
             use `1_000` on Windows and `5_000` on other platforms thus helping with exiting on `Ctrl+C` on Windows,
             see [#110](https://github.com/samuelcolvin/watchfiles/issues/110).
@@ -249,10 +261,7 @@ async def awatch(  # C901
             DeprecationWarning,
         )
 
-    if stop_event is None:
-        stop_event_: AnyEvent = anyio.Event()
-    else:
-        stop_event_ = stop_event
+    stop_event_ = _StopEvent(stop_event)
 
     force_polling = _default_force_polling(force_polling)
     poll_delay_ms = _default_poll_delay_ms(poll_delay_ms)
