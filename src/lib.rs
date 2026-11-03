@@ -46,6 +46,33 @@ struct RustNotify {
     watcher: WatcherEnum,
 }
 
+/// Case-sensitive check that the given path's file name exists in its parent directory.
+///
+/// `Path::exists()` resolves names through the filesystem, which is case-insensitive on
+/// the default macOS APFS and on Windows NTFS. As a result it can return `true` for a
+/// path whose exact-case filename does not exist on disk -- only a case-folded sibling
+/// does. This helper avoids that ambiguity by reading the parent directory and looking
+/// for an entry whose file name matches `path`'s file name byte-for-byte. On
+/// case-sensitive filesystems it is equivalent to `Path::exists()`.
+fn path_exists_exact_case(path: &Path) -> bool {
+    let (parent, file_name) = match (path.parent(), path.file_name()) {
+        (Some(p), Some(n)) => (p, n),
+        // Path has no parent (e.g. "/") or no file name component: fall back to exists().
+        _ => return path.exists(),
+    };
+    // An empty parent (e.g. relative bare filename like "hello.txt") means the current
+    // directory; pass it through as "." so read_dir succeeds.
+    let parent = if parent.as_os_str().is_empty() {
+        Path::new(".")
+    } else {
+        parent
+    };
+    match std::fs::read_dir(parent) {
+        Ok(entries) => entries.filter_map(|e| e.ok()).any(|e| e.file_name() == file_name),
+        Err(_) => false,
+    }
+}
+
 fn map_watch_error(error: notify::Error) -> PyErr {
     let err_string = error.to_string();
     match error.kind {
@@ -153,7 +180,14 @@ impl RustNotify {
                             // On macOS the modify name event is triggered when a file is renamed,
                             // but no information about whether it's the src or dst path is available.
                             // Hence we have to check if the file exists instead.
-                            if Path::new(&path).exists() {
+                            //
+                            // `Path::exists()` is case-insensitive on case-insensitive filesystems
+                            // (e.g. the default APFS on macOS), so for a case-only rename like
+                            // `hello.txt` -> `Hello.txt` it would report both endpoints as existing
+                            // and emit two ADDED events instead of a DELETED/ADDED pair (#368).
+                            // `path_exists_exact_case` checks the parent directory for an entry
+                            // matching `path`'s file name byte-for-byte, distinguishing the two.
+                            if path_exists_exact_case(Path::new(&path)) {
                                 CHANGE_ADDED
                             } else {
                                 CHANGE_DELETED

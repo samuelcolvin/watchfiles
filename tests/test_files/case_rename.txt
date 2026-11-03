@@ -1,0 +1,1 @@
+case rename fixture for issue #368
