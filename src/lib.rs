@@ -104,6 +104,7 @@ macro_rules! wf_error {
 impl RustNotify {
     #[new]
     fn py_new(
+        py: Python,
         watch_paths: Vec<String>,
         debug: bool,
         force_polling: bool,
@@ -213,7 +214,9 @@ impl RustNotify {
             }};
         }
 
-        let watcher: WatcherEnum = match force_polling {
+        // registering watches walks the whole tree (and polling reads every file's metadata),
+        // which can take a while on big or slow file systems: don't hold the GIL during it.
+        let watcher: WatcherEnum = py.detach(move || match force_polling {
             true => create_poll_watcher!("Error creating poll watcher: {}"),
             false => {
                 match RecommendedWatcher::new(event_handler.clone(), NotifyConfig::default()) {
@@ -242,7 +245,7 @@ impl RustNotify {
                     }
                 }
             }
-        }?;
+        })?;
 
         Ok(RustNotify {
             changes,
