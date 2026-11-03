@@ -299,6 +299,25 @@ def test_polling(test_dir: Path):
     assert (1, str(test_dir / 'test_polling.txt')) in changes  # sometimes has an event modify too
 
 
+@skip_windows
+def test_polling_same_mtime_content_change(tmp_path: Path):
+    """Polling must see content changes even when mtime stays in the same second.
+
+    notify::PollWatcher truncates mtime to whole seconds, which is why #319 missed
+    rapid edits. compare_contents hashes the file so those edits still surface.
+    """
+    target = tmp_path / 'same_second.txt'
+    target.write_text('hello')
+    stat = target.stat()
+
+    watcher = RustNotify([str(tmp_path)], True, True, 50, True, False)
+    target.write_text('world')
+    os.utime(target, ns=(stat.st_atime_ns, stat.st_mtime_ns))
+
+    changes = watcher.watch(200, 50, 800, None)
+    assert (2, str(target)) in changes
+
+
 def test_not_polling_repr(test_dir: Path):
     watcher = RustNotify([str(test_dir)], True, False, 123, True, False)
     r = repr(watcher)
