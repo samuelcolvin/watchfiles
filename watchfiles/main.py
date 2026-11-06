@@ -298,7 +298,7 @@ def _prep_changes(
 ) -> set[FileChange]:
     # if we wanted to be really snazzy, we could move this into rust
     changes = {(Change(change), path) for change, path in raw_changes}
-    if watch_filter:
+    if watch_filter is not None:
         changes = {c for c in changes if watch_filter(c[0], c[1])}
     return changes
 
