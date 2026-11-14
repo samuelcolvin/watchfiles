@@ -174,9 +174,9 @@ jobs:
             target: i686
             python-architecture: x86
           - os: ubuntu
+            runs-on: ubuntu-24.04
             platform: linux
             target: i686
-            manylinux: 2_28
           - os: ubuntu
             platform: linux
             target: armv7
@@ -193,13 +193,13 @@ jobs:
           - os: ubuntu
             platform: linux
             target: x86_64
-            manylinux: musllinux_1_2
+            manylinux: musllinux_1_1
           - os: ubuntu
             platform: linux
             target: aarch64
-            manylinux: musllinux_1_2
+            manylinux: musllinux_1_1
 
-    runs-on: ${{ matrix.os }}-latest
+    runs-on: ${{ matrix.runs-on || format('{0}-latest', matrix.os) }}
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
