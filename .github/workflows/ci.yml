@@ -174,7 +174,8 @@ jobs:
             target: i686
             python-architecture: x86
           - os: ubuntu
-            runs-on: ubuntu-24.04
+            # i686 container builds fail DNS lookups on ubuntu-26.04 (ubuntu-latest).
+            os-version: '24.04'
             platform: linux
             target: i686
           - os: ubuntu
@@ -199,7 +200,7 @@ jobs:
             target: aarch64
             manylinux: musllinux_1_1
 
-    runs-on: ${{ matrix.runs-on || format('{0}-latest', matrix.os) }}
+    runs-on: ${{ matrix.os }}-${{ matrix.os-version || 'latest' }}
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
