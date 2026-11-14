@@ -176,6 +176,7 @@ jobs:
           - os: ubuntu
             platform: linux
             target: i686
+            manylinux: 2_28
           - os: ubuntu
             platform: linux
             target: armv7
@@ -192,11 +193,11 @@ jobs:
           - os: ubuntu
             platform: linux
             target: x86_64
-            manylinux: musllinux_1_1
+            manylinux: musllinux_1_2
           - os: ubuntu
             platform: linux
             target: aarch64
-            manylinux: musllinux_1_1
+            manylinux: musllinux_1_2
 
     runs-on: ${{ matrix.os }}-latest
 
