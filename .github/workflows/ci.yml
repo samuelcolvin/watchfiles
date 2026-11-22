@@ -210,7 +210,7 @@ jobs:
       - name: set up python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.13"
+          python-version: "3.15"
           architecture: ${{ matrix.python-architecture || 'x64' }}
 
       - name: check GITHUB_REF matches package version
@@ -234,7 +234,7 @@ jobs:
         with:
           target: ${{ matrix.target }}
           manylinux: ${{ matrix.manylinux || 'auto' }}
-          args: --release --out dist --interpreter 3.10 3.14t
+          args: --release --out dist --interpreter 3.10 3.14t 3.15t
 
       - name: build pypy wheels
         if: ${{ matrix.pypy }}
