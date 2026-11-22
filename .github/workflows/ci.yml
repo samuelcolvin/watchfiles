@@ -174,6 +174,8 @@ jobs:
             target: i686
             python-architecture: x86
           - os: ubuntu
+            # i686 container builds fail DNS lookups on ubuntu-26.04 (ubuntu-latest).
+            os-version: '24.04'
             platform: linux
             target: i686
           - os: ubuntu
@@ -198,7 +200,7 @@ jobs:
             target: aarch64
             manylinux: musllinux_1_1
 
-    runs-on: ${{ matrix.os }}-latest
+    runs-on: ${{ matrix.os }}-${{ matrix.os-version || 'latest' }}
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -277,10 +279,10 @@ jobs:
           tree -a sdist-files
 
       - name: extract and list wheel file
-        run: ls dist/*cp310-abi3-manylinux_2_17_x86_64*.whl | head -n 1
+        run: ls dist/*cp310-abi3-manylinux*_x86_64.whl | head -n 1
 
       - name: extract and list wheel file
-        run: python -m zipfile --list `ls dist/*cp310-abi3-manylinux_2_17_x86_64*.whl | head -n 1`
+        run: python -m zipfile --list `ls dist/*cp310-abi3-manylinux*_x86_64.whl | head -n 1`
 
   # Used for branch protection checks, see https://github.com/marketplace/actions/alls-green#why
   check:
