@@ -156,6 +156,15 @@ def test_watch_yield_on_timeout(mock_rust_notify: 'MockRustType'):
     assert mock.watch_count == 2
 
 
+def test_watch_yield_on_start(mock_rust_notify: 'MockRustType'):
+    mock = mock_rust_notify([{(1, 'spam.py')}])
+
+    change_list = list(watch('.', yield_on_start=True))
+
+    assert change_list == [set(), {(Change.added, 'spam.py')}]
+    assert mock.watch_count == 1
+
+
 async def test_awatch_timeout(mock_rust_notify: 'MockRustType', caplog):
     mock = mock_rust_notify(['timeout', {(1, 'spam.py')}])
 
@@ -181,6 +190,17 @@ async def test_awatch_yield_on_timeout(mock_rust_notify: 'MockRustType'):
 
     assert change_list == [set(), {(Change.added, 'spam.py')}]
     assert mock.watch_count == 2
+
+
+async def test_awatch_yield_on_start(mock_rust_notify: 'MockRustType'):
+    mock = mock_rust_notify([{(1, 'spam.py')}])
+
+    change_list = []
+    async for changes in awatch('.', yield_on_start=True):
+        change_list.append(changes)
+
+    assert change_list == [set(), {(Change.added, 'spam.py')}]
+    assert mock.watch_count == 1
 
 
 @pytest.mark.skipif(sys.platform == 'win32', reason='different on windows')

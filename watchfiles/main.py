@@ -58,6 +58,7 @@ def watch(
     stop_event: 'AbstractEvent | None' = None,
     rust_timeout: int = 5_000,
     yield_on_timeout: bool = False,
+    yield_on_start: bool = False,
     debug: bool | None = None,
     raise_interrupt: bool = True,
     force_polling: bool | None = None,
@@ -100,6 +101,7 @@ def watch(
             this can be anything with an `is_set()` method which returns a bool, e.g. `threading.Event()`.
         rust_timeout: maximum time in milliseconds to wait in the rust code for changes, `0` means no timeout.
         yield_on_timeout: if `True`, the generator will yield upon timeout in rust even if no changes are detected.
+        yield_on_start: if `True`, the generator will yield an empty set once the watcher is ready.
         debug: whether to print information about all filesystem changes in rust to stdout, if `None` will use the
             `WATCHFILES_DEBUG` environment variable.
         raise_interrupt: whether to re-raise `KeyboardInterrupt`s, or suppress the error and just stop iterating.
@@ -127,6 +129,9 @@ def watch(
     with RustNotify(
         [str(p) for p in paths], debug, force_polling, poll_delay_ms, recursive, ignore_permission_denied
     ) as watcher:
+        if yield_on_start:
+            yield set()
+
         while True:
             raw_changes = watcher.watch(debounce, step, rust_timeout, stop_event)
             if raw_changes == 'timeout':
@@ -159,6 +164,7 @@ async def awatch(  # C901
     stop_event: 'AnyEvent | None' = None,
     rust_timeout: int | None = None,
     yield_on_timeout: bool = False,
+    yield_on_start: bool = False,
     debug: bool | None = None,
     raise_interrupt: bool | None = None,
     force_polling: bool | None = None,
@@ -185,6 +191,7 @@ async def awatch(  # C901
             use `1_000` on Windows and `5_000` on other platforms thus helping with exiting on `Ctrl+C` on Windows,
             see [#110](https://github.com/samuelcolvin/watchfiles/issues/110).
         yield_on_timeout: matches the same argument of [`watch`][watchfiles.watch].
+        yield_on_start: matches the same argument of [`watch`][watchfiles.watch].
         debug: matches the same argument of [`watch`][watchfiles.watch].
         raise_interrupt: This is deprecated, `KeyboardInterrupt` will cause this coroutine to be cancelled and then
             be raised by the top level `asyncio.run` call or equivalent, and should be caught there.
@@ -261,6 +268,9 @@ async def awatch(  # C901
     with RustNotify(
         [str(p) for p in paths], debug, force_polling, poll_delay_ms, recursive, ignore_permission_denied
     ) as watcher:
+        if yield_on_start:
+            yield set()
+
         timeout = _calc_async_timeout(rust_timeout)
         CancelledError = anyio.get_cancelled_exc_class()
 
