@@ -1,6 +1,6 @@
 import sys
 import threading
-from contextlib import contextmanager
+from contextlib import aclosing, closing, contextmanager
 from pathlib import Path
 from time import sleep
 from typing import TYPE_CHECKING
@@ -232,3 +232,65 @@ async def test_awatch_interrupt_raise(mocker):
     # event is set because it's set while handling the KeyboardInterrupt
     assert stop_event.is_set()
     assert count == 1
+
+
+@pytest.mark.parametrize('follow_symlinks', [False, True])
+def test_watch_follow_symlinks(tmp_path: Path, follow_symlinks: bool):
+    root = tmp_path / 'root'
+    root.mkdir()
+    outside = tmp_path / 'outside'
+    outside.mkdir()
+    if sys.platform == 'linux':
+        (root / 'link').symlink_to(outside, target_is_directory=True)
+
+    with closing(
+        watch(
+            root,
+            follow_symlinks=follow_symlinks,
+            force_polling=False,
+            watch_filter=lambda change, path: path.endswith('.txt'),
+            rust_timeout=500,
+            yield_on_timeout=True,
+            debounce=100,
+            step=20,
+        )
+    ) as watcher:
+        assert next(watcher) == set()
+        local = root / 'local.txt'
+        (outside / 'external.txt').write_text('external')
+        local.write_text('local')
+        expected = {(Change.added, str(local))}
+        if sys.platform == 'linux' and follow_symlinks:
+            expected.add((Change.added, str(root / 'link' / 'external.txt')))
+        assert next(watcher) == expected
+
+
+@pytest.mark.parametrize('follow_symlinks', [False, True])
+async def test_awatch_follow_symlinks(tmp_path: Path, follow_symlinks: bool):
+    root = tmp_path / 'root'
+    root.mkdir()
+    outside = tmp_path / 'outside'
+    outside.mkdir()
+    if sys.platform == 'linux':
+        (root / 'link').symlink_to(outside, target_is_directory=True)
+
+    async with aclosing(
+        awatch(
+            root,
+            follow_symlinks=follow_symlinks,
+            force_polling=False,
+            watch_filter=lambda change, path: path.endswith('.txt'),
+            rust_timeout=500,
+            yield_on_timeout=True,
+            debounce=100,
+            step=20,
+        )
+    ) as watcher:
+        assert await anext(watcher) == set()
+        local = root / 'local.txt'
+        (outside / 'external.txt').write_text('external')
+        local.write_text('local')
+        expected = {(Change.added, str(local))}
+        if sys.platform == 'linux' and follow_symlinks:
+            expected.add((Change.added, str(root / 'link' / 'external.txt')))
+        assert await anext(watcher) == expected

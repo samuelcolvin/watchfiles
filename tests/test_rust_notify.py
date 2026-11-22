@@ -340,3 +340,56 @@ def test_default_ignore_permission_denied(env: 'SetEnv', env_var, arg, expected)
     if env_var is not None:
         env('WATCHFILES_IGNORE_PERMISSION_DENIED', env_var)
     assert _default_ignore_permission_denied(arg) == expected
+
+
+@skip_unless_linux
+@pytest.mark.parametrize('create_after_start', [False, True])
+def test_no_follow_symlinks(tmp_path: Path, create_after_start: bool):
+    root = tmp_path / 'root'
+    root.mkdir()
+    outside = tmp_path / 'outside'
+    outside.mkdir()
+    link = root / 'link'
+    if not create_after_start:
+        link.symlink_to(outside, target_is_directory=True)
+
+    with RustNotify([str(root)], False, False, 300, True, False, False) as watcher:
+        if create_after_start:
+            link.symlink_to(outside, target_is_directory=True)
+            # Drain link creation so the next batch only contains file changes.
+            watcher.watch(100, 20, 500, None)
+
+        (outside / 'external.txt').write_text('external')
+        local = root / 'local.txt'
+        local.write_text('local')
+        assert watcher.watch(100, 20, 500, None) == {(1, str(local))}
+        assert watcher.watch(100, 20, 500, None) == 'timeout'
+
+
+@skip_unless_linux
+@pytest.mark.parametrize('follow_symlinks', [None, True])
+def test_follow_symlinks(tmp_path: Path, follow_symlinks: bool | None):
+    root = tmp_path / 'root'
+    root.mkdir()
+    outside = tmp_path / 'outside'
+    outside.mkdir()
+    (root / 'link').symlink_to(outside, target_is_directory=True)
+    kwargs = {} if follow_symlinks is None else {'follow_symlinks': follow_symlinks}
+
+    with RustNotify([str(root)], False, False, 300, True, False, **kwargs) as watcher:
+        (outside / 'external.txt').write_text('external')
+        assert watcher.watch(100, 20, 500, None) == {(1, str(root / 'link' / 'external.txt'))}
+
+
+@skip_windows
+def test_polling_still_follows_symlinks(tmp_path: Path):
+    root = tmp_path / 'root'
+    root.mkdir()
+    outside = tmp_path / 'outside'
+    outside.mkdir()
+    (root / 'link').symlink_to(outside, target_is_directory=True)
+
+    with RustNotify([str(root)], False, True, 50, True, False, False) as watcher:
+        (outside / 'external.txt').write_text('external')
+        changes = watcher.watch(100, 20, 1000, None)
+        assert (1, str(root / 'link' / 'external.txt')) in changes
