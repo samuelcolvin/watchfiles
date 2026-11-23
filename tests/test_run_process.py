@@ -10,7 +10,15 @@ from dirty_equals import IsStr
 
 from watchfiles import arun_process, run_process
 from watchfiles.main import Change
-from watchfiles.run import detect_target_type, import_string, run_function, set_tty, split_cmd, start_process
+from watchfiles.run import (
+    CombinedProcess,
+    detect_target_type,
+    import_string,
+    run_function,
+    set_tty,
+    split_cmd,
+    start_process,
+)
 
 if TYPE_CHECKING:
     from conftest import MockRustType
@@ -111,6 +119,19 @@ def test_sigint_timeout(mocker, mock_rust_notify: 'MockRustType', caplog):
     assert mock_spawn_process.call_count == 2
     assert mock_kill.call_count == 2
     assert "SIGINT timed out after 'sigint_timeout' seconds" in caplog.text
+
+
+def test_sigint_timeout_propagates_to_final_stop(mocker, mock_rust_notify: 'MockRustType'):
+    mocker.patch('watchfiles.run.spawn_context.Process', return_value=FakeProcess())
+    mocker.patch('watchfiles.run.os.kill')
+    stop_spy = mocker.spy(CombinedProcess, 'stop')
+    mock_rust_notify([{(1, '/path/to/foobar.py')}])
+
+    assert run_process('/x/y/z', target=object(), debounce=5, step=1, sigint_timeout=7, sigkill_timeout=8) == 1
+    # both the in-loop stop and the final stop in the finally block should use the custom timeouts
+    assert stop_spy.call_count == 2
+    for call in stop_spy.call_args_list:
+        assert call.kwargs == {'sigint_timeout': 7, 'sigkill_timeout': 8}
 
 
 def test_start_process(mocker):
