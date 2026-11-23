@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import pytest
 from dirty_equals import IsTuple
 
-from watchfiles import Change, DefaultFilter, PythonFilter, watch
+from watchfiles import Change, DefaultFilter, PythonFilter, awatch, watch
 
 if TYPE_CHECKING:
     from conftest import MockRustType
@@ -98,3 +98,36 @@ def test_customising_filters():
 def test_repr():
     f = DefaultFilter(ignore_dirs=['apple', 'banana'])
     assert repr(f).startswith('DefaultFilter(_ignore_dirs={')
+
+
+@pytest.mark.parametrize('falsiness', ['bool', 'len'])
+@pytest.mark.parametrize('include', [False, True])
+@pytest.mark.parametrize('asynchronous', [False, True])
+async def test_falsey_callable_filter(mock_rust_notify: 'MockRustType', falsiness, include, asynchronous):
+    calls = []
+
+    class RecordingFilter:
+        def __call__(self, change, path):
+            calls.append((change, path))
+            return include
+
+    class BooleanFilter(RecordingFilter):
+        def __bool__(self):
+            return False
+
+    class EmptyFilter(RecordingFilter):
+        def __len__(self):
+            return 0
+
+    watch_filter = BooleanFilter() if falsiness == 'bool' else EmptyFilter()
+    assert not watch_filter
+    mock_rust_notify([{(1, 'owned.txt')}])
+
+    if asynchronous:
+        changes = [c async for c in awatch('.', watch_filter=watch_filter)]
+    else:
+        changes = list(watch('.', watch_filter=watch_filter))
+
+    expected = [{(Change.added, 'owned.txt')}] if include else []
+    assert changes == expected
+    assert calls == [(Change.added, 'owned.txt')]
