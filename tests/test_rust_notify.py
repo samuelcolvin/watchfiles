@@ -1,6 +1,8 @@
 import os
 import re
 import sys
+import threading
+import time
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -310,6 +312,42 @@ def test_polling_repr(test_dir: Path):
     r = repr(watcher)
     assert r.startswith('RustNotify(Poll(\n    PollWatcher {\n')
     assert 'delay: Some( 123ms, )' in re.sub(r'\s+', ' ', r)
+
+
+@pytest.mark.parametrize(
+    'force_polling',
+    [
+        # FSEvents (macOS) & ReadDirectoryChangesW (Windows) watch subtrees natively, without walking the tree,
+        # so setting up the watcher is too fast for the other thread to run
+        pytest.param(False, marks=skip_unless_linux),
+        True,
+    ],
+)
+def test_new_releases_gil(tmp_path: Path, force_polling: bool):
+    for i in range(50):
+        for j in range(100):
+            (tmp_path / str(i) / str(j)).mkdir(parents=True)
+
+    ticks = 0
+    done = threading.Event()
+
+    def ticker():
+        nonlocal ticks
+        while not done.is_set():
+            ticks += 1
+            time.sleep(0.0001)
+
+    thread = threading.Thread(target=ticker)
+    thread.start()
+    time.sleep(0.01)
+    try:
+        before = ticks
+        RustNotify([str(tmp_path)], False, force_polling, 0, True, False)
+        # the ticker could only run during the watcher setup if the GIL was released
+        assert ticks - before > 1
+    finally:
+        done.set()
+        thread.join()
 
 
 @skip_unless_linux
