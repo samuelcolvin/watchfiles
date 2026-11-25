@@ -46,6 +46,13 @@ struct RustNotify {
     watcher: WatcherEnum,
 }
 
+fn debounce_sleep_time(step: Duration, deadline: Option<Instant>, now: Instant) -> Duration {
+    match deadline {
+        Some(deadline) => step.min(deadline.saturating_duration_since(now)),
+        None => step,
+    }
+}
+
 fn map_watch_error(error: notify::Error) -> PyErr {
     let err_string = error.to_string();
     match error.kind {
@@ -276,7 +283,8 @@ impl RustNotify {
             _ => Some(Instant::now() + Duration::from_millis(timeout_ms)),
         };
         loop {
-            py.detach(|| sleep(step_time));
+            let sleep_time = debounce_sleep_time(step_time, max_debounce_time, Instant::now());
+            py.detach(|| sleep(sleep_time));
             match py.check_signals() {
                 Ok(_) => (),
                 Err(_) => {
@@ -309,7 +317,7 @@ impl RustNotify {
 
                 let now = Instant::now();
                 if let Some(max_time) = max_debounce_time {
-                    if now > max_time {
+                    if now >= max_time {
                         break;
                     }
                 } else {
@@ -373,4 +381,28 @@ fn _rust_notify(py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     )?;
     m.add_class::<RustNotify>()?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::debounce_sleep_time;
+    use std::time::{Duration, Instant};
+
+    #[test]
+    fn sleep_is_bounded_by_step_and_debounce_deadline() {
+        let now = Instant::now();
+        let step = Duration::from_millis(400);
+        assert_eq!(debounce_sleep_time(step, None, now), step);
+        assert_eq!(debounce_sleep_time(step, Some(now + step * 2), now), step);
+        assert_eq!(
+            debounce_sleep_time(step, Some(now + Duration::from_millis(50)), now),
+            Duration::from_millis(50)
+        );
+        assert_eq!(debounce_sleep_time(step, Some(now), now), Duration::ZERO);
+        assert_eq!(debounce_sleep_time(step, Some(now), now + step), Duration::ZERO);
+        assert_eq!(
+            debounce_sleep_time(Duration::ZERO, Some(now + step), now),
+            Duration::ZERO
+        );
+    }
 }
