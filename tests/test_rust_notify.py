@@ -1,6 +1,7 @@
 import os
 import re
 import sys
+import time
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -340,3 +341,20 @@ def test_default_ignore_permission_denied(env: 'SetEnv', env_var, arg, expected)
     if env_var is not None:
         env('WATCHFILES_IGNORE_PERMISSION_DENIED', env_var)
     assert _default_ignore_permission_denied(arg) == expected
+
+
+@skip_unless_linux
+@pytest.mark.parametrize('force_polling', [False, True])
+@pytest.mark.parametrize('debounce', [0, 50])
+def test_debounce_shorter_than_step(tmp_path: Path, debounce: int, force_polling: bool):
+    watcher = RustNotify([str(tmp_path)], False, force_polling, 10, True, False)
+    path = tmp_path / 'change.txt'
+    path.write_text('changed')
+    started = time.monotonic()
+    try:
+        assert watcher.watch(debounce, 400, 2000, None) == {(1, str(path))}
+        # The first check detects the change after one step. The next check
+        # should honor the shorter debounce, rather than wait another step.
+        assert time.monotonic() - started < 0.65
+    finally:
+        watcher.close()
