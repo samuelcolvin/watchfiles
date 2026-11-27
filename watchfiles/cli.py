@@ -148,7 +148,7 @@ def cli(*args_: str) -> None:
         logger.debug('target_type=function, attempting import of "%s"', arg_namespace.target)
         import_exit(arg_namespace.target)
         if arg_namespace.args:
-            sys.argv = [arg_namespace.target] + shlex.split(arg_namespace.args)
+            sys.argv = [arg_namespace.target] + split_args(arg_namespace.args)
     elif arg_namespace.args:
         logger.warning('--args is only used when the target is a function')
 
@@ -181,6 +181,19 @@ def cli(*args_: str) -> None:
         ignore_permission_denied=arg_namespace.ignore_permission_denied,
         grace_period=arg_namespace.grace_period,
     )
+
+
+def split_args(args: str) -> list[str]:
+    """
+    Split `--args` string into argv tokens, preserving Windows backslashes while stripping quotes.
+    """
+    if sys.platform == 'win32':
+        lex = shlex.shlex(args, posix=True)
+        lex.whitespace_split = True
+        lex.commenters = ''
+        lex.escape = ''
+        return list(lex)
+    return shlex.split(args)
 
 
 def import_exit(function_path: str) -> Any:

@@ -6,7 +6,7 @@ import pytest
 from dirty_equals import HasAttributes, HasLen, IsInstance
 
 from watchfiles import BaseFilter, DefaultFilter, PythonFilter
-from watchfiles.cli import build_filter, cli
+from watchfiles.cli import build_filter, cli, split_args
 
 pytestmark = pytest.mark.skipif(sys.platform == 'win32', reason='many tests fail on windows')
 
@@ -288,6 +288,35 @@ def test_args(mocker, tmp_path, reset_argv, caplog):
     )
     assert sys.argv == ['os.getcwd', '--version']
     assert 'WARNING: --args' not in caplog.text
+
+
+def test_args_windows_backslashes(mocker, tmp_path, reset_argv):
+    mocker.patch('watchfiles.cli.sys.platform', 'win32')
+    mocker.patch('watchfiles.cli.sys.stdin.fileno')
+    mocker.patch('os.ttyname', return_value='/path/to/tty')
+    mocker.patch('watchfiles.cli.run_process')
+    cli('--args', r'--config C:\proj\settings.toml --name "John Smith"', 'os.getcwd', str(tmp_path))
+    assert sys.argv == ['os.getcwd', '--config', r'C:\proj\settings.toml', '--name', 'John Smith']
+
+
+@pytest.mark.parametrize(
+    'args_str,expected',
+    [
+        (r'--config C:\proj\settings.toml', ['--config', r'C:\proj\settings.toml']),
+        ('--name "John Smith"', ['--name', 'John Smith']),
+        ("--name 'Jane Doe'", ['--name', 'Jane Doe']),
+        (r'--config "C:\Program Files\a.toml"', ['--config', r'C:\Program Files\a.toml']),
+        (r'--dir "C:\Program Files\" #keep', ['--dir', 'C:\\Program Files\\', '#keep']),
+    ],
+)
+def test_split_args_windows(mocker, args_str, expected):
+    mocker.patch('watchfiles.cli.sys.platform', 'win32')
+    assert split_args(args_str) == expected
+
+
+def test_split_args_posix(mocker):
+    mocker.patch('watchfiles.cli.sys.platform', 'linux')
+    assert split_args(r'--name "John\ Smith" --path /tmp/a\ b') == ['--name', 'John\\ Smith', '--path', '/tmp/a b']
 
 
 def test_args_command(mocker, tmp_path, caplog):
